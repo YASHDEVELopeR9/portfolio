@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SURVIVAL GUIDE V1.0.0 | Yash Vishwakarma - Player Profile</title>
+  <link rel="icon" type="image/jpeg" href="assets/player_avatar.jpg">
+  <!-- Google Fonts: Retro 8-bit and monospace fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=VT323&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- Three.js 3D WebGL Engine & Loaders -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- Embedded Model Data for 100% Offline & file:/// local double-click support without CORS -->
+  <script src="assets/model_data.js"></script>
+</head>
+<body class="theme-day">
+  <!-- Screen scanline CRT effect (optional toggle) -->
+  <div id="crt-overlay" class="crt-overlay"></div>
+
+  <!-- Background Cherry Grove Scene (Clean Landscape without standing character) -->
+  <div class="scene-background" id="scene-bg">
+    <div class="scene-overlay"></div>
+    <div class="scene-lighting"></div>
+  </div>
+
+  <!-- Ambient Falling Cherry Blossom Petals Canvas -->
+  <canvas id="petals-canvas"></canvas>
+
+  <!-- Top Dark Header Bar -->
+  <header class="header-bar">
+    <div class="header-left">
+      <img src="assets/player_avatar.jpg" alt="Yash 3D Logo" class="header-logo-icon">
+      <span class="online-indicator"></span>
+      <span class="game-title">SURVIVAL GUIDE V1.0.0</span>
+    </div>
+    
+    <div class="header-center">
+      <span class="biome-icon">🌸</span>
+      <span class="world-info">BIOME: <strong class="highlight-biome">CHERRY GROVE</strong></span>
+      <span class="info-divider">|</span>
+      <span class="day-icon">☀️</span>
+      <span class="day-info" id="day-counter">DAY: 8</span>
+    </div>
+
+    <div class="header-right">
+      <button class="header-action-btn" id="btn-sound" title="Toggle Game Audio (SFX)" aria-label="Toggle Sound">
+        <span class="btn-icon" id="sound-icon">🔊</span>
+        <span class="btn-text">SFX: ON</span>
+      </button>
+
+      <button class="header-action-btn active" id="btn-toggle-3d" title="Toggle 3D Model Mode" aria-label="Toggle 3D Model">
+        <span class="btn-icon">🧊</span>
+        <span class="btn-text">3D: ON</span>
+      </button>
+
+      <button class="header-action-btn" id="btn-time" title="Toggle Day / Night Ambience" aria-label="Toggle Day / Night">
+        <span class="btn-icon" id="time-icon">🌙</span>
+        <span class="btn-text">NIGHT</span>
+      </button>
+
+      <button class="header-action-btn" id="btn-settings" title="Game Settings & Info" aria-label="Settings">
+        <span class="btn-icon">⚙️</span>
+        <span class="btn-text">CONFIG</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="main-container">
+    <!-- Left Column: Player Profile Card -->
+    <section class="profile-card-wrapper">
+      <div class="profile-card mc-gui-panel" id="player-profile-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h1 class="card-title">Player Profile</h1>
+            <span class="player-real-name">YASH VISHWAKARMA</span>
+          </div>
+          <span class="card-pill">SURVIVOR</span>
+        </div>
+
+        <div class="card-body">
+          <!-- Pixel Avatar Container (Styled according to the 3D model) -->
+          <div class="avatar-well mc-inset-box" id="avatar-box" title="Yash Vishwakarma - Web & Python Builder">
+            <img 
+              src="assets/player_avatar.jpg" 
+              alt="Yash 3D Model Pixel Avatar Logo" 
+              class="avatar-img"
+              id="avatar-img"
+            />
+            <div class="avatar-border-glow"></div>
+          </div>
+
+          <!-- Description and Stats -->
+          <div class="profile-info">
+            <p class="bio-text">
+              Motivated web designer, developer & AI creator. Proficient in HTML, CSS, JavaScript, Python, Bootstrap, and WordPress. Certified in AI Agents with Google & Kaggle Python Coder.
+            </p>
+
+            <!-- Technical Skills Badges -->
+            <div class="skills-chip-row">
+              <span class="skill-chip html-chip">HTML5</span>
+              <span class="skill-chip css-chip">CSS3</span>
+              <span class="skill-chip js-chip">JavaScript</span>
+              <span class="skill-chip py-chip">Python</span>
+              <span class="skill-chip wp-chip">WordPress</span>
+              <span class="skill-chip bs-chip">Bootstrap</span>
+            </div>
+
+            <div class="stats-table">
+              <div class="stat-row">
+                <span class="stat-label">Class</span>
+                <span class="stat-value class-value">Web & Python Builder</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Level</span>
+                <span class="stat-value">19 - MPBSE 2025 Pass</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Spawn</span>
+                <span class="stat-value"><span class="compass-icon">🧭</span> D2/64 Awas Nager, Dewas (M.P) 455001</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Status</span>
+                <span class="stat-value status-online">
+                  <span class="status-pulse-dot"></span>
+                  Online - accepting quests
+                </span>
+              </div>
+            </div>
+
+            <!-- "View Journey" Button -->
+            <button class="mc-btn view-journey-btn" id="btn-view-journey">
+              <span class="mc-btn-inner">View Journey & Credentials</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Side 3D Character Viewport -->
+    <section class="character-3d-zone" id="character-zone">
+      <div class="model-3d-wrapper" id="model-3d-wrapper">
+        <canvas id="three-canvas"></canvas>
+
+        <!-- 3D Viewport Controls Pill -->
+        <div class="model-control-bar" id="model-control-bar">
+          <span class="model-tag">🧊 3D MODEL</span>
+          <div class="model-btn-group">
+            <button class="model-tool-btn active" id="btn-mat-colored" title="Original Vibrant PBR Texture">🎨 Colors</button>
+            <button class="model-tool-btn" id="btn-mat-titanium" title="Dark Titanium Armor">🖤 Dark</button>
+            <button class="model-tool-btn" id="btn-mat-cyan" title="Diamond Cyan Glow">💎 Cyan</button>
+            <button class="model-tool-btn" id="btn-mat-gold" title="Golden Netherite">👑 Gold</button>
+            <button class="model-tool-btn active" id="btn-toggle-rotate" title="Toggle Auto-Spin">🔄 Spin</button>
+            <button class="model-tool-btn" id="btn-reset-cam" title="Reset View">🎯 Reset</button>
+          </div>
+        </div>
+
+        <!-- 3D Model Loading Spinner -->
+        <div class="model-loading" id="model-loading">
+          <div class="mc-spinner"></div>
+          <span>Loading Colored 3D Player Mesh...</span>
+        </div>
+
+        <div class="model-interaction-hint">
+          <span>🖱️ Drag to Rotate • Scroll to Zoom</span>
+        </div>
+      </div>
+
+      <!-- Speech Bubble -->
+      <div class="speech-bubble" id="char-speech-bubble">
+        <span>"Hi, I'm Yash! Welcome to my Cherry Grove sanctuary. Drag me in 3D!"</span>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom Game UI: Vitals, XP Bar, Hotbar -->
+  <footer class="bottom-hud">
+    <!-- Vitals Row: Health Hearts, Level, Hunger Drumsticks -->
+    <div class="vitals-row">
+      <!-- 10 Health Hearts (Left) -->
+      <div class="hearts-container" id="hearts-container" title="Player Health: 20/20 HP (Click to interact)">
+        <span class="mc-heart" data-index="0"><img src="assets/icons/heart.svg" alt="heart"></span>
+        <span class="mc-heart" data-index="1"><img src="assets/icons/heart.svg" alt="heart"></span>
+        <span class="mc-heart" data-index="2"><img src="assets/icons/heart.svg" alt="heart"></span>
+        <span class="mc-heart" data-index="3"><img src="assets/icons/heart.svg" alt="heart"></span>
+        <span class="mc-heart" data-index="4"><img src="assets/icons/heart.svg" alt="heart"></span>
+        <span class="mc-heart" data-index="5"><img src="assets/icons/heart.svg" alt="heart"></span>
+        <span class="mc-heart" data-index="6"><img src="assets/icons/heart.svg" alt="heart"></span>
+        <span class="mc-heart" data-index="7"><img src="assets/icons/heart.svg" alt="heart"></span>
+        <span class="mc-heart" data-index="8"><img src="assets/icons/heart.svg" alt="heart"></span>
+        <span class="mc-heart" data-index="9"><img src="assets/icons/heart.svg" alt="heart"></span>
+      </div>
+
+      <!-- Level Number Above XP Bar -->
+      <div class="xp-level-badge" id="xp-level-badge" title="Player Level: 38 (Click for XP chime!)">
+        <span class="xp-level-text" id="level-display">38</span>
+      </div>
+
+      <!-- 10 Hunger Drumsticks (Right) -->
+      <div class="hunger-container" id="hunger-container" title="Hunger Bar: 20/20">
+        <span class="mc-drumstick"><img src="assets/icons/drumstick.svg" alt="hunger"></span>
+        <span class="mc-drumstick"><img src="assets/icons/drumstick.svg" alt="hunger"></span>
+        <span class="mc-drumstick"><img src="assets/icons/drumstick.svg" alt="hunger"></span>
+        <span class="mc-drumstick"><img src="assets/icons/drumstick.svg" alt="hunger"></span>
+        <span class="mc-drumstick"><img src="assets/icons/drumstick.svg" alt="hunger"></span>
+        <span class="mc-drumstick"><img src="assets/icons/drumstick.svg" alt="hunger"></span>
+        <span class="mc-drumstick"><img src="assets/icons/drumstick.svg" alt="hunger"></span>
+        <span class="mc-drumstick"><img src="assets/icons/drumstick.svg" alt="hunger"></span>
+        <span class="mc-drumstick"><img src="assets/icons/drumstick.svg" alt="hunger"></span>
+        <span class="mc-drumstick"><img src="assets/icons/drumstick.svg" alt="hunger"></span>
+      </div>
+    </div>
+
+    <!-- Green Minecraft Experience Bar -->
+    <div class="xp-bar-wrapper">
+      <div class="xp-bar-track">
+        <div class="xp-bar-progress" id="xp-progress" style="width: 78%;">
+          <div class="xp-shimmer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9-Slot Hotbar -->
+    <div class="hotbar-wrapper">
+      <div class="hotbar-frame" id="hotbar-frame">
+        <!-- Active Slot Selection Indicator Box -->
+        <div class="hotbar-selection-box" id="hotbar-selector"></div>
+
+        <!-- Slot 1: Grass Block -->
+        <div class="hotbar-slot" data-slot="1" data-name="Cherry Grass Block" data-rarity="common" data-lore="Planted in fertile Cherry Grove soil. Radiates vibrant biome nature." data-key="1">
+          <span class="slot-num">1</span>
+          <img src="assets/icons/grass-block.svg" alt="Grass Block" class="slot-icon">
+        </div>
+
+        <!-- Slot 2: Player Head (Active Default) -->
+        <div class="hotbar-slot active" data-slot="2" data-name="Yash's Head" data-rarity="rare" data-lore="Yash Vishwakarma - Web & Python Builder. Dewas, MP. Ready for quests." data-key="2">
+          <span class="slot-num">2</span>
+          <img src="assets/icons/player-head.svg" alt="Player Head" class="slot-icon">
+        </div>
+
+        <!-- Slot 3: Enchanted Book -->
+        <div class="hotbar-slot enchanted" data-slot="3" data-name="Tome of Web Crafting IV" data-rarity="epic" data-lore="Enchanted with HTML5, CSS3, JavaScript, Python, WordPress, and Google AI Agents." data-key="3">
+          <span class="slot-num">3</span>
+          <img src="assets/icons/enchanted-book.svg" alt="Enchanted Book" class="slot-icon">
+          <div class="enchanted-glint"></div>
+        </div>
+
+        <!-- Slot 4: Chest -->
+        <div class="hotbar-slot" data-slot="4" data-name="Ender Storage Chest" data-rarity="rare" data-lore="Holds responsive portfolio projects, WordPress theme setups, and code practice." data-key="4">
+          <span class="slot-num">4</span>
+          <img src="assets/icons/chest.svg" alt="Chest" class="slot-icon">
+        </div>
+
+        <!-- Slot 5: Clock -->
+        <div class="hotbar-slot" data-slot="5" data-name="Chrono Compass" data-rarity="common" data-lore="Synchronized with Dewas, MP (Indian Standard Time) & world cycles." data-key="5">
+          <span class="slot-num">5</span>
+          <img src="assets/icons/clock.svg" alt="Clock" class="slot-icon">
+        </div>
+
+        <!-- Slot 6: Nether Star -->
+        <div class="hotbar-slot" data-slot="6" data-name="Nether Star of Credentials" data-rarity="epic" data-lore="Click to open the Official Certificates & Resume Gallery!" data-key="6">
+          <span class="slot-num">6</span>
+          <img src="assets/icons/nether-star.svg" alt="Nether Star" class="slot-icon star-glow">
+        </div>
+
+        <!-- Slot 7: Emerald -->
+        <div class="hotbar-slot" data-slot="7" data-name="Emerald of Commerce" data-rarity="rare" data-lore="Accepted currency for hiring Yash in IT, web design, and development roles." data-key="7">
+          <span class="slot-num">7</span>
+          <img src="assets/icons/emerald.svg" alt="Emerald" class="slot-icon">
+        </div>
+
+        <!-- Slot 8: Book & Quill -->
+        <div class="hotbar-slot" data-slot="8" data-name="Author's Chronicle" data-lore="Send a signal to yashvishwakarma48@gmail.com or call 8103650250." data-rarity="common" data-key="8">
+          <span class="slot-num">8</span>
+          <img src="assets/icons/book-quill.svg" alt="Book & Quill" class="slot-icon">
+        </div>
+
+        <!-- Slot 9: Ender Pearl -->
+        <div class="hotbar-slot" data-slot="9" data-name="Quantum Ender Pearl" data-rarity="rare" data-lore="Teleport instantly to Yash's credentials, resume, and contact channels." data-key="9">
+          <span class="slot-num">9</span>
+          <img src="assets/icons/ender-pearl.svg" alt="Ender Pearl" class="slot-icon">
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating Minecraft Lore Tooltip -->
+  <div class="mc-tooltip" id="mc-tooltip">
+    <div class="tooltip-title" id="tooltip-title">Item Name</div>
+    <div class="tooltip-lore" id="tooltip-lore">Lore description goes here.</div>
+    <div class="tooltip-action" id="tooltip-action">[Press 1-9 or Click to select]</div>
+  </div>
+
+  <!-- Toast Notification System (Minecraft "Advancement Made!") -->
+  <div class="advancement-toast" id="advancement-toast">
+    <div class="toast-icon-box">
+      <img src="assets/icons/nether-star.svg" alt="Advancement" id="toast-icon">
+    </div>
+    <div class="toast-content">
+      <div class="toast-title" id="toast-subtitle">Advancement Made!</div>
+      <div class="toast-desc" id="toast-title">Web & Python Builder</div>
+    </div>
+  </div>
+
+  <!-- "View Journey" Modal (Native HTML5 Dialog with Minecraft GUI Theme) -->
+  <dialog class="mc-dialog" id="journey-dialog">
+    <div class="mc-dialog-window">
+      <!-- Window Title Bar -->
+      <div class="dialog-title-bar">
+        <div class="title-text">
+          <span class="title-icon">📜</span>
+          <span>YASH VISHWAKARMA - SURVIVAL LOG & CREDENTIALS</span>
+        </div>
+        <button class="dialog-close-btn" id="btn-dialog-close" aria-label="Close dialog">✕</button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="dialog-tabs">
+        <button class="tab-btn active" data-tab="certificates">🏆 Certificates & Badges</button>
+        <button class="tab-btn" data-tab="skills">⚡ Skills (HTML/CSS/JS/Python)</button>
+        <button class="tab-btn" data-tab="quests">⚔️ Education & Practice</button>
+        <button class="tab-btn" data-tab="teleport">🌌 Resume & Contact</button>
+      </nav>
+
+      <!-- Tab 1: Certificates & Badges -->
+      <div class="tab-content active" id="tab-certificates">
+        <div class="cert-grid">
+          <!-- Google AI Agents Course -->
+          <div class="cert-card" data-img="assets/certificates/cert_google_ai_agents.png" data-title="5-Day AI Agents Intensive Course with Google">
+            <div class="cert-preview-wrapper">
+              <img src="assets/certificates/cert_google_ai_agents.png" alt="Google AI Agents Certificate" class="cert-thumb">
+              <div class="cert-overlay-action">🔍 Inspect</div>
+            </div>
+            <div class="cert-info">
+              <span class="cert-issuer">Google | Kaggle</span>
+              <h4 class="cert-name">5-Day AI Agents Intensive Course</h4>
+              <span class="cert-date">Issued: December 18, 2025</span>
+            </div>
+          </div>
+
+          <!-- Kaggle Python Coder -->
+          <div class="cert-card" data-img="assets/certificates/cert_python_coder.png" data-title="Python Coder Badge - Kaggle">
+            <div class="cert-preview-wrapper">
+              <img src="assets/certificates/cert_python_coder.png" alt="Python Coder Certificate" class="cert-thumb">
+              <div class="cert-overlay-action">🔍 Inspect</div>
+            </div>
+            <div class="cert-info">
+              <span class="cert-issuer">Kaggle Badge</span>
+              <h4 class="cert-name">Python Coder</h4>
+              <span class="cert-date">Issued: November 10, 2025</span>
+            </div>
+          </div>
+
+          <!-- Kaggle Code Forker -->
+          <div class="cert-card" data-img="assets/certificates/cert_code_forker.png" data-title="Code Forker Badge - Kaggle">
+            <div class="cert-preview-wrapper">
+              <img src="assets/certificates/cert_code_forker.png" alt="Code Forker Certificate" class="cert-thumb">
+              <div class="cert-overlay-action">🔍 Inspect</div>
+            </div>
+            <div class="cert-info">
+              <span class="cert-issuer">Kaggle Badge</span>
+              <h4 class="cert-name">Code Forker</h4>
+              <span class="cert-date">Issued: November 14, 2025</span>
+            </div>
+          </div>
+
+          <!-- Wardhan WordPress Development -->
+          <div class="cert-card" data-img="assets/certificates/cert_wordpress_wardhan.jpg" data-title="WordPress Development Certificate - Wardhan Training">
+            <div class="cert-preview-wrapper">
+              <img src="assets/certificates/cert_wordpress_wardhan.jpg" alt="WordPress Certificate" class="cert-thumb">
+              <div class="cert-overlay-action">🔍 Inspect</div>
+            </div>
+            <div class="cert-info">
+              <span class="cert-issuer">Wardhan Training & Placement</span>
+              <h4 class="cert-name">WordPress Development Course</h4>
+              <span class="cert-date">Outstanding Work Completion</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Skills & Enchantments -->
+      <div class="tab-content" id="tab-skills">
+        <div class="gear-grid">
+          <div class="gear-slot">
+            <div class="gear-header">
+              <span class="gear-icon">🌐</span>
+              <span class="gear-name">HTML5 & CSS3</span>
+            </div>
+            <div class="gear-enchants">
+              <div class="enchant-line"><span class="ench-name">Structure & Design</span> <span class="ench-lvl">V</span></div>
+              <div class="ench-sub">Semantic elements, responsive flexbox & grid, CSS animations, pixel-perfect layouts, modern dark mode.</div>
+            </div>
+          </div>
+
+          <div class="gear-slot">
+            <div class="gear-header">
+              <span class="gear-icon">⚡</span>
+              <span class="gear-name">JavaScript & Three.js</span>
+            </div>
+            <div class="gear-enchants">
+              <div class="enchant-line"><span class="ench-name">Dynamic Scripting</span> <span class="ench-lvl">IV</span></div>
+              <div class="ench-sub">Interactive DOM manipulation, WebGL 3D rendering (Three.js), Web Audio API sound synthesis, event handling.</div>
+            </div>
+          </div>
+
+          <div class="gear-slot">
+            <div class="gear-header">
+              <span class="gear-icon">🐍</span>
+              <span class="gear-name">Python Programming</span>
+            </div>
+            <div class="gear-enchants">
+              <div class="enchant-line"><span class="ench-name">Python Coder</span> <span class="ench-lvl">IV</span></div>
+              <div class="ench-sub">Certified Kaggle Python Coder, script automation, data manipulation, algorithm logic, AI pipelines.</div>
+            </div>
+          </div>
+
+          <div class="gear-slot">
+            <div class="gear-header">
+              <span class="gear-icon">🧩</span>
+              <span class="gear-name">WordPress & Bootstrap</span>
+            </div>
+            <div class="gear-enchants">
+              <div class="enchant-line"><span class="ench-name">CMS & Rapid UI</span> <span class="ench-lvl">V</span></div>
+              <div class="ench-sub">Custom WordPress site development, responsive mobile grids, plugins, themes, client website delivery.</div>
+            </div>
+          </div>
+
+          <div class="gear-slot">
+            <div class="gear-header">
+              <span class="gear-icon">🤖</span>
+              <span class="gear-name">AI Agents & Workflows</span>
+            </div>
+            <div class="gear-enchants">
+              <div class="enchant-line"><span class="ench-name">Google AI Intensive</span> <span class="ench-lvl">IV</span></div>
+              <div class="ench-sub">Google 5-Day Intensive Certified: Autonomous LLM agents, prompt crafting, task delegation, generative tools.</div>
+            </div>
+          </div>
+
+          <div class="gear-slot">
+            <div class="gear-header">
+              <span class="gear-icon">🛡️</span>
+              <span class="gear-name">Core Strengths</span>
+            </div>
+            <div class="gear-enchants">
+              <div class="enchant-line"><span class="ench-name">Character Stats</span> <span class="ench-lvl">MAX</span></div>
+              <div class="ench-sub">Quick Learner, Problem Solving, Hardworking, Positive Attitude, Clear Communication.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Quests & Education -->
+      <div class="tab-content" id="tab-quests">
+        <div class="quest-list">
+          <div class="quest-card completed">
+            <div class="quest-badge">✓ COMPLETED</div>
+            <h3 class="quest-title">Higher Secondary Education (12th MPBSE)</h3>
+            <p class="quest-desc">Completed 12th Higher Secondary under Madhya Pradesh Board of Secondary Education (MPBSE) in 2025 with successful pass result.</p>
+            <div class="quest-reward">+1000 XP | Milestone: High School Graduate</div>
+          </div>
+
+          <div class="quest-card completed">
+            <div class="quest-badge">✓ COMPLETED</div>
+            <h3 class="quest-title">Personal Portfolio Website Practice Project</h3>
+            <p class="quest-desc">Developed a modern responsive portfolio website to showcase IT skills, featuring Home, About, Skills, Projects, and Contact sections using HTML, CSS, Bootstrap, and WordPress.</p>
+            <div class="quest-reward">+1500 XP | Achievement: Portfolio Architect</div>
+          </div>
+
+          <div class="quest-card completed">
+            <div class="quest-badge">✓ COMPLETED</div>
+            <h3 class="quest-title">WordPress Development Certification</h3>
+            <p class="quest-desc">Completed hands-on training with Wardhan Training & Placement Company, mastering WordPress content architecture, theme styling, and deployment.</p>
+            <div class="quest-reward">+1200 XP | Title: Certified WP Designer</div>
+          </div>
+
+          <div class="quest-card active-quest">
+            <div class="quest-badge quest-badge-open">⚡ ACTIVE QUEST</div>
+            <h3 class="quest-title">Begin Professional IT Career</h3>
+            <p class="quest-desc">Eager to contribute to innovative software and web projects while continuously learning and growing alongside high-velocity teams.</p>
+            <div class="quest-reward">Reward: Full Commitment, Speed & Loyalty</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Resume & Contact -->
+      <div class="tab-content" id="tab-teleport">
+        <div class="resume-showcase-box">
+          <div class="resume-preview-banner">
+            <div class="resume-info">
+              <h3 class="resume-name">Yash Vishwakarma</h3>
+              <p class="resume-sub">WordPress Designer & Web Developer • Dewas, MP</p>
+              <div class="resume-quick-contacts">
+                <span>📞 +91 8103650250</span>
+                <span>✉️ yashvishwakarma48@gmail.com</span>
+                <span>📍 D2/64 Awas Nager, Dewas, (M.P) 455001</span>
+              </div>
+            </div>
+            <button class="mc-btn btn-sm btn-inspect-resume" id="btn-inspect-resume">
+              <span class="mc-btn-inner">🔍 Inspect Full Resume</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="waypoints-list">
+          <div class="waypoint-card">
+            <div class="waypoint-meta">
+              <span class="wp-icon">✉️</span>
+              <div>
+                <h4 class="wp-name">Direct Email Transmission</h4>
+                <span class="wp-coords">yashvishwakarma48@gmail.com</span>
+              </div>
+            </div>
+            <a href="mailto:yashvishwakarma48@gmail.com?subject=Project%20or%20Job%20Inquiry%20for%20Yash" class="mc-btn waypoint-btn">
+              <span class="mc-btn-inner">Send Mail →</span>
+            </a>
+          </div>
+
+          <div class="waypoint-card">
+            <div class="waypoint-meta">
+              <span class="wp-icon">📞</span>
+              <div>
+                <h4 class="wp-name">Direct Tele-Signal / Phone</h4>
+                <span class="wp-coords">+91 8103650250</span>
+              </div>
+            </div>
+            <a href="tel:8103650250" class="mc-btn waypoint-btn">
+              <span class="mc-btn-inner">Call Now →</span>
+            </a>
+          </div>
+
+          <div class="waypoint-card">
+            <div class="waypoint-meta">
+              <span class="wp-icon">🧭</span>
+              <div>
+                <h4 class="wp-name">Coordinates / Base Location</h4>
+                <span class="wp-coords">D2/64 Awas Nager, Dewas, MP 455001</span>
+              </div>
+            </div>
+            <span class="waypoint-tag">Spawn Point</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dialog Footer -->
+      <div class="dialog-footer">
+        <span class="footer-hint">Tip: Click any certificate above to inspect it in full resolution!</span>
+        <button class="mc-btn btn-sm" id="btn-dialog-done">
+          <span class="mc-btn-inner">Done</span>
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Interactive Lightbox Modal for Certificates & Resume -->
+  <dialog class="mc-dialog" id="lightbox-dialog">
+    <div class="mc-dialog-window lightbox-window">
+      <div class="dialog-title-bar">
+        <div class="title-text">
+          <span class="title-icon">🔍</span>
+          <span id="lightbox-title">DOCUMENT INSPECTION</span>
+        </div>
+        <button class="dialog-close-btn" id="btn-lightbox-close" aria-label="Close lightbox">✕</button>
+      </div>
+      <div class="lightbox-body">
+        <img src="" alt="Document Preview" id="lightbox-img" class="lightbox-img">
+      </div>
+      <div class="dialog-footer">
+        <a href="#" id="lightbox-open-new" target="_blank" class="mc-btn btn-sm">
+          <span class="mc-btn-inner">Open Full Size ↗</span>
+        </a>
+        <button class="mc-btn btn-sm" id="btn-lightbox-done">
+          <span class="mc-btn-inner">Close</span>
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Settings & Config Dialog -->
+  <dialog class="mc-dialog" id="settings-dialog">
+    <div class="mc-dialog-window sm-window">
+      <div class="dialog-title-bar">
+        <div class="title-text"><span>⚙️ GAME OPTIONS</span></div>
+        <button class="dialog-close-btn" id="btn-settings-close">✕</button>
+      </div>
+      <div class="settings-body">
+        <div class="setting-item">
+          <label for="slider-particles">Cherry Blossom Density:</label>
+          <input type="range" id="slider-particles" min="10" max="100" value="45">
+          <span id="particles-val">45 petals</span>
+        </div>
+        <div class="setting-item">
+          <label for="toggle-crt">Retro CRT Scanlines:</label>
+          <input type="checkbox" id="toggle-crt" checked>
+        </div>
+        <div class="setting-item">
+          <label for="toggle-sfx">Synthesized Retro SFX:</label>
+          <input type="checkbox" id="toggle-sfx" checked>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="mc-btn" id="btn-settings-save">
+          <span class="mc-btn-inner">Save & Return</span>
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Sound Audio Synthesizer & Controller Scripts -->
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges" width="28" height="28">
+  <!-- Book Base Purple -->
+  <path d="M3 2h9v11h-9z" fill="#582173"/>
+  <path d="M2 3h11v9h-11z" fill="#6d2b8e"/>
+  <!-- Pages edge -->
+  <path d="M11 3h2v9h-2z" fill="#e9dbbe"/>
+  <path d="M12 4h1v7h-1z" fill="#fff7e6"/>
+  <!-- Red Bookmark Ribbon -->
+  <path d="M6 1h2v13h-2z" fill="#c4182b"/>
+  <path d="M6 12h1v2h-1z M7 11h1v2h-1z" fill="#e52e42"/>
+  <!-- Gold Corner Trim -->
+  <path d="M2 2h3v1h-3z M2 3h1v2h-1z M11 2h2v1h-2z M12 3h1v2h-1z M2 11h1v2h-1z M2 12h3v1h-3z M11 12h2v1h-2z M12 10h1v2h-1z" fill="#f5c02b"/>
+  <!-- Enchantment Shimmer Highlights -->
+  <path d="M4 4h2v2h-2z M8 6h3v1h-3z M5 8h2v2h-2z" fill="#d978ff" opacity="0.9"/>
+  <!-- Outer Outline -->
+  <path d="M2 2h11v1h-11z M2 12h11v1h-11z M1 3h1v9h-1z M13 3h1v9h-1z" fill="#1d0a28"/>
+</svg>

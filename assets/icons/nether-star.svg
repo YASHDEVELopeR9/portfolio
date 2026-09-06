@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges" width="28" height="28">
+  <!-- Outer Glow -->
+  <path d="M7 1h2v14h-2z M1 7h14v2h-14z" fill="#55ffff" opacity="0.4"/>
+  <!-- Diamond Star Cross -->
+  <path d="M7 2h2v12h-2z M2 7h12v2h-2z" fill="#b9f5ff"/>
+  <path d="M5 4h6v8h-6z M4 5h8v6h-8z" fill="#e8ffff"/>
+  <path d="M6 6h4v4h-4z" fill="#ffffff"/>
+  <!-- Dark Contour / Star facets -->
+  <path d="M5 5h1v1h-1z M10 5h1v1h-1z M5 10h1v1h-1z M10 10h1v1h-1z" fill="#3dd6e0"/>
+  <path d="M7 4h2v1h-2z M7 11h2v1h-2z M4 7h1v2h-1z M11 7h1v2h-1z" fill="#ffffff"/>
+  <!-- Outline -->
+  <path d="M7 0h2v2h-2z M7 14h2v2h-2z M0 7h2v2h-2z M14 7h2v2h-2z" fill="#12515e"/>
+</svg>

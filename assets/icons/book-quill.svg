@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges" width="28" height="28">
+  <!-- Book Cover -->
+  <path d="M2 4h8v10h-8z" fill="#63391b"/>
+  <path d="M3 5h6v8h-6z" fill="#d2c199"/>
+  <!-- Writing Lines -->
+  <path d="M4 6h4v1h-4z M4 8h4v1h-4z M4 10h3v1h-3z" fill="#4a3e2b"/>
+  <!-- Quill Feather -->
+  <path d="M13 1h2v3h-2z M11 3h3v2h-3z M9 5h3v2h-3z M8 7h2v3h-2z" fill="#ffffff"/>
+  <path d="M12 2h1v3h-1z M10 4h1v3h-1z" fill="#d6dfe8"/>
+  <path d="M7 10h2v2h-2z" fill="#1b1c20"/>
+  <!-- Ink on tip -->
+  <rect x="6" y="11" width="2" height="2" fill="#111111"/>
+  <!-- Book Border -->
+  <path d="M2 3h8v1h-8z M1 4h1v10h-1z M2 14h8v1h-8z M10 4h1v10h-1z" fill="#2d1706"/>
+</svg>

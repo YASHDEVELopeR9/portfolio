@@ -1,0 +1,1673 @@
+/* ==========================================================================
+   MINECRAFT PLAYER PROFILE - STYLESHEET
+   Aesthetic: Dark Gaming UI with authentic Minecraft pixel art & modern glassmorphism
+   ========================================================================== */
+
+/* --- CSS Variables --- */
+:root {
+  --font-pixel: 'Silkscreen', 'Press Start 2P', monospace;
+  --font-retro-heading: 'Press Start 2P', monospace;
+  --font-body: 'JetBrains Mono', 'VT323', monospace;
+  
+  /* Palette */
+  --bg-dark-900: #0e0f11;
+  --bg-dark-800: #151619;
+  --bg-dark-700: #1c1d21;
+  --bg-dark-600: #26282e;
+  --bg-panel: rgba(23, 25, 29, 0.88);
+  
+  /* Bevels */
+  --bevel-light: #525660;
+  --bevel-highlight: #707583;
+  --bevel-dark: #0f1013;
+  --bevel-shadow: #08090a;
+  
+  /* Accents */
+  --accent-cyan: #00f0ff;
+  --accent-cyan-dim: #009cb0;
+  --accent-cyan-glow: rgba(0, 240, 255, 0.4);
+  --accent-emerald: #55ff55;
+  --accent-xp-green: #80ff20;
+  --accent-purple: #d978ff;
+  --accent-gold: #f5c738;
+  
+  /* Text */
+  --text-primary: #ffffff;
+  --text-secondary: #c5cbd5;
+  --text-muted: #838a96;
+  
+  /* Layout */
+  --header-height: 48px;
+  --hotbar-slot-size: 48px;
+}
+
+/* --- Global Reset & Base --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-dark-900);
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  image-rendering: pixelated;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- CRT Scanlines Effect Overlay --- */
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.18) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.02),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.02)
+  );
+  background-size: 100% 4px, 6px 100%;
+  opacity: 0.75;
+  transition: opacity 0.3s ease;
+}
+
+body.no-crt .crt-overlay {
+  display: none;
+}
+
+/* --- Fullscreen Scene Background --- */
+.scene-background {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background-image: url('assets/cherry_grove_bg.jpg');
+  background-size: cover;
+  background-position: center 25%;
+  background-repeat: no-repeat;
+  transition: filter 1.2s ease, transform 0.3s ease;
+}
+
+.theme-night .scene-background {
+  filter: brightness(0.65) saturate(1.2) hue-rotate(15deg) contrast(1.1);
+}
+
+.scene-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 75% 45%,
+    rgba(0, 0, 0, 0) 30%,
+    rgba(10, 12, 16, 0.3) 70%,
+    rgba(6, 8, 10, 0.6) 100%
+  );
+  pointer-events: none;
+}
+
+.scene-lighting {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0) 25%,
+    rgba(0, 0, 0, 0) 65%,
+    rgba(5, 6, 8, 0.75) 100%
+  );
+  pointer-events: none;
+}
+
+/* --- Canvas Particle Layer (Falling Cherry Petals) --- */
+#petals-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   HEADER BAR
+   ========================================================================== */
+.header-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  z-index: 100;
+  background-color: var(--bg-dark-800);
+  border-bottom: 3px solid var(--bevel-dark);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  font-family: var(--font-pixel);
+  letter-spacing: 0.5px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.online-indicator {
+  width: 9px;
+  height: 9px;
+  background-color: var(--accent-emerald);
+  box-shadow: 0 0 8px var(--accent-emerald);
+  border-radius: 1px;
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+.game-title {
+  font-size: 13px;
+  color: var(--text-primary);
+  text-shadow: 2px 2px 0 #000;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 6px 14px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.biome-icon {
+  font-size: 14px;
+  animation: float-gentle 3s ease-in-out infinite;
+}
+
+.highlight-biome {
+  color: #ff9ec6;
+  text-shadow: 0 0 6px rgba(255, 158, 198, 0.5);
+}
+
+.info-divider {
+  color: var(--bevel-light);
+  font-weight: bold;
+}
+
+.day-info {
+  color: var(--accent-gold);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-action-btn {
+  background: var(--bg-dark-600);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+  color: var(--text-secondary);
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.header-action-btn:hover {
+  background: #343740;
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan) var(--bevel-dark) var(--bevel-dark) var(--accent-cyan);
+  box-shadow: 0 0 8px var(--accent-cyan-glow);
+}
+
+.header-action-btn:active {
+  border-color: var(--bevel-dark) var(--bevel-light) var(--bevel-light) var(--bevel-dark);
+  transform: translateY(1px);
+}
+
+/* ==========================================================================
+   MAIN LAYOUT & PLAYER PROFILE CARD
+   ========================================================================== */
+.main-container {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: calc(100vh - var(--header-height));
+  margin-top: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 48px 120px 48px;
+}
+
+.profile-card-wrapper {
+  max-width: 530px;
+  width: 100%;
+  perspective: 1000px;
+}
+
+/* Authentic Minecraft Beveled GUI Panel */
+.mc-gui-panel {
+  background-color: var(--bg-panel);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 3px solid;
+  border-top-color: var(--bevel-light);
+  border-left-color: var(--bevel-light);
+  border-right-color: var(--bevel-dark);
+  border-bottom-color: var(--bevel-dark);
+  box-shadow: 
+    0 16px 36px rgba(0, 0, 0, 0.85),
+    inset 2px 2px 0 rgba(255, 255, 255, 0.1),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.6);
+  padding: 20px;
+  position: relative;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.mc-gui-panel:hover {
+  box-shadow: 
+    0 20px 44px rgba(0, 0, 0, 0.9),
+    0 0 20px rgba(0, 240, 255, 0.12),
+    inset 2px 2px 0 rgba(255, 255, 255, 0.15),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.6);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+}
+
+.card-title {
+  font-family: var(--font-pixel);
+  font-size: 17px;
+  color: var(--text-primary);
+  text-shadow: 2px 2px 0 #000;
+  letter-spacing: 0.5px;
+}
+
+.card-pill {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--accent-cyan);
+  background: rgba(0, 240, 255, 0.12);
+  border: 1px solid var(--accent-cyan-dim);
+  padding: 3px 8px;
+  border-radius: 1px;
+}
+
+.card-body {
+  display: flex;
+  gap: 20px;
+}
+
+/* Avatar Inset Box */
+.avatar-well {
+  width: 124px;
+  height: 124px;
+  min-width: 124px;
+  background-color: #121316;
+  border: 3px solid;
+  border-top-color: var(--bevel-dark);
+  border-left-color: var(--bevel-dark);
+  border-right-color: var(--bevel-light);
+  border-bottom-color: var(--bevel-light);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.9);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+  transition: transform 0.3s ease;
+}
+
+.avatar-well:hover .avatar-img {
+  transform: scale(1.08);
+}
+
+.avatar-border-glow {
+  position: absolute;
+  inset: 0;
+  border: 1px solid transparent;
+  pointer-events: none;
+  transition: border-color 0.3s ease;
+}
+
+.avatar-well:hover .avatar-border-glow {
+  border-color: var(--accent-cyan);
+  box-shadow: inset 0 0 12px var(--accent-cyan-glow);
+}
+
+/* Info & Stats */
+.profile-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.bio-text {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.stats-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 10px 14px;
+  border-radius: 2px;
+  border-left: 3px solid var(--accent-cyan-dim);
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.stat-label {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  text-align: right;
+}
+
+.class-value {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 8px var(--accent-cyan-glow);
+}
+
+.compass-icon {
+  font-size: 12px;
+  margin-right: 2px;
+}
+
+.status-online {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-emerald);
+}
+
+.status-pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: var(--accent-emerald);
+  box-shadow: 0 0 8px var(--accent-emerald);
+  border-radius: 50%;
+  animation: pulse-dot 1.8s infinite ease-in-out;
+}
+
+/* ==========================================================================
+   MINECRAFT BUTTON (View Journey)
+   ========================================================================== */
+.mc-btn {
+  display: inline-block;
+  width: 100%;
+  padding: 2px;
+  background-color: #4b4f5a;
+  border: 3px solid;
+  border-top-color: #727989;
+  border-left-color: #727989;
+  border-right-color: #212328;
+  border-bottom-color: #212328;
+  cursor: pointer;
+  font-family: var(--font-pixel);
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.1s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+.mc-btn-inner {
+  display: block;
+  background-color: #555966;
+  padding: 10px 16px;
+  color: #ffffff;
+  font-size: 12px;
+  text-shadow: 2px 2px 0 #18191c;
+  letter-spacing: 0.5px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mc-btn:hover {
+  border-top-color: #8c94a6;
+  border-left-color: #8c94a6;
+  border-right-color: #16171b;
+  border-bottom-color: #16171b;
+  box-shadow: 0 0 14px var(--accent-cyan-glow);
+}
+
+.mc-btn:hover .mc-btn-inner {
+  background-color: #636877;
+  color: #fffb91; /* Classic Minecraft button yellow hover text */
+}
+
+.mc-btn:active {
+  border-top-color: #212328;
+  border-left-color: #212328;
+  border-right-color: #727989;
+  border-bottom-color: #727989;
+  transform: translateY(2px);
+}
+
+.mc-btn:active .mc-btn-inner {
+  background-color: #444752;
+}
+
+.mc-btn.btn-sm {
+  width: auto;
+  min-width: 110px;
+}
+
+.mc-btn.btn-sm .mc-btn-inner {
+  padding: 6px 14px;
+  font-size: 11px;
+}
+
+/* ==========================================================================
+   3D CHARACTER VIEWPORT (Three.js WebGL Zone)
+   ========================================================================== */
+.character-3d-zone {
+  flex: 1.1;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  padding-bottom: 24px;
+}
+
+body.mode-2d-only .character-3d-zone {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.96);
+}
+
+.model-3d-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-height: calc(100vh - var(--header-height) - 130px);
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#three-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+  outline: none;
+}
+
+#three-canvas:active {
+  cursor: grabbing;
+}
+
+/* 3D Control Bar (Top Floating Island) */
+.model-control-bar {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  z-index: 20;
+  background-color: rgba(22, 24, 28, 0.9);
+  backdrop-filter: blur(8px);
+  border: 2px solid;
+  border-top-color: var(--bevel-light);
+  border-left-color: var(--bevel-light);
+  border-right-color: var(--bevel-dark);
+  border-bottom-color: var(--bevel-dark);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  font-family: var(--font-pixel);
+}
+
+.model-tag {
+  font-size: 9px;
+  color: var(--accent-cyan);
+  text-shadow: 0 0 6px var(--accent-cyan-glow);
+  letter-spacing: 0.5px;
+}
+
+.model-btn-group {
+  display: flex;
+  gap: 4px;
+}
+
+.model-tool-btn {
+  background-color: #2b2e36;
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-dark) var(--bevel-light);
+  color: var(--text-secondary);
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.model-tool-btn:hover {
+  background-color: #3b3f4a;
+  color: #fffb91;
+  border-color: var(--accent-cyan) var(--bevel-dark) var(--bevel-dark) var(--accent-cyan);
+}
+
+.model-tool-btn.active {
+  background-color: #1a1b1f;
+  color: var(--accent-cyan);
+  border-color: var(--bevel-dark) var(--accent-cyan) var(--accent-cyan) var(--bevel-dark);
+  box-shadow: inset 0 0 6px rgba(0, 240, 255, 0.3);
+}
+
+/* Loading Spinner */
+.model-loading {
+  position: absolute;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  color: var(--accent-cyan);
+  background: rgba(15, 17, 21, 0.85);
+  padding: 16px 24px;
+  border: 2px solid var(--accent-cyan-dim);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.25);
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.model-loading.loaded {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.mc-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #333;
+  border-top-color: var(--accent-cyan);
+  border-radius: 50%;
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Interaction Hint */
+.model-interaction-hint {
+  position: absolute;
+  bottom: 20px;
+  right: 24px;
+  z-index: 20;
+  background: rgba(14, 16, 20, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 4px 10px;
+  border-radius: 2px;
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--text-muted);
+  pointer-events: none;
+  letter-spacing: 0.5px;
+}
+
+.speech-bubble {
+  position: absolute;
+  top: 15%;
+  right: 16%;
+  background: rgba(18, 20, 24, 0.92);
+  border: 2px solid var(--accent-cyan);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 12px var(--accent-cyan-glow);
+  padding: 12px 18px;
+  max-width: 260px;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  line-height: 1.6;
+  color: #ffffff;
+  opacity: 0;
+  transform: translateY(10px) scale(0.95);
+  transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  pointer-events: none;
+}
+
+.speech-bubble.active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  right: 45px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid var(--accent-cyan);
+}
+
+/* ==========================================================================
+   BOTTOM HUD (Vitals, XP Bar, Hotbar)
+   ========================================================================== */
+.bottom-hud {
+  position: fixed;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+/* Vitals Row: Hearts (left) + Level (center) + Hunger (right) */
+.vitals-row {
+  width: 440px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.hearts-container, .hunger-container {
+  display: flex;
+  gap: 2px;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+}
+
+.mc-heart, .mc-drumstick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  transition: transform 0.15s ease;
+}
+
+.mc-heart:hover, .mc-drumstick:hover {
+  transform: scale(1.2);
+}
+
+.mc-heart.damaged {
+  animation: heart-flash 0.35s ease;
+}
+
+/* Level 38 Badge */
+.xp-level-badge {
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-xp-green);
+  text-shadow: 
+    2px 2px 0 #000000,
+    -2px -2px 0 #000000,
+    2px -2px 0 #000000,
+    -2px 2px 0 #000000,
+    0 2px 0 #000000,
+    2px 0 0 #000000,
+    0 -2px 0 #000000,
+    -2px 0 0 #000000;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  user-select: none;
+}
+
+.xp-level-badge:hover {
+  transform: scale(1.25);
+  color: #b0ff60;
+}
+
+.xp-level-badge:active {
+  transform: scale(0.95);
+}
+
+/* XP Bar */
+.xp-bar-wrapper {
+  width: 442px;
+  height: 8px;
+  background-color: #0b0c0e;
+  border: 1px solid #000000;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+  position: relative;
+  overflow: hidden;
+}
+
+.xp-bar-track {
+  width: 100%;
+  height: 100%;
+  background: #2b3323;
+}
+
+.xp-bar-progress {
+  height: 100%;
+  background: linear-gradient(to bottom, #98e833 0%, #68bf19 100%);
+  position: relative;
+  box-shadow: 0 0 6px rgba(120, 216, 40, 0.6);
+  transition: width 0.4s ease;
+}
+
+.xp-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  animation: xp-sweep 3s infinite linear;
+}
+
+/* 9-Slot Hotbar */
+.hotbar-wrapper {
+  position: relative;
+  margin-top: 2px;
+}
+
+.hotbar-frame {
+  display: flex;
+  background-color: #24262b;
+  border: 3px solid;
+  border-top-color: var(--bevel-light);
+  border-left-color: var(--bevel-light);
+  border-right-color: var(--bevel-dark);
+  border-bottom-color: var(--bevel-dark);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.9),
+    inset 2px 2px 0 rgba(255, 255, 255, 0.08),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.6);
+  padding: 3px;
+  position: relative;
+  gap: 2px;
+}
+
+.hotbar-slot {
+  width: var(--hotbar-slot-size);
+  height: var(--hotbar-slot-size);
+  background-color: #1a1b1f;
+  border: 2px solid;
+  border-top-color: var(--bevel-dark);
+  border-left-color: var(--bevel-dark);
+  border-right-color: var(--bevel-light);
+  border-bottom-color: var(--bevel-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.hotbar-slot:hover {
+  background-color: #2c2f37;
+}
+
+.slot-num {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: #6d7280;
+  pointer-events: none;
+}
+
+.slot-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  transition: transform 0.15s ease;
+}
+
+.hotbar-slot:hover .slot-icon {
+  transform: scale(1.15) translateY(-2px);
+}
+
+/* Active Selection Box */
+.hotbar-selection-box {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: calc(var(--hotbar-slot-size) + 10px);
+  height: calc(var(--hotbar-slot-size) + 10px);
+  border: 4px solid #ffffff;
+  box-shadow: 
+    0 0 12px rgba(255, 255, 255, 0.8),
+    0 0 20px var(--accent-cyan-glow),
+    inset 0 0 8px rgba(0, 240, 255, 0.3);
+  pointer-events: none;
+  z-index: 10;
+  transition: transform 0.18s cubic-bezier(0.2, 0.85, 0.4, 1.2);
+}
+
+/* Enchantment Shimmer */
+.hotbar-slot.enchanted .enchanted-glint {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(217, 120, 255, 0) 30%,
+    rgba(217, 120, 255, 0.4) 50%,
+    rgba(217, 120, 255, 0) 70%
+  );
+  background-size: 200% 200%;
+  animation: glint-anim 2.5s infinite linear;
+  pointer-events: none;
+}
+
+.star-glow {
+  filter: drop-shadow(0 0 6px #55ffff);
+  animation: star-pulse 2s infinite ease-in-out;
+}
+
+/* ==========================================================================
+   MINECRAFT LORE TOOLTIP
+   ========================================================================== */
+.mc-tooltip {
+  position: fixed;
+  z-index: 1000;
+  background: rgba(16, 1, 25, 0.95);
+  border: 3px solid #280242;
+  box-shadow: 
+    0 0 0 2px #12011e,
+    0 8px 24px rgba(0, 0, 0, 0.9),
+    inset 0 0 12px rgba(125, 25, 200, 0.2);
+  padding: 10px 14px;
+  max-width: 320px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  font-family: var(--font-pixel);
+}
+
+.mc-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tooltip-title {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.tooltip-title.common { color: #ffffff; }
+.tooltip-title.rare { color: var(--accent-cyan); text-shadow: 0 0 8px var(--accent-cyan-glow); }
+.tooltip-title.epic { color: var(--accent-purple); text-shadow: 0 0 8px rgba(217, 120, 255, 0.5); }
+
+.tooltip-lore {
+  font-size: 10px;
+  color: #b8b2c2;
+  line-height: 1.5;
+  margin-bottom: 6px;
+  font-style: italic;
+}
+
+.tooltip-action {
+  font-size: 8px;
+  color: #695e78;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   ADVANCEMENT TOAST ("Advancement Made!")
+   ========================================================================== */
+.advancement-toast {
+  position: fixed;
+  top: 60px;
+  right: -360px;
+  z-index: 1100;
+  background-color: #24262b;
+  border: 3px solid;
+  border-top-color: var(--bevel-light);
+  border-left-color: var(--bevel-light);
+  border-right-color: var(--bevel-dark);
+  border-bottom-color: var(--bevel-dark);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  transition: right 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.advancement-toast.show {
+  right: 24px;
+}
+
+.toast-icon-box {
+  width: 36px;
+  height: 36px;
+  background-color: #151619;
+  border: 2px solid var(--bevel-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-icon-box img {
+  width: 24px;
+  height: 24px;
+}
+
+.toast-content {
+  font-family: var(--font-pixel);
+}
+
+.toast-title {
+  font-size: 10px;
+  color: var(--accent-gold);
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.toast-desc {
+  font-size: 12px;
+  color: #ffffff;
+  text-shadow: 1px 1px 0 #000;
+}
+
+/* ==========================================================================
+   MINECRAFT DIALOG / MODAL (View Journey)
+   ========================================================================== */
+.mc-dialog {
+  border: none;
+  background: transparent;
+  padding: 0;
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  max-width: 660px;
+  width: 90%;
+  max-height: 85vh;
+  z-index: 1200;
+  outline: none;
+}
+
+.mc-dialog::backdrop {
+  background: rgba(8, 10, 14, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.mc-dialog-window {
+  background-color: #1e2025;
+  border: 4px solid;
+  border-top-color: var(--bevel-light);
+  border-left-color: var(--bevel-light);
+  border-right-color: var(--bevel-dark);
+  border-bottom-color: var(--bevel-dark);
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.95),
+    inset 2px 2px 0 rgba(255, 255, 255, 0.1),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dialog-title-bar {
+  background-color: #16171b;
+  border-bottom: 3px solid var(--bevel-dark);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-pixel);
+}
+
+.title-text {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #ffffff;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.dialog-close-btn {
+  background: #393d47;
+  border: 2px solid;
+  border-color: #555c6d var(--bevel-dark) var(--bevel-dark) #555c6d;
+  color: #ffffff;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.dialog-close-btn:hover {
+  background: #c73434;
+  border-color: #ff6666 #771111 #771111 #ff6666;
+}
+
+.dialog-tabs {
+  display: flex;
+  background-color: #16171a;
+  border-bottom: 2px solid var(--bevel-dark);
+  padding: 0 16px;
+  gap: 6px;
+}
+
+.tab-btn {
+  background: #252830;
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-dark) transparent var(--bevel-light);
+  color: var(--text-muted);
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 6px;
+}
+
+.tab-btn:hover {
+  color: #ffffff;
+  background: #2e323c;
+}
+
+.tab-btn.active {
+  background: #1e2025;
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan-dim) var(--bevel-dark) #1e2025 var(--accent-cyan-dim);
+  border-bottom: 2px solid #1e2025;
+  margin-bottom: -2px;
+}
+
+.tab-content {
+  display: none;
+  padding: 20px;
+  overflow-y: auto;
+  max-height: 52vh;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Quests View */
+.quest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quest-card {
+  background: #15171a;
+  border: 2px solid;
+  border-top-color: var(--bevel-dark);
+  border-left-color: var(--bevel-dark);
+  border-right-color: var(--bevel-light);
+  border-bottom-color: var(--bevel-light);
+  padding: 14px 16px;
+  position: relative;
+}
+
+.quest-card.completed {
+  border-left: 4px solid var(--accent-emerald);
+}
+
+.quest-card.in-progress {
+  border-left: 4px solid var(--accent-gold);
+}
+
+.quest-card.active-quest {
+  border-left: 4px solid var(--accent-cyan);
+  background: rgba(0, 240, 255, 0.04);
+}
+
+.quest-badge {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--accent-emerald);
+  margin-bottom: 6px;
+}
+
+.quest-badge.progress-badge { color: var(--accent-gold); }
+.quest-badge.quest-badge-open { color: var(--accent-cyan); }
+
+.quest-title {
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.quest-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.quest-reward {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: #8c93a0;
+}
+
+/* Gear Grid (Tech stack) */
+.gear-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.gear-slot {
+  background: #15171a;
+  border: 2px solid var(--bevel-dark);
+  padding: 12px 14px;
+  border-radius: 2px;
+}
+
+.gear-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  color: var(--accent-cyan);
+}
+
+.gear-enchants {
+  font-family: var(--font-pixel);
+}
+
+.enchant-line {
+  font-size: 11px;
+  color: var(--accent-purple);
+  margin-bottom: 4px;
+}
+
+.ench-lvl {
+  color: var(--accent-gold);
+}
+
+.ench-sub {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Waypoints / Teleport */
+.waypoints-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.waypoint-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #15171a;
+  border: 2px solid var(--bevel-dark);
+  padding: 14px 18px;
+}
+
+.waypoint-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.wp-icon {
+  font-size: 24px;
+}
+
+.wp-name {
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.wp-coords {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--accent-cyan);
+}
+
+.waypoint-btn {
+  width: auto;
+}
+
+.dialog-footer {
+  background-color: #16171b;
+  border-top: 2px solid var(--bevel-dark);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Settings Modal */
+.sm-window {
+  max-width: 420px;
+}
+
+.settings-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: var(--font-pixel);
+  font-size: 11px;
+}
+
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.setting-item input[type="range"] {
+  accent-color: var(--accent-cyan);
+}
+
+/* ==========================================================================
+   HEADER LOGO & CARD CUSTOMIZATIONS
+   ========================================================================== */
+.header-logo-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 2px;
+  border: 1.5px solid var(--accent-cyan);
+  box-shadow: 0 0 8px var(--accent-cyan-glow);
+  image-rendering: pixelated;
+  object-fit: cover;
+}
+
+.card-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.player-real-name {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--accent-gold);
+  letter-spacing: 0.8px;
+}
+
+/* Skills Chip Row */
+.skills-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+
+.skill-chip {
+  font-family: var(--font-pixel);
+  font-size: 8.5px;
+  padding: 3px 7px;
+  border: 1px solid;
+  border-radius: 1px;
+  letter-spacing: 0.3px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.skill-chip:hover {
+  transform: translateY(-2px);
+}
+
+.html-chip { border-color: #e44d26; background: rgba(228, 77, 38, 0.18); color: #ff7a59; }
+.css-chip  { border-color: #264de4; background: rgba(38, 77, 228, 0.18); color: #60a5fa; }
+.js-chip   { border-color: #f7df1e; background: rgba(247, 223, 30, 0.18); color: #fde047; }
+.py-chip   { border-color: #3776ab; background: rgba(55, 118, 171, 0.18); color: #38bdf8; }
+.wp-chip   { border-color: #21759b; background: rgba(33, 117, 155, 0.18); color: #7dd3fc; }
+.bs-chip   { border-color: #7952b3; background: rgba(121, 82, 179, 0.18); color: #c084fc; }
+
+/* ==========================================================================
+   CERTIFICATES & CREDENTIALS GRID
+   ========================================================================== */
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.cert-card {
+  background: #15171a;
+  border: 2px solid;
+  border-top-color: var(--bevel-dark);
+  border-left-color: var(--bevel-dark);
+  border-right-color: var(--bevel-light);
+  border-bottom-color: var(--bevel-light);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.cert-card:hover {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 12px var(--accent-cyan-glow);
+  transform: translateY(-2px);
+}
+
+.cert-preview-wrapper {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  background-color: #0b0c0e;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 8px;
+}
+
+.cert-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.cert-card:hover .cert-thumb {
+  transform: scale(1.05);
+}
+
+.cert-overlay-action {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--accent-cyan);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.cert-card:hover .cert-overlay-action {
+  opacity: 1;
+}
+
+.cert-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cert-issuer {
+  font-family: var(--font-pixel);
+  font-size: 8.5px;
+  color: var(--accent-gold);
+}
+
+.cert-name {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  color: #ffffff;
+  line-height: 1.35;
+}
+
+.cert-date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Resume Showcase Box */
+.resume-showcase-box {
+  background: #15171a;
+  border: 2px solid var(--bevel-dark);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+
+.resume-preview-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.resume-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resume-name {
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  color: var(--accent-cyan);
+}
+
+.resume-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.resume-quick-contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.waypoint-tag {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--accent-emerald);
+  background: rgba(85, 255, 85, 0.1);
+  border: 1px solid var(--accent-emerald);
+  padding: 4px 8px;
+  border-radius: 1px;
+}
+
+/* Lightbox Modal Window */
+.lightbox-window {
+  max-width: 780px;
+  width: 95%;
+}
+
+.lightbox-body {
+  padding: 16px;
+  background-color: #0b0c0e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.lightbox-img {
+  max-width: 100%;
+  max-height: 65vh;
+  object-fit: contain;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
+}
+
+/* ==========================================================================
+   ANIMATIONS & KEYFRAMES
+   ========================================================================== */
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.6; }
+}
+
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes heart-flash {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(1.4); filter: brightness(2); }
+  60% { transform: scale(0.9); }
+}
+
+@keyframes xp-sweep {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+@keyframes glint-anim {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 200%; }
+}
+
+@keyframes star-pulse {
+  0%, 100% { filter: drop-shadow(0 0 4px #55ffff); }
+  50% { filter: drop-shadow(0 0 10px #ffffff); }
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (Tablets & Mobile)
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .main-container {
+    padding: 20px 24px 140px 24px;
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - var(--header-height));
+    gap: 32px;
+    overflow-y: auto;
+  }
+  .character-3d-zone {
+    display: flex;
+    width: 100%;
+    min-height: 480px;
+    height: 480px;
+  }
+  .model-3d-wrapper {
+    min-height: 480px;
+    height: 480px;
+    max-height: 480px;
+  }
+  .profile-card-wrapper {
+    max-width: 580px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-bar {
+    padding: 0 12px;
+  }
+  .game-title {
+    font-size: 11px;
+  }
+  .header-center {
+    display: none;
+  }
+  .header-action-btn .btn-text {
+    display: none;
+  }
+  .card-body {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .stats-table {
+    border-left: none;
+    border-top: 3px solid var(--accent-cyan-dim);
+  }
+  .stat-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat-value {
+    text-align: center;
+  }
+  .vitals-row {
+    width: 95vw;
+  }
+  .xp-bar-wrapper {
+    width: 95vw;
+  }
+  .hotbar-frame {
+    overflow-x: auto;
+    max-width: 95vw;
+    gap: 1px;
+  }
+  :root {
+    --hotbar-slot-size: 38px;
+  }
+  .slot-icon {
+    width: 22px;
+    height: 22px;
+  }
+}
