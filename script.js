@@ -745,13 +745,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // =========================================================================
   // 9. THREE.JS 3D PLAYER MODEL ENGINE (WebGL + GLTFLoader + OrbitControls)
   // =========================================================================
-  let threeScene, threeCamera, threeRenderer, threeControls;
+  let threeScene, threeCamera, threeRenderer;
   let modelMeshGroup = null;
   let modelPivot = null;
   let fitCameraToModel = () => {};
   let currentModelMaterial = 'colored'; // Default to the colorful PBR model!
   let is3DModeActive = true;
   const originalMeshMaterials = new Map();
+
+  // Pointer & Drag Rotation State (Strictly Left & Right, NO Zoom)
+  let isDragging = false;
+  let lastPointerX = 0;
+  let currentVelocityY = 0;
+  let autoSpinEnabled = true;
+  const autoSpinSpeed = 0.007;
+  let optimalCamDist = 3.0;
 
   const threeCanvas = document.getElementById('three-canvas');
   const modelLoading = document.getElementById('model-loading');
@@ -762,6 +770,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnMatGold = document.getElementById('btn-mat-gold');
   const btnToggleRotate = document.getElementById('btn-toggle-rotate');
   const btnResetCam = document.getElementById('btn-reset-cam');
+  const btnTurnLeft = document.getElementById('btn-turn-left');
+  const btnTurnRight = document.getElementById('btn-turn-right');
 
   // Alternative materials palette
   const materials = {
@@ -819,49 +829,26 @@ document.addEventListener('DOMContentLoaded', () => {
     threeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
     threeRenderer.toneMappingExposure = 1.15;
 
-    // 4. OrbitControls (Strictly Left & Right horizontal rotation, NO zoom, NO vertical tilt)
-    if (typeof THREE.OrbitControls !== 'undefined') {
-      threeControls = new THREE.OrbitControls(threeCamera, threeCanvas);
-      threeControls.enableDamping = true;
-      threeControls.dampingFactor = 0.06;
-      threeControls.enableZoom = false; // Strictly disable zoom in and zoom out
-      threeControls.enablePan = false;  // Lock panning so character remains centered
-      threeControls.autoRotate = true;  // Smooth continuous rotation
-      threeControls.autoRotateSpeed = 1.8; // Elegant turntable speed
-      // Lock vertical polar angle strictly to horizontal eye-level (PI / 2)
-      threeControls.minPolarAngle = Math.PI * 0.5;
-      threeControls.maxPolarAngle = Math.PI * 0.5;
-      threeControls.target.set(0, 0, 0);
-    }
-
-    // Auto-Fit Camera Function to guarantee the character fits 100% on any screen
+    // 4. Fixed Eye-Level Camera & Zero-Zoom Fitting (Camera distance is locked, NO zoom in/out)
     fitCameraToModel = function() {
-      if (!threeCamera || !threeControls) return;
+      if (!threeCamera) return;
       const aspect = threeCamera.aspect || (width / height) || 1.0;
       const fovRad = (threeCamera.fov * Math.PI) / 360;
 
       // Target model height is 1.65 units, comfortably centered at (0, 0, 0)
-      // We want character to occupy ~74% of vertical canvas height
       const targetHeight = 1.65;
       const fitFraction = 0.74;
       const distY = (targetHeight / 2) / (Math.tan(fovRad) * fitFraction);
 
-      // Also ensure width fits on narrow / portrait screens
       const targetWidth = 0.85;
       const distX = (targetWidth / 2) / (Math.tan(fovRad) * Math.max(aspect, 0.35) * 0.78);
 
-      const optimalDist = Math.max(distY, distX, 2.85);
+      optimalCamDist = Math.max(distY, distX, 2.85);
 
-      threeCamera.position.set(0, 0.0, optimalDist);
-      threeControls.target.set(0, 0, 0);
-      threeControls.enableZoom = false;
-      threeControls.enablePan = false;
-      threeControls.minDistance = optimalDist;
-      threeControls.maxDistance = optimalDist;
-      threeControls.minPolarAngle = Math.PI * 0.5;
-      threeControls.maxPolarAngle = Math.PI * 0.5;
-      threeControls.update();
+      threeCamera.position.set(0, 0.0, optimalCamDist);
+      threeCamera.lookAt(0, 0, 0);
     };
+    fitCameraToModel();
 
     // 5. Lighting (Matching Cherry Grove biome)
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
@@ -1091,44 +1078,95 @@ document.addEventListener('DOMContentLoaded', () => {
       tryLoadCandidate(0);
     }
 
-    // 7. Mouse cursor horizontal sway tracking (strictly left/right, no vertical tilt)
-    let targetRotationY = 0;
+    // 7. Direct Pointer Dragging: Strictly Left & Right rotation (Mouse & Touch)
+    function onPointerDown(e) {
+      if (e.button !== undefined && e.button !== 0) return;
+      isDragging = true;
+      lastPointerX = e.clientX;
+      currentVelocityY = 0;
+      if (threeCanvas) threeCanvas.style.cursor = 'grabbing';
+      if (e.pointerId && container.setPointerCapture) {
+        try { container.setPointerCapture(e.pointerId); } catch (_) {}
+      }
+    }
 
-    window.addEventListener('mousemove', (e) => {
-      const normX = (e.clientX / window.innerWidth) - 0.5;
-      targetRotationY = normX * 0.45;
-    });
+    function onPointerMove(e) {
+      if (!isDragging || !modelPivot) return;
+      const deltaX = e.clientX - lastPointerX;
+      lastPointerX = e.clientX;
 
-    // Keyboard controls for rotating character left and right
+      // Rotate strictly around Y axis (Left/Right)
+      const moveDelta = deltaX * 0.009;
+      modelPivot.rotation.y += moveDelta;
+      currentVelocityY = moveDelta;
+    }
+
+    function onPointerUp(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      if (threeCanvas) threeCanvas.style.cursor = 'grab';
+      if (e.pointerId && container.releasePointerCapture) {
+        try { container.releasePointerCapture(e.pointerId); } catch (_) {}
+      }
+    }
+
+    container.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+
+    // Completely block all mousewheel & pinch zooming on canvas and container
+    const preventZoom = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    if (threeCanvas) {
+      threeCanvas.addEventListener('wheel', preventZoom, { passive: false });
+    }
+    if (container) {
+      container.addEventListener('wheel', preventZoom, { passive: false });
+    }
+
+    // Keyboard controls: Left and Right arrows, A and D keys
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-        if (modelPivot) modelPivot.rotation.y -= 0.12;
+        if (modelPivot) {
+          currentVelocityY = -0.06;
+          modelPivot.rotation.y -= 0.08;
+        }
       } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-        if (modelPivot) modelPivot.rotation.y += 0.12;
+        if (modelPivot) {
+          currentVelocityY = 0.06;
+          modelPivot.rotation.y += 0.08;
+        }
       }
     });
 
-    // Disable mousewheel zooming completely on canvas
-    if (threeCanvas) {
-      threeCanvas.addEventListener('wheel', (e) => {
-        e.preventDefault();
-      }, { passive: false });
-    }
-
-    // 8. Animation Render Loop
+    // 8. Animation Render Loop (Strictly Left/Right rotation, Camera locked, Zero Zoom)
     function renderThree() {
       requestAnimationFrame(renderThree);
       try {
-        if (threeControls) {
-          threeControls.update();
+        if (modelPivot) {
+          // Strictly lock pitch and roll to 0
+          modelPivot.rotation.x = 0;
+          modelPivot.rotation.z = 0;
+
+          if (!isDragging) {
+            // Apply inertia momentum
+            if (Math.abs(currentVelocityY) > 0.0001) {
+              modelPivot.rotation.y += currentVelocityY;
+              currentVelocityY *= 0.90;
+            } else if (autoSpinEnabled) {
+              // Smooth continuous horizontal turntable spin
+              modelPivot.rotation.y += autoSpinSpeed;
+            }
+          }
         }
 
-        // Horizontal sway only, vertical tilt strictly locked to 0
-        if (modelPivot && (!threeControls || !threeControls.state || threeControls.state === -1)) {
-          modelPivot.rotation.y += (targetRotationY - modelPivot.rotation.y) * 0.04;
-          modelPivot.rotation.x = 0;
-        }
+        // Camera stays permanently locked (No zoom in, no zoom out)
+        threeCamera.position.set(0, 0, optimalCamDist);
+        threeCamera.lookAt(0, 0, 0);
 
         threeRenderer.render(threeScene, threeCamera);
       } catch (err) {
@@ -1181,14 +1219,33 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnMatCyan) btnMatCyan.addEventListener('click', () => setModelMaterial('cyan'));
   if (btnMatGold) btnMatGold.addEventListener('click', () => setModelMaterial('gold'));
 
+  // Turn Left & Turn Right Button Listeners
+  if (btnTurnLeft) {
+    btnTurnLeft.addEventListener('click', () => {
+      playClickSound(1.0);
+      if (modelPivot) {
+        currentVelocityY = -0.08;
+        modelPivot.rotation.y -= 0.18;
+      }
+    });
+  }
+
+  if (btnTurnRight) {
+    btnTurnRight.addEventListener('click', () => {
+      playClickSound(1.0);
+      if (modelPivot) {
+        currentVelocityY = 0.08;
+        modelPivot.rotation.y += 0.18;
+      }
+    });
+  }
+
   // Auto-Spin Toggle
   if (btnToggleRotate) {
     btnToggleRotate.addEventListener('click', () => {
+      autoSpinEnabled = !autoSpinEnabled;
       playClickSound(1.0);
-      if (threeControls) {
-        threeControls.autoRotate = !threeControls.autoRotate;
-        btnToggleRotate.classList.toggle('active', threeControls.autoRotate);
-      }
+      btnToggleRotate.classList.toggle('active', autoSpinEnabled);
     });
   }
 
@@ -1196,12 +1253,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnResetCam) {
     btnResetCam.addEventListener('click', () => {
       playClickSound(0.9);
-      if (typeof fitCameraToModel === 'function') {
-        fitCameraToModel();
-      }
+      currentVelocityY = 0;
       if (modelPivot) {
         modelPivot.rotation.set(0, 0, 0);
       }
+      fitCameraToModel();
     });
   }
 

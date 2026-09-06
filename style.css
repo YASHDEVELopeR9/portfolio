@@ -536,6 +536,7 @@ body.mode-2d-only .character-3d-zone {
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: none;
 }
 
 #three-canvas {
@@ -545,6 +546,7 @@ body.mode-2d-only .character-3d-zone {
   inset: 0;
   cursor: grab;
   outline: none;
+  touch-action: none;
 }
 
 #three-canvas:active {
