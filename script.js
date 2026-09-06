@@ -766,25 +766,28 @@ document.addEventListener('DOMContentLoaded', () => {
   // Alternative materials palette
   const materials = {
     titanium: new THREE.MeshStandardMaterial({
-      color: 0x22262e,
+      color: 0x2e333d,
       roughness: 0.38,
       metalness: 0.35,
+      side: THREE.DoubleSide,
       flatShading: false
     }),
     cyan: new THREE.MeshStandardMaterial({
-      color: 0x072a33,
+      color: 0x073540,
       roughness: 0.22,
       metalness: 0.65,
-      emissive: 0x00333d,
-      emissiveIntensity: 0.4,
+      emissive: 0x004555,
+      emissiveIntensity: 0.5,
+      side: THREE.DoubleSide,
       flatShading: false
     }),
     gold: new THREE.MeshStandardMaterial({
-      color: 0x3d2b07,
+      color: 0x4a360a,
       roughness: 0.25,
       metalness: 0.78,
-      emissive: 0x2b1c00,
-      emissiveIntensity: 0.3,
+      emissive: 0x3d2900,
+      emissiveIntensity: 0.4,
+      side: THREE.DoubleSide,
       flatShading: false
     })
   };
@@ -905,13 +908,22 @@ document.addEventListener('DOMContentLoaded', () => {
           if (child.isMesh) {
             child.geometry.computeVertexNormals();
             if (child.material) {
-              // Clone and configure original textured material
-              const origMat = child.material.clone();
-              origMat.roughness = 0.65;
-              origMat.metalness = 0.15;
-              if (origMat.map) origMat.map.flipY = false;
-              originalMeshMaterials.set(child.uuid, origMat);
-              child.material = origMat;
+              child.material.side = THREE.DoubleSide;
+              child.material.roughness = 0.6;
+              child.material.metalness = 0.15;
+              child.material.transparent = false;
+              child.material.opacity = 1.0;
+              child.material.needsUpdate = true;
+              if (child.material.map) {
+                child.material.map.needsUpdate = true;
+                if (child.material.map.image && typeof child.material.map.image.addEventListener === 'function') {
+                  child.material.map.image.addEventListener('load', () => {
+                    child.material.map.needsUpdate = true;
+                    child.material.needsUpdate = true;
+                  });
+                }
+              }
+              originalMeshMaterials.set(child.uuid, child.material);
             }
           }
         });
@@ -939,6 +951,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Perfectly frame model in viewport
         fitCameraToModel();
+
+        // Render immediate initial frame
+        threeRenderer.render(threeScene, threeCamera);
 
         // Hide loading spinner
         if (modelLoading) {
@@ -1085,18 +1100,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // 8. Animation Render Loop
     function renderThree() {
       requestAnimationFrame(renderThree);
+      try {
+        if (threeControls) {
+          threeControls.update();
+        }
 
-      if (threeControls) {
-        threeControls.update();
+        if (modelPivot && (!threeControls || !threeControls.state || threeControls.state === -1)) {
+          modelPivot.rotation.y += (targetRotationY - modelPivot.rotation.y) * 0.04;
+          modelPivot.rotation.x += (targetRotationX - modelPivot.rotation.x) * 0.04;
+        }
+
+        threeRenderer.render(threeScene, threeCamera);
+      } catch (err) {
+        console.warn('Render loop frame error:', err);
       }
-
-      // Smooth idle sway when not actively dragging
-      if (modelPivot && (!threeControls || !threeControls.state || threeControls.state === -1)) {
-        modelPivot.rotation.y += (targetRotationY - modelPivot.rotation.y) * 0.04;
-        modelPivot.rotation.x += (targetRotationX - modelPivot.rotation.x) * 0.04;
-      }
-
-      threeRenderer.render(threeScene, threeCamera);
     }
     renderThree();
 
