@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges" width="28" height="28">
+  <!-- Dirt Base -->
+  <rect x="0" y="0" width="16" height="16" fill="#866043"/>
+  <path d="M1 5h1v2h-1z M4 6h2v1h-2z M8 7h2v2h-2z M12 6h2v1h-2z M2 10h2v1h-2z M6 11h2v2h-2z M11 12h2v1h-2z M14 9h1v2h-1z M3 14h2v1h-2z M9 13h2v2h-2z" fill="#573d26"/>
+  <path d="M2 7h2v1h-2z M7 9h2v1h-2z M12 10h1v2h-1z M5 13h2v1h-2z M13 14h2v1h-2z" fill="#a07453"/>
+  <!-- Grass Top Outline & Body -->
+  <path d="M0 0h16v4h-16z M1 4h2v2h-2z M5 4h1v3h-1z M8 4h2v1h-2z M11 4h2v3h-2z M14 4h1v2h-1z" fill="#5b8731"/>
+  <!-- Grass Highlights -->
+  <path d="M0 0h16v1h-16z M1 1h3v1h-3z M6 1h4v1h-4z M12 1h3v1h-3z M2 2h2v1h-2z M7 2h2v1h-2z M13 2h2v1h-2z" fill="#7dbc3b"/>
+  <!-- Grass Shadow / Overhang -->
+  <path d="M0 3h16v1h-16z M1 4h1v1h-1z M5 4h1v2h-1z M11 4h1v2h-1z" fill="#446624"/>
+  <!-- Cube Border -->
+  <path d="M0 0h16v1h-16z M0 0h1v16h-1z M15 0h1v16h-1z M0 15h16v1h-16z" fill="#1b120c" opacity="0.6"/>
+</svg>

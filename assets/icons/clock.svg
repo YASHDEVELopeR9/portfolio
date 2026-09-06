@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges" width="28" height="28">
+  <!-- Gold Frame -->
+  <path d="M5 1h6v1h-6z M3 2h10v1h-10z M2 3h12v2h-12z M1 5h14v6h-14z M2 11h12v2h-12z M3 13h10v1h-10z M5 14h6v1h-6z" fill="#d99d1c"/>
+  <path d="M4 3h8v1h-8z M2 5h1v6h-1z M13 5h1v6h-1z M4 12h8v1h-8z" fill="#f5c738"/>
+  <!-- Clock Face (Sky / Day & Night) -->
+  <path d="M4 4h8v4h-8z" fill="#3880ff"/>
+  <path d="M4 8h8v4h-8z" fill="#111833"/>
+  <!-- Sun & Moon -->
+  <rect x="7" y="5" width="2" height="2" fill="#fff769"/>
+  <rect x="7" y="9" width="2" height="2" fill="#d9e6f2"/>
+  <!-- Hand / Needle -->
+  <rect x="7" y="7" width="2" height="2" fill="#992200"/>
+  <!-- Border -->
+  <path d="M5 0h6v1h-6z M3 1h2v1h-2z M11 1h2v1h-2z M1 3h1v2h-1z M14 3h1v2h-1z M0 5h1v6h-1z M15 5h1v6h-1z M1 11h1v2h-1z M14 11h1v2h-1z M3 14h2v1h-2z M11 14h2v1h-2z M5 15h6v1h-6z" fill="#382506"/>
+</svg>

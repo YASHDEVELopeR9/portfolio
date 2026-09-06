@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges" width="28" height="28">
+  <!-- Emerald facets -->
+  <path d="M5 2h6v2h-6z M3 4h10v8h-10z M5 12h6v2h-6z" fill="#17a840"/>
+  <!-- Bright highlight -->
+  <path d="M5 3h4v1h-4z M4 4h3v2h-3z M4 6h2v4h-2z" fill="#6df78c"/>
+  <path d="M5 4h2v1h-2z" fill="#ffffff"/>
+  <!-- Medium facet -->
+  <path d="M7 4h5v2h-5z M6 6h6v4h-6z M5 10h5v2h-5z" fill="#1bb546"/>
+  <!-- Dark shadow -->
+  <path d="M11 4h2v6h-2z M10 10h2v2h-2z M5 12h5v1h-5z" fill="#08571c"/>
+  <!-- Black border -->
+  <path d="M5 1h6v1h-6z M3 2h2v2h-2z M11 2h2v2h-2z M2 4h1v8h-1z M13 4h1v8h-1z M3 12h2v2h-2z M11 12h2v2h-2z M5 14h6v1h-6z" fill="#04230b"/>
+</svg>

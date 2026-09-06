@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges" width="28" height="28">
+  <!-- Hair & Headphones -->
+  <path d="M3 1h10v3h-10z M2 3h12v2h-12z" fill="#1f1f23"/>
+  <path d="M1 5h2v6h-2z M13 5h2v6h-2z" fill="#2d3139"/>
+  <!-- Face Skin -->
+  <path d="M3 4h10v9h-10z" fill="#cb8e5c"/>
+  <!-- Glasses -->
+  <path d="M3 6h10v3h-10z" fill="#111113"/>
+  <!-- Eyes behind glasses -->
+  <path d="M4 7h2v1h-2z M9 7h2v1h-2z" fill="#ffffff"/>
+  <path d="M5 7h1v1h-1z M10 7h1v1h-1z" fill="#3b2210"/>
+  <!-- Beard & Mustache -->
+  <path d="M5 9h5v1h-5z M4 10h7v3h-7z" fill="#1f1f23"/>
+  <path d="M6 10h3v1h-3z" fill="#9b6238"/>
+  <!-- Outer Border -->
+  <path d="M2 1h12v1h-12z M1 2h1v12h-1z M14 2h1v12h-1z M2 14h12v1h-12z" fill="#0c0d0f"/>
+</svg>
