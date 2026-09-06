@@ -819,17 +819,18 @@ document.addEventListener('DOMContentLoaded', () => {
     threeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
     threeRenderer.toneMappingExposure = 1.15;
 
-    // 4. OrbitControls
+    // 4. OrbitControls (Strictly Left & Right horizontal rotation, NO zoom, NO vertical tilt)
     if (typeof THREE.OrbitControls !== 'undefined') {
       threeControls = new THREE.OrbitControls(threeCamera, threeCanvas);
       threeControls.enableDamping = true;
-      threeControls.dampingFactor = 0.05;
-      threeControls.autoRotate = true;
-      threeControls.autoRotateSpeed = 1.2;
-      threeControls.minDistance = 1.4;
-      threeControls.maxDistance = 5.2;
-      threeControls.minPolarAngle = Math.PI * 0.12;
-      threeControls.maxPolarAngle = Math.PI * 0.88;
+      threeControls.dampingFactor = 0.06;
+      threeControls.enableZoom = false; // Strictly disable zoom in and zoom out
+      threeControls.enablePan = false;  // Lock panning so character remains centered
+      threeControls.autoRotate = true;  // Smooth continuous rotation
+      threeControls.autoRotateSpeed = 1.8; // Elegant turntable speed
+      // Lock vertical polar angle strictly to horizontal eye-level (PI / 2)
+      threeControls.minPolarAngle = Math.PI * 0.5;
+      threeControls.maxPolarAngle = Math.PI * 0.5;
       threeControls.target.set(0, 0, 0);
     }
 
@@ -851,10 +852,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const optimalDist = Math.max(distY, distX, 2.85);
 
-      threeCamera.position.set(0, 0.02, optimalDist);
+      threeCamera.position.set(0, 0.0, optimalDist);
       threeControls.target.set(0, 0, 0);
-      threeControls.minDistance = Math.max(optimalDist * 0.45, 1.3);
-      threeControls.maxDistance = optimalDist * 2.2;
+      threeControls.enableZoom = false;
+      threeControls.enablePan = false;
+      threeControls.minDistance = optimalDist;
+      threeControls.maxDistance = optimalDist;
+      threeControls.minPolarAngle = Math.PI * 0.5;
+      threeControls.maxPolarAngle = Math.PI * 0.5;
       threeControls.update();
     };
 
@@ -1086,16 +1091,30 @@ document.addEventListener('DOMContentLoaded', () => {
       tryLoadCandidate(0);
     }
 
-    // 7. Mouse cursor subtle sway tracking
+    // 7. Mouse cursor horizontal sway tracking (strictly left/right, no vertical tilt)
     let targetRotationY = 0;
-    let targetRotationX = 0;
 
     window.addEventListener('mousemove', (e) => {
       const normX = (e.clientX / window.innerWidth) - 0.5;
-      const normY = (e.clientY / window.innerHeight) - 0.5;
-      targetRotationY = normX * 0.35;
-      targetRotationX = normY * 0.15;
+      targetRotationY = normX * 0.45;
     });
+
+    // Keyboard controls for rotating character left and right
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        if (modelPivot) modelPivot.rotation.y -= 0.12;
+      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        if (modelPivot) modelPivot.rotation.y += 0.12;
+      }
+    });
+
+    // Disable mousewheel zooming completely on canvas
+    if (threeCanvas) {
+      threeCanvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+      }, { passive: false });
+    }
 
     // 8. Animation Render Loop
     function renderThree() {
@@ -1105,9 +1124,10 @@ document.addEventListener('DOMContentLoaded', () => {
           threeControls.update();
         }
 
+        // Horizontal sway only, vertical tilt strictly locked to 0
         if (modelPivot && (!threeControls || !threeControls.state || threeControls.state === -1)) {
           modelPivot.rotation.y += (targetRotationY - modelPivot.rotation.y) * 0.04;
-          modelPivot.rotation.x += (targetRotationX - modelPivot.rotation.x) * 0.04;
+          modelPivot.rotation.x = 0;
         }
 
         threeRenderer.render(threeScene, threeCamera);
