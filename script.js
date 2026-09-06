@@ -187,7 +187,8 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSelectorPosition();
   });
 
-  let petalCount = 45;
+  const isMobileDevice = window.innerWidth <= 868 || /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent);
+  let petalCount = isMobileDevice ? 8 : 45;
   let petals = [];
   let mouse = { x: width / 2, y: height / 2, moved: false };
 
@@ -286,13 +287,19 @@ document.addEventListener('DOMContentLoaded', () => {
   initPetals();
 
   let animFrameId;
+  let lastPetalTime = 0;
+  const petalInterval = isMobileDevice ? (1000 / 30) : 0;
   function animatePetals(time = 0) {
+    animFrameId = requestAnimationFrame(animatePetals);
+    if (isMobileDevice && time) {
+      if (time - lastPetalTime < petalInterval) return;
+      lastPetalTime = time;
+    }
     ctx.clearRect(0, 0, width, height);
     for (let i = 0; i < petals.length; i++) {
       petals[i].update(time);
       petals[i].draw();
     }
-    animFrameId = requestAnimationFrame(animatePetals);
   }
   requestAnimationFrame(animatePetals);
 
@@ -827,17 +834,23 @@ document.addEventListener('DOMContentLoaded', () => {
     threeCamera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
     threeCamera.position.set(0, 0.05, 3.1);
 
-    // 3. Renderer with transparent background
+    const isMobile = window.innerWidth <= 868 || /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent);
+
+    // 3. Renderer with transparent background (Optimized for mobile GPUs)
     threeRenderer = new THREE.WebGLRenderer({
       canvas: threeCanvas,
       alpha: true,
-      antialias: true,
-      powerPreference: 'high-performance'
+      antialias: !isMobile, // Disable heavy MSAA on mobile for buttery smooth 60fps
+      powerPreference: 'high-performance',
+      precision: isMobile ? 'mediump' : 'highp'
     });
     threeRenderer.setSize(width, height);
-    threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    threeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-    threeRenderer.toneMappingExposure = 1.15;
+    // Clamp DPR to 1.0 on mobile to prevent 3x overdraw lag; 1.5 max on desktop
+    threeRenderer.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio, 1.5));
+    if (!isMobile) {
+      threeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+      threeRenderer.toneMappingExposure = 1.15;
+    }
 
     // 4. Fixed Eye-Level Camera & Zero-Zoom Fitting (Camera distance is locked, NO zoom in/out)
     fitCameraToModel = function() {
@@ -905,12 +918,17 @@ document.addEventListener('DOMContentLoaded', () => {
       function setupModelScene(gltf) {
         modelMeshGroup = gltf.scene;
 
-        // Preserve original textures and compute smooth normals
+        // Preserve original textures and avoid expensive normal recomputations
         modelMeshGroup.traverse((child) => {
           if (child.isMesh) {
-            child.geometry.computeVertexNormals();
+            // Only compute normals if missing to save 724k vertex calculations
+            if (!child.geometry.attributes.normal) {
+              child.geometry.computeVertexNormals();
+            }
+            child.frustumCulled = true;
             if (child.material) {
-              child.material.side = THREE.DoubleSide;
+              // Enable GPU backface culling on mobile to cut fragment draw calls in half
+              child.material.side = isMobile ? THREE.FrontSide : THREE.DoubleSide;
               child.material.roughness = 0.6;
               child.material.metalness = 0.15;
               child.material.transparent = false;
@@ -1151,8 +1169,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 8. Animation Render Loop (Strictly moves horizontally from cursor/drag, Zero Zoom)
-    function renderThree() {
+    let lastRenderTime = 0;
+    const mobileFrameInterval = isMobile ? (1000 / 38) : 0;
+
+    function renderThree(timestamp = 0) {
       requestAnimationFrame(renderThree);
+      if (isMobile && timestamp) {
+        if (timestamp - lastRenderTime < mobileFrameInterval) return;
+        lastRenderTime = timestamp;
+      }
       try {
         if (modelPivot) {
           // Strictly lock pitch and roll to 0

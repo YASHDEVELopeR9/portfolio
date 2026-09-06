@@ -1730,4 +1730,18 @@ body.mode-2d-only .character-3d-zone {
     width: 22px;
     height: 22px;
   }
+
+  /* Mobile GPU Optimizations: Disable expensive backdrop-filter and CRT lines to prevent lag */
+  .mc-gui-panel,
+  .model-control-bar,
+  .speech-bubble,
+  .advancement-toast {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background-color: rgba(22, 24, 28, 0.96) !important;
+  }
+
+  .crt-overlay {
+    display: none !important;
+  }
 }
