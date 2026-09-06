@@ -893,76 +893,150 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
-    // 6. Load GLB Model
+    // 6. Load GLB Model (Supporting multiple paths & local file fallback)
     if (typeof THREE.GLTFLoader !== 'undefined') {
       const loader = new THREE.GLTFLoader();
-      loader.load(
-        'assets/character.glb',
-        (gltf) => {
-          modelMeshGroup = gltf.scene;
 
-          // Preserve original textures and compute smooth normals
-          modelMeshGroup.traverse((child) => {
-            if (child.isMesh) {
-              child.geometry.computeVertexNormals();
-              if (child.material) {
-                // Clone and configure original textured material
-                const origMat = child.material.clone();
-                origMat.roughness = 0.65;
-                origMat.metalness = 0.15;
-                if (origMat.map) origMat.map.flipY = false;
-                originalMeshMaterials.set(child.uuid, origMat);
-                child.material = origMat;
+      function setupModelScene(gltf) {
+        modelMeshGroup = gltf.scene;
+
+        // Preserve original textures and compute smooth normals
+        modelMeshGroup.traverse((child) => {
+          if (child.isMesh) {
+            child.geometry.computeVertexNormals();
+            if (child.material) {
+              // Clone and configure original textured material
+              const origMat = child.material.clone();
+              origMat.roughness = 0.65;
+              origMat.metalness = 0.15;
+              if (origMat.map) origMat.map.flipY = false;
+              originalMeshMaterials.set(child.uuid, origMat);
+              child.material = origMat;
+            }
+          }
+        });
+
+        // Center and normalize model mesh
+        const bbox = new THREE.Box3().setFromObject(modelMeshGroup);
+        const center = bbox.getCenter(new THREE.Vector3());
+        const size = bbox.getSize(new THREE.Vector3());
+
+        // Re-center model geometry so pivot is at geometric origin (0, 0, 0)
+        modelMeshGroup.position.set(-center.x, -center.y, -center.z);
+
+        // Scale model so height is standardized to 1.65 units
+        const baseHeight = size.y || 1.0;
+        const targetScale = 1.65 / baseHeight;
+        modelMeshGroup.scale.set(targetScale, targetScale, targetScale);
+
+        // Container group for rotation & mouse sway
+        if (modelPivot) {
+          threeScene.remove(modelPivot);
+        }
+        modelPivot = new THREE.Group();
+        modelPivot.add(modelMeshGroup);
+        threeScene.add(modelPivot);
+
+        // Perfectly frame model in viewport
+        fitCameraToModel();
+
+        // Hide loading spinner
+        if (modelLoading) {
+          modelLoading.classList.add('loaded');
+        }
+
+        showToast('Colored 3D Model Active', 'Yash’s textured 3D character is ready! Drag to orbit.', 'assets/icons/player-head.svg');
+      }
+
+      function loadModelFromFile(file) {
+        if (!file) return;
+        if (modelLoading) {
+          modelLoading.classList.remove('loaded');
+          const span = modelLoading.querySelector('span');
+          if (span) span.textContent = `Parsing ${file.name}...`;
+        }
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const contents = event.target.result;
+          loader.parse(
+            contents,
+            '',
+            (gltf) => {
+              setupModelScene(gltf);
+            },
+            (err) => {
+              console.error('Error parsing GLB file:', err);
+              if (modelLoading) {
+                modelLoading.innerHTML = '<span>Could not parse 3D file</span>';
               }
             }
-          });
+          );
+        };
+        reader.readAsArrayBuffer(file);
+      }
 
-          // Center and normalize model mesh
-          const bbox = new THREE.Box3().setFromObject(modelMeshGroup);
-          const center = bbox.getCenter(new THREE.Vector3());
-          const size = bbox.getSize(new THREE.Vector3());
+      // Candidate paths to check in order
+      const candidatePaths = [
+        'assets/character.glb',
+        'colored 3d.glb',
+        'assets/colored 3d.glb',
+        'assets/3d_model.glb'
+      ];
 
-          // Re-center model geometry so pivot is at geometric origin (0, 0, 0)
-          modelMeshGroup.position.set(-center.x, -center.y, -center.z);
-
-          // Scale model so height is standardized to 1.65 units
-          const baseHeight = size.y || 1.0;
-          const targetScale = 1.65 / baseHeight;
-          modelMeshGroup.scale.set(targetScale, targetScale, targetScale);
-
-          // Container group for rotation & mouse sway
-          if (modelPivot) {
-            threeScene.remove(modelPivot);
-          }
-          modelPivot = new THREE.Group();
-          modelPivot.add(modelMeshGroup);
-          threeScene.add(modelPivot);
-
-          // Perfectly frame model in viewport
-          fitCameraToModel();
-
-          // Hide loading spinner
+      function tryLoadCandidate(idx) {
+        if (idx >= candidatePaths.length) {
           if (modelLoading) {
-            modelLoading.classList.add('loaded');
+            modelLoading.innerHTML = `
+              <span>Load "colored 3d.glb"</span>
+              <label class="mc-btn btn-sm" style="margin-top:6px; cursor:pointer;">
+                <span class="mc-btn-inner">Select 3D File</span>
+                <input type="file" id="local-model-input" accept=".glb,.gltf" style="display:none;">
+              </label>
+            `;
+            const input = document.getElementById('local-model-input');
+            if (input) {
+              input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) loadModelFromFile(file);
+              });
+            }
           }
-
-          showToast('Colored 3D Model Active', 'Yash’s textured 3D character is ready! Drag to orbit.', 'assets/icons/player-head.svg');
-        },
-        (xhr) => {
-          if (xhr.lengthComputable && modelLoading) {
-            const percent = Math.round((xhr.loaded / xhr.total) * 100);
-            const span = modelLoading.querySelector('span');
-            if (span) span.textContent = `Loading Colored 3D Mesh (${percent}%)...`;
-          }
-        },
-        (error) => {
-          console.warn('Could not load character.glb:', error);
-          if (modelLoading) {
-            modelLoading.innerHTML = '<span>3D Player Available</span>';
-            setTimeout(() => modelLoading.classList.add('loaded'), 1000);
-          }
+          return;
         }
-      );
+
+        const path = candidatePaths[idx];
+        loader.load(
+          path,
+          (gltf) => {
+            setupModelScene(gltf);
+          },
+          (xhr) => {
+            if (xhr.lengthComputable && modelLoading) {
+              const percent = Math.round((xhr.loaded / xhr.total) * 100);
+              const span = modelLoading.querySelector('span');
+              if (span) span.textContent = `Loading Colored 3D Mesh (${percent}%)...`;
+            }
+          },
+          (error) => {
+            console.warn(`Could not load model from ${path}, trying next fallback...`, error);
+            tryLoadCandidate(idx + 1);
+          }
+        );
+      }
+
+      // Drag & drop support on canvas container
+      if (container) {
+        container.addEventListener('dragover', (e) => e.preventDefault());
+        container.addEventListener('drop', (e) => {
+          e.preventDefault();
+          const file = e.dataTransfer && e.dataTransfer.files[0];
+          if (file && (file.name.endsWith('.glb') || file.name.endsWith('.gltf'))) {
+            loadModelFromFile(file);
+          }
+        });
+      }
+
+      tryLoadCandidate(0);
     }
 
     // 7. Mouse cursor subtle sway tracking

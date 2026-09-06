@@ -123,7 +123,7 @@ npx serve .
 ## 👤 Author
 
 **Yash Vishwakarma**
-- **Spawn / Location**: Dewas, Madhya Pradesh, India
+- **Spawn / Location**: D2/64 Awas Nager, Dewas, (M.P) 455001, India
 - **Email**: [yashvishwakarma48@gmail.com](mailto:yashvishwakarma48@gmail.com)
 - **Phone**: +91 8103650250
 
