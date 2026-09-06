@@ -1036,6 +1036,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
+      // Check if embedded model data is present (100% offline & local file:/// support without CORS)
+      if (typeof window.MODEL_DATA_BASE64 === 'string' && window.MODEL_DATA_BASE64.length > 1000) {
+        if (modelLoading) {
+          const span = modelLoading.querySelector('span');
+          if (span) span.textContent = 'Rendering Colored 3D Mesh...';
+        }
+        try {
+          const bin = window.atob(window.MODEL_DATA_BASE64);
+          const len = bin.length;
+          const bytes = new Uint8Array(len);
+          for (let i = 0; i < len; i++) {
+            bytes[i] = bin.charCodeAt(i);
+          }
+          loader.parse(
+            bytes.buffer,
+            '',
+            (gltf) => {
+              setupModelScene(gltf);
+            },
+            (err) => {
+              console.warn('Could not parse embedded model data, falling back to candidate files:', err);
+              tryLoadCandidate(0);
+            }
+          );
+          return;
+        } catch (err) {
+          console.warn('Embedded model decoding error:', err);
+          tryLoadCandidate(0);
+          return;
+        }
+      }
+
       tryLoadCandidate(0);
     }
 
