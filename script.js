@@ -475,6 +475,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const toastIcon = document.getElementById('toast-icon');
   let toastTimer = null;
 
+  function hideToast() {
+    if (!toast) return;
+    clearTimeout(toastTimer);
+    toast.classList.remove('show');
+  }
+
   function showToast(subtitle, title, iconSrc) {
     if (!toast) return;
     clearTimeout(toastTimer);
@@ -483,10 +489,17 @@ document.addEventListener('DOMContentLoaded', () => {
     toastTitle.textContent = title;
     if (iconSrc) toastIcon.src = iconSrc;
 
+    toast.classList.remove('show');
+    void toast.offsetWidth; // Trigger CSS reflow so animation re-triggers cleanly
+
     toast.classList.add('show');
     toastTimer = setTimeout(() => {
-      toast.classList.remove('show');
-    }, 3600);
+      hideToast();
+    }, 2800);
+  }
+
+  if (toast) {
+    toast.addEventListener('click', hideToast);
   }
 
   // =========================================================================
@@ -753,10 +766,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let is3DModeActive = true;
   const originalMeshMaterials = new Map();
 
-  // Pointer & Drag Rotation State (Strictly Left & Right, NO Zoom)
+  // Pointer & Cursor Movement State (Strictly Left & Right, Zero Zoom)
   let isDragging = false;
   let lastPointerX = 0;
   let currentVelocityY = 0;
+  let dragRotation = 0;
+  let targetCursorAngle = 0;
   let autoSpinEnabled = true;
   const autoSpinSpeed = 0.007;
   let optimalCamDist = 3.0;
@@ -770,35 +785,30 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnMatGold = document.getElementById('btn-mat-gold');
   const btnToggleRotate = document.getElementById('btn-toggle-rotate');
   const btnResetCam = document.getElementById('btn-reset-cam');
-  const btnTurnLeft = document.getElementById('btn-turn-left');
-  const btnTurnRight = document.getElementById('btn-turn-right');
 
-  // Alternative materials palette
+  // Alternative materials palette (Distinct, vibrant Minecraft styles)
   const materials = {
     titanium: new THREE.MeshStandardMaterial({
-      color: 0x2e333d,
-      roughness: 0.38,
-      metalness: 0.35,
-      side: THREE.DoubleSide,
-      flatShading: false
+      color: 0x22262e,
+      roughness: 0.32,
+      metalness: 0.82,
+      side: THREE.DoubleSide
     }),
     cyan: new THREE.MeshStandardMaterial({
-      color: 0x073540,
-      roughness: 0.22,
-      metalness: 0.65,
-      emissive: 0x004555,
-      emissiveIntensity: 0.5,
-      side: THREE.DoubleSide,
-      flatShading: false
+      color: 0x00e5ff,
+      roughness: 0.18,
+      metalness: 0.68,
+      emissive: 0x006688,
+      emissiveIntensity: 0.45,
+      side: THREE.DoubleSide
     }),
     gold: new THREE.MeshStandardMaterial({
-      color: 0x4a360a,
-      roughness: 0.25,
-      metalness: 0.78,
-      emissive: 0x3d2900,
-      emissiveIntensity: 0.4,
-      side: THREE.DoubleSide,
-      flatShading: false
+      color: 0xffbb00,
+      roughness: 0.22,
+      metalness: 0.88,
+      emissive: 0x774400,
+      emissiveIntensity: 0.38,
+      side: THREE.DoubleSide
     })
   };
 
@@ -951,8 +961,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modelLoading) {
           modelLoading.classList.add('loaded');
         }
-
-        showToast('Colored 3D Model Active', 'Yash’s textured 3D character is ready! Drag to orbit.', 'assets/icons/player-head.svg');
       }
 
       function loadModelFromFile(file) {
@@ -1078,44 +1086,50 @@ document.addEventListener('DOMContentLoaded', () => {
       tryLoadCandidate(0);
     }
 
-    // 7. Direct Pointer Dragging: Strictly Left & Right rotation (Mouse & Touch)
-    function onPointerDown(e) {
+    // 7. Cursor Movement & Drag Interaction (Move from cursor horizontally, Zero Zoom)
+    function onCanvasPointerDown(e) {
       if (e.button !== undefined && e.button !== 0) return;
+      if (e.target !== threeCanvas) return;
       isDragging = true;
       lastPointerX = e.clientX;
       currentVelocityY = 0;
       if (threeCanvas) threeCanvas.style.cursor = 'grabbing';
-      if (e.pointerId && container.setPointerCapture) {
-        try { container.setPointerCapture(e.pointerId); } catch (_) {}
-      }
+      try { threeCanvas.setPointerCapture(e.pointerId); } catch (_) {}
     }
 
     function onPointerMove(e) {
-      if (!isDragging || !modelPivot) return;
-      const deltaX = e.clientX - lastPointerX;
-      lastPointerX = e.clientX;
+      // 1) Update cursor angle so character turns left/right following cursor
+      const normX = (e.clientX / window.innerWidth) - 0.5; // -0.5 (left) to +0.5 (right)
+      targetCursorAngle = normX * 1.6; // ~45 deg left or right
 
-      // Rotate strictly around Y axis (Left/Right)
-      const moveDelta = deltaX * 0.009;
-      modelPivot.rotation.y += moveDelta;
-      currentVelocityY = moveDelta;
+      // 2) If dragging on canvas, add direct spin rotation
+      if (isDragging && modelPivot) {
+        const deltaX = e.clientX - lastPointerX;
+        lastPointerX = e.clientX;
+        const delta = deltaX * 0.009;
+        dragRotation += delta;
+        currentVelocityY = delta;
+      }
     }
 
     function onPointerUp(e) {
       if (!isDragging) return;
       isDragging = false;
-      if (threeCanvas) threeCanvas.style.cursor = 'grab';
-      if (e.pointerId && container.releasePointerCapture) {
-        try { container.releasePointerCapture(e.pointerId); } catch (_) {}
+      if (threeCanvas) {
+        threeCanvas.style.cursor = 'grab';
+        try { threeCanvas.releasePointerCapture(e.pointerId); } catch (_) {}
       }
     }
 
-    container.addEventListener('pointerdown', onPointerDown);
+    // Attach drag listener directly to canvas only (so top buttons are never blocked)
+    if (threeCanvas) {
+      threeCanvas.addEventListener('pointerdown', onCanvasPointerDown);
+    }
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
     window.addEventListener('pointercancel', onPointerUp);
 
-    // Completely block all mousewheel & pinch zooming on canvas and container
+    // Completely block all mousewheel & pinch zooming on canvas
     const preventZoom = (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -1123,27 +1137,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (threeCanvas) {
       threeCanvas.addEventListener('wheel', preventZoom, { passive: false });
     }
-    if (container) {
-      container.addEventListener('wheel', preventZoom, { passive: false });
-    }
 
-    // Keyboard controls: Left and Right arrows, A and D keys
+    // Keyboard turning: ArrowLeft, ArrowRight, A, D
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-        if (modelPivot) {
-          currentVelocityY = -0.06;
-          modelPivot.rotation.y -= 0.08;
-        }
+        dragRotation -= 0.12;
+        currentVelocityY = -0.05;
       } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-        if (modelPivot) {
-          currentVelocityY = 0.06;
-          modelPivot.rotation.y += 0.08;
-        }
+        dragRotation += 0.12;
+        currentVelocityY = 0.05;
       }
     });
 
-    // 8. Animation Render Loop (Strictly Left/Right rotation, Camera locked, Zero Zoom)
+    // 8. Animation Render Loop (Strictly moves horizontally from cursor/drag, Zero Zoom)
     function renderThree() {
       requestAnimationFrame(renderThree);
       try {
@@ -1152,19 +1159,27 @@ document.addEventListener('DOMContentLoaded', () => {
           modelPivot.rotation.x = 0;
           modelPivot.rotation.z = 0;
 
-          if (!isDragging) {
-            // Apply inertia momentum
-            if (Math.abs(currentVelocityY) > 0.0001) {
-              modelPivot.rotation.y += currentVelocityY;
+          if (isDragging) {
+            modelPivot.rotation.y = dragRotation;
+          } else {
+            // Apply inertia if recently dragged/flicked
+            if (Math.abs(currentVelocityY) > 0.0002) {
+              dragRotation += currentVelocityY;
+              modelPivot.rotation.y = dragRotation;
               currentVelocityY *= 0.90;
             } else if (autoSpinEnabled) {
               // Smooth continuous horizontal turntable spin
-              modelPivot.rotation.y += autoSpinSpeed;
+              dragRotation += autoSpinSpeed;
+              modelPivot.rotation.y = dragRotation;
+            } else {
+              // Smoothly turn character left and right to face the cursor!
+              const targetY = dragRotation + targetCursorAngle;
+              modelPivot.rotation.y += (targetY - modelPivot.rotation.y) * 0.08;
             }
           }
         }
 
-        // Camera stays permanently locked (No zoom in, no zoom out)
+        // Camera stays permanently locked at optimal distance (Zero Zoom)
         threeCamera.position.set(0, 0, optimalCamDist);
         threeCamera.lookAt(0, 0, 0);
 
@@ -1188,7 +1203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Set Material Helper
+  // Set Material Helper (Colors, Dark, Cyan, Gold)
   function setModelMaterial(matKey) {
     currentModelMaterial = matKey;
     playClickSound(1.2);
@@ -1204,55 +1219,67 @@ document.addEventListener('DOMContentLoaded', () => {
         if (child.isMesh) {
           if (matKey === 'colored') {
             const orig = originalMeshMaterials.get(child.uuid);
-            if (orig) child.material = orig;
-          } else {
-            child.material = materials[matKey];
+            if (orig) {
+              child.material = orig;
+              orig.needsUpdate = true;
+            }
+          } else if (materials[matKey]) {
+            const m = materials[matKey].clone();
+            m.side = THREE.DoubleSide;
+            m.needsUpdate = true;
+            child.material = m;
           }
         }
       });
+      if (threeRenderer && threeScene && threeCamera) {
+        threeRenderer.render(threeScene, threeCamera);
+      }
     }
   }
 
-  // Material Button Listeners
-  if (btnMatColored) btnMatColored.addEventListener('click', () => setModelMaterial('colored'));
-  if (btnMatTitanium) btnMatTitanium.addEventListener('click', () => setModelMaterial('titanium'));
-  if (btnMatCyan) btnMatCyan.addEventListener('click', () => setModelMaterial('cyan'));
-  if (btnMatGold) btnMatGold.addEventListener('click', () => setModelMaterial('gold'));
-
-  // Turn Left & Turn Right Button Listeners
-  if (btnTurnLeft) {
-    btnTurnLeft.addEventListener('click', () => {
-      playClickSound(1.0);
-      if (modelPivot) {
-        currentVelocityY = -0.08;
-        modelPivot.rotation.y -= 0.18;
-      }
+  // Material Button Listeners (Colors, Dark, Cyan, Gold)
+  if (btnMatColored) {
+    btnMatColored.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setModelMaterial('colored');
+    });
+  }
+  if (btnMatTitanium) {
+    btnMatTitanium.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setModelMaterial('titanium');
+    });
+  }
+  if (btnMatCyan) {
+    btnMatCyan.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setModelMaterial('cyan');
+    });
+  }
+  if (btnMatGold) {
+    btnMatGold.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setModelMaterial('gold');
     });
   }
 
-  if (btnTurnRight) {
-    btnTurnRight.addEventListener('click', () => {
-      playClickSound(1.0);
-      if (modelPivot) {
-        currentVelocityY = 0.08;
-        modelPivot.rotation.y += 0.18;
-      }
-    });
-  }
-
-  // Auto-Spin Toggle
+  // Auto-Spin Toggle Button
   if (btnToggleRotate) {
-    btnToggleRotate.addEventListener('click', () => {
+    btnToggleRotate.addEventListener('click', (e) => {
+      e.stopPropagation();
       autoSpinEnabled = !autoSpinEnabled;
       playClickSound(1.0);
       btnToggleRotate.classList.toggle('active', autoSpinEnabled);
     });
   }
 
-  // Reset Camera View
+  // Reset Camera & Rotation Button
   if (btnResetCam) {
-    btnResetCam.addEventListener('click', () => {
+    btnResetCam.addEventListener('click', (e) => {
+      e.stopPropagation();
       playClickSound(0.9);
+      dragRotation = 0;
+      targetCursorAngle = 0;
       currentVelocityY = 0;
       if (modelPivot) {
         modelPivot.rotation.set(0, 0, 0);

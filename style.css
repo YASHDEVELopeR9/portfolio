@@ -558,7 +558,8 @@ body.mode-2d-only .character-3d-zone {
   position: absolute;
   top: 16px;
   right: 24px;
-  z-index: 20;
+  z-index: 50;
+  pointer-events: auto;
   background-color: rgba(22, 24, 28, 0.9);
   backdrop-filter: blur(8px);
   border: 2px solid;
@@ -978,8 +979,8 @@ body.mode-2d-only .character-3d-zone {
    ========================================================================== */
 .advancement-toast {
   position: fixed;
-  top: 60px;
-  right: -360px;
+  top: 115px;
+  right: 24px;
   z-index: 1100;
   background-color: #24262b;
   border: 3px solid;
@@ -992,11 +993,20 @@ body.mode-2d-only .character-3d-zone {
   align-items: center;
   gap: 14px;
   padding: 12px 18px;
-  transition: right 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  max-width: calc(100vw - 48px);
+  transform: translateX(calc(100% + 60px));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.35s ease, visibility 0.4s;
 }
 
 .advancement-toast.show {
-  right: 24px;
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .toast-icon-box {
