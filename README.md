@@ -124,7 +124,7 @@ npx serve .
 
 **Yash Vishwakarma**
 - **Spawn / Location**: D2/64 Awas Nager, Dewas, (M.P) 455001, India
-- **Email**: [yashvishwakarma48@gmail.com](mailto:yashvishwakarma48@gmail.com)
+- **Email**: [yashvishwakarma968@gmail.com](mailto:yashvishwakarma968@gmail.com)
 - **Phone**: +91 8103650250
 
 ---

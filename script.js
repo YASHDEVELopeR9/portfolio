@@ -1036,13 +1036,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       showToast('Trade Completed! 💚', `You commissioned: ${currentSelectedTrade.name}!`, 'assets/icons/emerald.svg');
 
-      // Dispatch Requisition Mail
-      const subject = encodeURIComponent(`[Quest Commission] ${currentSelectedTrade.name}`);
+      // Dispatch Requisition / Hiring Mail to yashvishwakarma968@gmail.com
+      const subject = encodeURIComponent(`[Hire Quest Commission] ${currentSelectedTrade.name} - Yash Vishwakarma`);
       const body = encodeURIComponent(
-        `Greetings Yash,\n\nI just traded ${currentSelectedTrade.cost} Emeralds on your Minecraft portfolio to commission the following quest:\n\nService: ${currentSelectedTrade.name}\nScope: ${currentSelectedTrade.desc}\n\nClient Base: Ready to collaborate!\n\nBest regards.`
+        `Greetings Yash,\n\nI want to hire you for the following project from your Minecraft Portfolio:\n\nService: ${currentSelectedTrade.name}\nScope: ${currentSelectedTrade.desc}\nInvestment: ${currentSelectedTrade.cost} Emeralds\n\nClient Status: Ready to collaborate on timeline and start date!\n\nBest regards.`
       );
       setTimeout(() => {
-        window.location.href = `mailto:yashvishwakarma48@gmail.com?subject=${subject}&body=${body}`;
+        window.location.href = `mailto:yashvishwakarma968@gmail.com?subject=${subject}&body=${body}`;
       }, 1200);
     });
   }
@@ -1180,13 +1180,13 @@ document.addEventListener('DOMContentLoaded', () => {
       playLevelUpSound();
       showToast('Dispatch Signed! 📜', `Sending message from ${name} to Yash...`, 'assets/icons/book-quill.svg');
 
-      const subject = encodeURIComponent(`[Quest Dispatch: ${type}] from ${name}`);
+      const subject = encodeURIComponent(`[Hire / Quest Dispatch: ${type}] from ${name}`);
       const body = encodeURIComponent(
-        `Dear Yash,\n\nSender: ${name}\nContact: ${email}\nRequisition Type: ${type}\n\nMessage:\n${msg || 'I am interested in collaborating on a web/Python project.'}\n\n-- Dispatched via Minecraft Portfolio Book & Quill`
+        `Dear Yash,\n\nSender Name: ${name}\nContact Details: ${email}\nRequisition Type: ${type}\n\nProject Brief & Requirements:\n${msg || 'I am interested in hiring you for a web development / Python automation project.'}\n\n-- Dispatched via Minecraft Portfolio Book & Quill to yashvishwakarma968@gmail.com`
       );
 
       setTimeout(() => {
-        window.location.href = `mailto:yashvishwakarma48@gmail.com?subject=${subject}&body=${body}`;
+        window.location.href = `mailto:yashvishwakarma968@gmail.com?subject=${subject}&body=${body}`;
       }, 1000);
     });
   }
@@ -1410,9 +1410,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnOpenContact = document.getElementById('btn-open-contact');
   if (btnOpenContact) {
     btnOpenContact.addEventListener('click', () => {
-      const email = 'yashvishwakarma48@gmail.com';
-      window.location.href = `mailto:${email}?subject=Project%20Inquiry%20for%20Yash%20Vishwakarma`;
-      showToast('Signal Dispatched', 'Opening mail client for Yash Vishwakarma...', 'assets/icons/book-quill.svg');
+      const email = 'yashvishwakarma968@gmail.com';
+      window.location.href = `mailto:${email}?subject=Hiring%20/%20Project%20Inquiry%20for%20Yash%20Vishwakarma`;
+      showToast('Signal Dispatched', 'Opening mail client to hire Yash Vishwakarma...', 'assets/icons/book-quill.svg');
     });
   }
 
