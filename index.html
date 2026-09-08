@@ -80,13 +80,67 @@
   <!-- Main Content Layout -->
   <main class="main-container">
     <!-- Left Column: Player Profile Card -->
+    <!-- Left Column: Minecraft Game Menu (Screenshot 2) & Player Profile Card (Screenshot 1) -->
     <section class="profile-card-wrapper">
-      <div class="profile-card mc-gui-panel" id="player-profile-card">
+      <!-- Mode Switcher Tabs -->
+      <div class="view-mode-tabs" id="view-mode-tabs">
+        <button class="mode-tab-btn active" id="tab-gamemenu" data-target="minecraft-title-menu">
+          <span class="tab-icon">🎮</span> GAME MENU
+        </button>
+        <button class="mode-tab-btn" id="tab-profile" data-target="player-profile-card">
+          <span class="tab-icon">👤</span> PLAYER PROFILE
+        </button>
+      </div>
+
+      <!-- 1. Minecraft Title / Game Menu (Screenshot 2) -->
+      <div class="minecraft-title-menu mc-gui-panel" id="minecraft-title-menu">
+        <div class="mc-title-banner">
+          <h1 class="mc-logo-title">YASH VISHWAKARMA</h1>
+          <div class="mc-logo-subtitle">
+            <span class="mc-mode-badge">SURVIVAL</span>
+            <span class="mc-mode-dot">•</span>
+            <span class="mc-mode-difficulty">HARD MODE</span>
+          </div>
+        </div>
+
+        <div class="mc-menu-button-stack">
+          <button class="mc-btn mc-menu-btn" id="btn-menu-enter-world">
+            <span class="mc-btn-inner">Enter World</span>
+          </button>
+          <button class="mc-btn mc-menu-btn" id="btn-menu-builds">
+            <span class="mc-btn-inner">View Builds</span>
+          </button>
+          <button class="mc-btn mc-menu-btn" id="btn-menu-trades">
+            <span class="mc-btn-inner">Villager Trades</span>
+          </button>
+          <div class="mc-menu-split-row">
+            <button class="mc-btn mc-menu-btn mc-split-btn" id="btn-menu-contact">
+              <span class="mc-btn-inner">Contact</span>
+            </button>
+            <button class="mc-btn mc-menu-btn mc-split-btn" id="btn-menu-the-end">
+              <span class="mc-btn-inner">The End</span>
+            </button>
+          </div>
+          <button class="mc-btn mc-menu-btn" id="btn-menu-hire">
+            <span class="mc-btn-inner">Hire for the Quest</span>
+          </button>
+        </div>
+
+        <div class="mc-menu-footer-hint">
+          <span>Press 1-9 or click the hotbar to browse</span>
+        </div>
+      </div>
+
+      <!-- 2. Player Profile Card (Screenshot 1) -->
+      <div class="profile-card mc-gui-panel" id="player-profile-card" style="display: none;">
         <div class="card-header">
           <div class="card-title-group">
             <h1 class="card-title">Player Profile</h1>
             <span class="player-real-name">YASH VISHWAKARMA</span>
           </div>
+          <button class="mc-switch-to-menu-btn" id="btn-switch-to-menu" title="Switch to Game Menu">
+            🎮 MENU
+          </button>
           <span class="card-pill">SURVIVOR</span>
         </div>
 

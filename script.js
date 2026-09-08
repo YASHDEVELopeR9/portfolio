@@ -573,11 +573,124 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // =========================================================================
+  // VIEW MODE SWITCHER: MINECRAFT GAME MENU (Screenshot 2) & PLAYER PROFILE (Screenshot 1)
+  // =========================================================================
+  const tabGameMenu = document.getElementById('tab-gamemenu');
+  const tabProfile = document.getElementById('tab-profile');
+  const menuView = document.getElementById('minecraft-title-menu');
+  const profileView = document.getElementById('player-profile-card');
+  const btnSwitchToMenu = document.getElementById('btn-switch-to-menu');
+
+  function switchToView(viewName) {
+    if (viewName === 'profile') {
+      if (menuView) menuView.style.display = 'none';
+      if (profileView) {
+        profileView.style.display = 'block';
+        profileView.style.animation = 'mcMenuFadeIn 0.25s ease-out';
+      }
+      if (tabProfile) tabProfile.classList.add('active');
+      if (tabGameMenu) tabGameMenu.classList.remove('active');
+    } else {
+      if (profileView) profileView.style.display = 'none';
+      if (menuView) {
+        menuView.style.display = 'flex';
+        menuView.style.animation = 'mcMenuFadeIn 0.25s ease-out';
+      }
+      if (tabGameMenu) tabGameMenu.classList.add('active');
+      if (tabProfile) tabProfile.classList.remove('active');
+    }
+  }
+
+  if (tabGameMenu) {
+    tabGameMenu.addEventListener('click', () => {
+      playClickSound(1.0);
+      switchToView('gamemenu');
+    });
+  }
+
+  if (tabProfile) {
+    tabProfile.addEventListener('click', () => {
+      playClickSound(1.1);
+      switchToView('profile');
+    });
+  }
+
+  if (btnSwitchToMenu) {
+    btnSwitchToMenu.addEventListener('click', () => {
+      playClickSound(0.9);
+      switchToView('gamemenu');
+    });
+  }
+
+  // Title Menu Buttons (Screenshot 2)
+  const btnMenuEnterWorld = document.getElementById('btn-menu-enter-world');
+  const btnMenuBuilds = document.getElementById('btn-menu-builds');
+  const btnMenuTrades = document.getElementById('btn-menu-trades');
+  const btnMenuContact = document.getElementById('btn-menu-contact');
+  const btnMenuTheEnd = document.getElementById('btn-menu-the-end');
+  const btnMenuHire = document.getElementById('btn-menu-hire');
+
+  if (btnMenuEnterWorld) {
+    btnMenuEnterWorld.addEventListener('click', () => {
+      playXpChime();
+      switchToView('profile');
+      showToast('World Entered!', "Welcome to Yash Vishwakarma's Realm & Character Sheet", 'assets/icons/player-head.svg');
+      
+      // Spawn extra cherry blossom petals celebration
+      for (let i = 0; i < 24; i++) {
+        const p = new Petal();
+        p.x = window.innerWidth / 3 + (Math.random() - 0.5) * 400;
+        p.y = window.innerHeight / 2;
+        p.speedY = -Math.random() * 5 - 2;
+        p.speedX = (Math.random() - 0.5) * 8;
+        petals.push(p);
+      }
+    });
+  }
+
+  if (btnMenuBuilds) {
+    btnMenuBuilds.addEventListener('click', () => {
+      playClickSound(1.0);
+      openChestDialog();
+    });
+  }
+
+  if (btnMenuTrades) {
+    btnMenuTrades.addEventListener('click', () => {
+      playClickSound(1.0);
+      openTradeDialog();
+    });
+  }
+
+  if (btnMenuContact) {
+    btnMenuContact.addEventListener('click', () => {
+      playClickSound(1.0);
+      openBookDialog();
+    });
+  }
+
+  if (btnMenuTheEnd) {
+    btnMenuTheEnd.addEventListener('click', () => {
+      playClickSound(1.2);
+      openJourneyModal('certificates');
+    });
+  }
+
+  if (btnMenuHire) {
+    btnMenuHire.addEventListener('click', () => {
+      playClickSound(1.1);
+      openTradeDialog();
+      showToast('Hire Request', 'Select a quest tier in the Villager Trading Post to hire Yash!', 'assets/icons/emerald.svg');
+    });
+  }
+
   // Slot Actions (Full Video Game Navigation)
   function handleSlotAction(slotNum, el) {
     switch (slotNum) {
-      case 1: // Grass Block (Overworld 3D View)
+      case 1: // Grass Block (Overworld 3D View / Title Menu)
         closeAllGameDialogs();
+        switchToView('gamemenu');
         showToast('Overworld View Active', '3D Cherry Grove avatar in focus! Drag to turn.', 'assets/icons/grass-block.svg');
         // Spawn burst of petals
         for (let i = 0; i < 20; i++) {
@@ -592,6 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       case 2: // Player Head (Player Profile Sheet)
         closeAllGameDialogs();
+        switchToView('profile');
         const card = document.getElementById('player-profile-card');
         if (card) {
           card.style.transform = 'scale(1.03) translateY(-4px)';
