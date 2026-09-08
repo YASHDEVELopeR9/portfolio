@@ -1295,6 +1295,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const btnProfileHire = document.getElementById('btn-profile-hire');
+  if (btnProfileHire) {
+    btnProfileHire.addEventListener('click', openHireDialog);
+  }
+
+  const btnTradeOpenHire = document.getElementById('btn-trade-open-hire');
+  if (btnTradeOpenHire) {
+    btnTradeOpenHire.addEventListener('click', () => {
+      if (currentSelectedTrade && hireRoleInput) {
+        hireRoleInput.value = currentSelectedTrade.name;
+      }
+      openHireDialog();
+    });
+  }
+
+  const btnPauseHire = document.getElementById('btn-pause-hire');
+  if (btnPauseHire) {
+    btnPauseHire.addEventListener('click', openHireDialog);
+  }
+
   // --- 5. MINECRAFT PAUSE MENU ---
   const btnPauseResume = document.getElementById('btn-pause-resume');
   const btnPauseTrades = document.getElementById('btn-pause-trades');
