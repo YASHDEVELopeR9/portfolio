@@ -1156,6 +1156,136 @@
   </dialog>
 
   <!-- =========================================================================
+       HIRE FOR THE QUEST CONTRACT (Job Offer, Contact & Salary Dialog)
+       ========================================================================= -->
+  <dialog class="mc-dialog" id="hire-dialog">
+    <div class="mc-dialog-window hire-window">
+      <div class="dialog-title-bar">
+        <div class="title-text">
+          <span class="title-icon">⚔️</span>
+          <span>HIRE FOR THE QUEST — CONTRACT & JOB OFFER</span>
+        </div>
+        <button class="dialog-close-btn" id="btn-hire-close" aria-label="Close Hire Modal">✕</button>
+      </div>
+
+      <div class="hire-modal-body">
+        <div class="hire-banner">
+          <div class="hire-banner-icon">📜</div>
+          <div class="hire-banner-text">
+            <h3 class="hire-banner-heading">Official Quest Requisition Contract</h3>
+            <p class="hire-banner-desc">
+              Submit your name, contact details, job role, and salary offer. This requisition will be dispatched directly to Yash's personal Gmail (<span class="hire-gmail-tag">yashvishwakarma968@gmail.com</span>).
+            </p>
+          </div>
+        </div>
+
+        <form id="hire-form" class="hire-form" onsubmit="return false;">
+          <div class="hire-grid">
+            <!-- Name / Recruiter / Company -->
+            <div class="hire-field">
+              <label for="hire-name" class="hire-label">
+                <span class="label-icon">👤</span> Your Name / Recruiter / Company <span class="req-star">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="hire-name" 
+                class="hire-input" 
+                placeholder="e.g. Rahul Sharma / Tech Corp" 
+                required
+              >
+            </div>
+
+            <!-- Contact Number / Signal -->
+            <div class="hire-field">
+              <label for="hire-contact" class="hire-label">
+                <span class="label-icon">📞</span> Contact Number / Email <span class="req-star">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="hire-contact" 
+                class="hire-input" 
+                placeholder="e.g. +91 9876543210 or hr@company.com" 
+                required
+              >
+            </div>
+
+            <!-- Role of Job -->
+            <div class="hire-field hire-field-full">
+              <label for="hire-role" class="hire-label">
+                <span class="label-icon">💼</span> Role of Job / Position <span class="req-star">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="hire-role" 
+                class="hire-input" 
+                placeholder="e.g. Frontend Web Developer / Python Automation Engineer" 
+                required
+              >
+              <div class="hire-quick-tags" id="hire-role-tags">
+                <span class="hire-tag" data-val="Frontend Web Developer">🌐 Web Dev</span>
+                <span class="hire-tag" data-val="Python Developer & Automation">🐍 Python</span>
+                <span class="hire-tag" data-val="WordPress Designer & Builder">📄 WordPress</span>
+                <span class="hire-tag" data-val="AI Agents Engineer">🤖 AI Agents</span>
+                <span class="hire-tag" data-val="Full-Time Developer Role">💼 Full-Time</span>
+                <span class="hire-tag" data-val="Freelance Contract">🚀 Freelance</span>
+              </div>
+            </div>
+
+            <!-- Salary / Budget -->
+            <div class="hire-field hire-field-full">
+              <label for="hire-salary" class="hire-label">
+                <span class="label-icon">💰</span> Offered Salary / Budget <span class="req-star">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="hire-salary" 
+                class="hire-input" 
+                placeholder="e.g. ₹5,00,000 - ₹8,00,000 / year or $3,000 / month or ₹45,000 fixed" 
+                required
+              >
+              <div class="hire-quick-tags" id="hire-salary-tags">
+                <span class="hire-tag" data-val="₹4,00,000 - ₹6,00,000 / yr">₹4-6 LPA</span>
+                <span class="hire-tag" data-val="₹6,00,000 - ₹10,00,000 / yr">₹6-10 LPA</span>
+                <span class="hire-tag" data-val="$2,500 - $4,500 / mo">$2.5k-$4.5k/mo</span>
+                <span class="hire-tag" data-val="₹30,000 - ₹80,000 Fixed Project">Fixed Project</span>
+                <span class="hire-tag" data-val="Competitive / Negotiable">Negotiable</span>
+              </div>
+            </div>
+
+            <!-- Message / Scope -->
+            <div class="hire-field hire-field-full">
+              <label for="hire-message" class="hire-label">
+                <span class="label-icon">📝</span> Job Description / Project Brief (Optional)
+              </label>
+              <textarea 
+                id="hire-message" 
+                class="hire-textarea" 
+                rows="3" 
+                placeholder="Describe project requirements, timeline, deliverables, or interview details..."
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Bottom Footer Details & Actions -->
+          <div class="hire-footer">
+            <div class="hire-target-notice">
+              <span>✉️ Dispatches straight to: <strong>yashvishwakarma968@gmail.com</strong></span>
+            </div>
+            <div class="hire-action-buttons">
+              <button class="mc-btn mc-btn-green btn-hire-submit" id="btn-submit-hire">
+                <span class="mc-btn-inner">⚔️ SIGN & SEND HIRE OFFER</span>
+              </button>
+              <button class="mc-btn btn-sm btn-hire-cancel" id="btn-cancel-hire">
+                <span class="mc-btn-inner">Cancel</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- =========================================================================
        MINECRAFT PAUSE MENU (ESC)
        ========================================================================= -->
   <dialog class="mc-dialog" id="pause-menu-dialog">

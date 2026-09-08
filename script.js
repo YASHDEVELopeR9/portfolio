@@ -555,7 +555,8 @@ document.addEventListener('DOMContentLoaded', () => {
         pauseMenuDialog,
         journeyDialog,
         lightboxDialog,
-        settingsDialog
+        settingsDialog,
+        hireDialog
       ].find((d) => d && d.open);
 
       if (openDialog) {
@@ -679,9 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnMenuHire) {
     btnMenuHire.addEventListener('click', () => {
-      playClickSound(1.1);
-      openTradeDialog();
-      showToast('Hire Request', 'Select a quest tier in the Villager Trading Post to hire Yash!', 'assets/icons/emerald.svg');
+      openHireDialog();
     });
   }
 
@@ -881,13 +880,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const chestDialog = document.getElementById('chest-dialog');
   const bookDialog = document.getElementById('book-dialog');
   const pauseMenuDialog = document.getElementById('pause-menu-dialog');
+  const hireDialog = document.getElementById('hire-dialog');
 
   function closeAllGameDialogs() {
-    [journeyDialog, lightboxDialog, settingsDialog, villagerTradeDialog, enchantmentDialog, chestDialog, bookDialog, pauseMenuDialog].forEach((d) => {
+    [journeyDialog, lightboxDialog, settingsDialog, villagerTradeDialog, enchantmentDialog, chestDialog, bookDialog, pauseMenuDialog, hireDialog].forEach((d) => {
       if (d && d.open) {
         d.close();
       }
     });
+  }
+
+  function openHireDialog() {
+    initAudio();
+    closeAllGameDialogs();
+    playClickSound(1.2);
+    if (hireDialog) {
+      hireDialog.showModal();
+      hireDialog.focus();
+    }
   }
 
   function openTradeDialog() {
@@ -1187,6 +1197,100 @@ document.addEventListener('DOMContentLoaded', () => {
 
       setTimeout(() => {
         window.location.href = `mailto:yashvishwakarma968@gmail.com?subject=${subject}&body=${body}`;
+      }, 1000);
+    });
+  }
+
+  // --- 4b. HIRE FOR THE QUEST CONTRACT SYSTEM ---
+  const btnHireClose = document.getElementById('btn-hire-close');
+  const btnCancelHire = document.getElementById('btn-cancel-hire');
+  const btnSubmitHire = document.getElementById('btn-submit-hire');
+  const hireRoleTags = document.querySelectorAll('#hire-role-tags .hire-tag');
+  const hireSalaryTags = document.querySelectorAll('#hire-salary-tags .hire-tag');
+  const hireRoleInput = document.getElementById('hire-role');
+  const hireSalaryInput = document.getElementById('hire-salary');
+
+  function closeHireDialog() {
+    if (hireDialog && hireDialog.open) {
+      playClickSound(0.8);
+      hireDialog.close();
+    }
+  }
+
+  if (btnHireClose) btnHireClose.addEventListener('click', closeHireDialog);
+  if (btnCancelHire) btnCancelHire.addEventListener('click', closeHireDialog);
+  setupBackdropClose(hireDialog, () => playClickSound(0.8));
+
+  // Quick tag chips for Role
+  hireRoleTags.forEach((tag) => {
+    tag.addEventListener('click', () => {
+      playClickSound(1.1);
+      const val = tag.getAttribute('data-val');
+      if (hireRoleInput) {
+        hireRoleInput.value = val;
+        hireRoleInput.focus();
+      }
+    });
+  });
+
+  // Quick tag chips for Salary / Budget
+  hireSalaryTags.forEach((tag) => {
+    tag.addEventListener('click', () => {
+      playClickSound(1.1);
+      const val = tag.getAttribute('data-val');
+      if (hireSalaryInput) {
+        hireSalaryInput.value = val;
+        hireSalaryInput.focus();
+      }
+    });
+  });
+
+  if (btnSubmitHire) {
+    btnSubmitHire.addEventListener('click', () => {
+      const name = document.getElementById('hire-name')?.value.trim();
+      const contact = document.getElementById('hire-contact')?.value.trim();
+      const role = document.getElementById('hire-role')?.value.trim();
+      const salary = document.getElementById('hire-salary')?.value.trim();
+      const msg = document.getElementById('hire-message')?.value.trim();
+
+      if (!name || !contact || !role || !salary) {
+        playDamageSound();
+        showToast('Missing Details', 'Please enter Name, Contact, Role, and Salary!', 'assets/icons/heart-empty.svg');
+        return;
+      }
+
+      playLevelUpSound();
+      playXpChime();
+      showToast('Offer Dispatched! ⚔️', `Hire offer for ${role} sent to yashvishwakarma968@gmail.com!`, 'assets/icons/emerald.svg');
+
+      const subject = encodeURIComponent(`[JOB / QUEST OFFER: ${role}] from ${name} (Budget: ${salary})`);
+      const body = encodeURIComponent(
+        `=========================================\n` +
+        `⚔️ QUEST HIRE OFFER FOR YASH VISHWAKARMA\n` +
+        `=========================================\n\n` +
+        `👤 Recruiter / Company Name: ${name}\n` +
+        `📞 Contact Number / Email: ${contact}\n` +
+        `💼 Role of Job / Position: ${role}\n` +
+        `💰 Offered Salary / Budget: ${salary}\n\n` +
+        `📝 Job Description / Requirements:\n${msg || 'We want to hire you for an upcoming role/project. Please reply with your availability.'}\n\n` +
+        `-----------------------------------------\n` +
+        `📍 Dispatched via Minecraft Portfolio Quest Contract\n` +
+        `Direct Inbox: yashvishwakarma968@gmail.com`
+      );
+
+      // Celebration petals burst
+      for (let i = 0; i < 24; i++) {
+        const p = new Petal();
+        p.x = window.innerWidth / 2 + (Math.random() - 0.5) * 400;
+        p.y = window.innerHeight / 2;
+        p.speedY = -Math.random() * 5 - 2;
+        p.speedX = (Math.random() - 0.5) * 8;
+        petals.push(p);
+      }
+
+      setTimeout(() => {
+        window.location.href = `mailto:yashvishwakarma968@gmail.com?subject=${subject}&body=${body}`;
+        closeHireDialog();
       }, 1000);
     });
   }
