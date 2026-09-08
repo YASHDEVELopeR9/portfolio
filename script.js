@@ -172,6 +172,153 @@ document.addEventListener('DOMContentLoaded', () => {
     osc.stop(audioCtx.currentTime + 0.15);
   }
 
+  // Authentic Minecraft Villager Murmur ("Hrrr!")
+  function playVillagerHrrr() {
+    if (!sfxEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    const osc = audioCtx.createOscillator();
+    const filter = audioCtx.createBiquadFilter();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(125, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(95, audioCtx.currentTime + 0.28);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(650, audioCtx.currentTime);
+    filter.Q.setValueAtTime(4.0, audioCtx.currentTime);
+
+    gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.28);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.29);
+  }
+
+  // Villager Trade Agreement ("Hrrr!" chirp + emerald levelup chime)
+  function playVillagerTradeYes() {
+    if (!sfxEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    playVillagerHrrr();
+
+    setTimeout(() => {
+      if (!audioCtx) return;
+      const chimeFreqs = [1046.50, 1318.51, 1567.98, 2093.00]; // C6, E6, G6, C7
+      chimeFreqs.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const startTime = audioCtx.currentTime + idx * 0.06;
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+
+        gain.gain.setValueAtTime(0.25, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(startTime);
+        osc.stop(startTime + 0.36);
+      });
+    }, 120);
+  }
+
+  // Enchantment Table Magical Resonance Chime
+  function playEnchantSound() {
+    if (!sfxEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    const chords = [587.33, 880.00, 1174.66, 1760.00]; // D5, A5, D6, A6
+    chords.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const startTime = audioCtx.currentTime + i * 0.05;
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.05, startTime + 0.4);
+
+      gain.gain.setValueAtTime(0.2, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.45);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.46);
+    });
+  }
+
+  // Book & Quill Page Flip / Paper Flutter
+  function playPageFlipSound() {
+    if (!sfxEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    try {
+      const bufferSize = audioCtx.sampleRate * 0.08;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1800, audioCtx.currentTime);
+      filter.Q.setValueAtTime(1.5, audioCtx.currentTime);
+
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      noise.start();
+    } catch (_) {
+      playClickSound(1.5);
+    }
+  }
+
+  // Emerald Pickup / Clink
+  function playEmeraldClinkSound() {
+    if (!sfxEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(2200, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(2800, audioCtx.currentTime + 0.08);
+
+    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.13);
+  }
+
   // =========================================================================
   // 2. CHERRY BLOSSOM PETALS PARTICLE SIMULATION (Canvas)
   // =========================================================================
@@ -394,10 +541,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Keyboard navigation 1-9
+  // Keyboard navigation 1-9 & ESC Game Menu
   window.addEventListener('keydown', (e) => {
-    // If typing inside an input or dialog, ignore
-    if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+    // If typing inside an input, textarea or select, ignore hotbar keys
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+
+    if (e.key === 'Escape') {
+      const openDialog = [
+        villagerTradeDialog,
+        enchantmentDialog,
+        chestDialog,
+        bookDialog,
+        pauseMenuDialog,
+        journeyDialog,
+        lightboxDialog,
+        settingsDialog
+      ].find((d) => d && d.open);
+
+      if (openDialog) {
+        closeAllGameDialogs();
+        playClickSound(0.8);
+      } else {
+        openPauseMenu();
+      }
+      return;
+    }
 
     const num = parseInt(e.key, 10);
     if (num >= 1 && num <= 9) {
@@ -405,11 +573,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Slot Actions (Interactivity)
+  // Slot Actions (Full Video Game Navigation)
   function handleSlotAction(slotNum, el) {
     switch (slotNum) {
-      case 1: // Grass Block
-        showToast('Cherry Grove Spores', 'Assets and natural aesthetic energized!', 'assets/icons/grass-block.svg');
+      case 1: // Grass Block (Overworld 3D View)
+        closeAllGameDialogs();
+        showToast('Overworld View Active', '3D Cherry Grove avatar in focus! Drag to turn.', 'assets/icons/grass-block.svg');
         // Spawn burst of petals
         for (let i = 0; i < 20; i++) {
           const p = new Petal();
@@ -421,7 +590,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         break;
 
-      case 2: // Player Head
+      case 2: // Player Head (Player Profile Sheet)
+        closeAllGameDialogs();
         const card = document.getElementById('player-profile-card');
         if (card) {
           card.style.transform = 'scale(1.03) translateY(-4px)';
@@ -429,46 +599,48 @@ document.addEventListener('DOMContentLoaded', () => {
             card.style.transform = 'scale(1) translateY(0)';
           }, 300);
         }
-        showToast('Player Selected', 'Yash Vishwakarma - Web & Python Builder', 'assets/icons/player-head.svg');
+        showToast('Player Character Sheet', 'Yash Vishwakarma • Web & Python Builder', 'assets/icons/player-head.svg');
         break;
 
-      case 3: // Enchanted Book
-        playXpChime();
-        showToast('Advancement Made!', 'Enchanter: HTML, CSS, JS & Python', 'assets/icons/enchanted-book.svg');
-        openJourneyModal('skills');
+      case 3: // Enchanted Book (Enchantment Table)
+        openEnchantDialog();
+        showToast('Enchantment Table', 'Select and inspect coding masteries & powers!', 'assets/icons/enchanted-book.svg');
         break;
 
-      case 4: // Chest
-        playChestSound();
-        openJourneyModal('quests');
+      case 4: // Chest (Ender Chest Project Storage)
+        openChestDialog();
+        showToast('Ender Chest Opened', '27-slot creation inventory & projects loaded.', 'assets/icons/chest.svg');
         break;
 
-      case 5: // Clock
+      case 5: // Clock (Chrono Compass & Time)
         const now = new Date();
         const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        showToast('Chrono Compass', `World Time: ${timeString} (Dewas, MP)`, 'assets/icons/clock.svg');
+        showToast('Chrono Compass', `World Time: ${timeString} | Dewas, MP Base`, 'assets/icons/clock.svg');
+        if (btnTime) btnTime.click();
         break;
 
-      case 6: // Nether Star
-        playLevelUpSound();
-        showToast('Advancement Made!', 'Credentials & Badges Unlocked!', 'assets/icons/nether-star.svg');
+      case 6: // Nether Star (Advancements & Certificates)
+        closeAllGameDialogs();
         openJourneyModal('certificates');
+        playLevelUpSound();
+        showToast('Advancement Made!', 'Official Certificates & Badges Unlocked!', 'assets/icons/nether-star.svg');
         break;
 
-      case 7: // Emerald
-        playClickSound(1.2);
-        showToast('Hire Yash', 'Accepting IT, Web & Python Development Roles', 'assets/icons/emerald.svg');
+      case 7: // Emerald (Villager Trades - Buy Services with Emeralds!)
+        openTradeDialog();
+        showToast('Villager Trades Available', 'Buy Web, Python, WordPress & AI services with Emeralds!', 'assets/icons/emerald.svg');
         break;
 
-      case 8: // Book & Quill
-        playClickSound(0.9);
-        openJourneyModal('teleport');
+      case 8: // Book & Quill (Send Message / Dispatch)
+        openBookDialog();
+        showToast('Book & Quill', 'Sign & send a direct quest requisition to Yash.', 'assets/icons/book-quill.svg');
         break;
 
-      case 9: // Ender Pearl
+      case 9: // Ender Pearl (Quantum Teleport / Resume)
+        closeAllGameDialogs();
+        openLightbox('assets/certificates/resume_yash_vishwakarma.jpg', 'Official Resume - Yash Vishwakarma');
         playPopSound(9);
-        showToast('Quantum Ender Pearl', 'Teleporting to Waypoints & Connections...', 'assets/icons/ender-pearl.svg');
-        openJourneyModal('teleport');
+        showToast('Quantum Ender Pearl', 'Teleported to Official Resume!', 'assets/icons/ender-pearl.svg');
         break;
     }
   }
@@ -586,6 +758,374 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // =========================================================================
+  // 5B. MINECRAFT GAME SCREENS (Villager Trades, Enchantment, Chest, Book, Pause)
+  // =========================================================================
+  const villagerTradeDialog = document.getElementById('villager-trade-dialog');
+  const enchantmentDialog = document.getElementById('enchantment-dialog');
+  const chestDialog = document.getElementById('chest-dialog');
+  const bookDialog = document.getElementById('book-dialog');
+  const pauseMenuDialog = document.getElementById('pause-menu-dialog');
+
+  function closeAllGameDialogs() {
+    [journeyDialog, lightboxDialog, settingsDialog, villagerTradeDialog, enchantmentDialog, chestDialog, bookDialog, pauseMenuDialog].forEach((d) => {
+      if (d && d.open) {
+        d.close();
+      }
+    });
+  }
+
+  function openTradeDialog() {
+    initAudio();
+    closeAllGameDialogs();
+    if (villagerTradeDialog) {
+      villagerTradeDialog.showModal();
+      playVillagerHrrr();
+    }
+  }
+
+  function openEnchantDialog() {
+    initAudio();
+    closeAllGameDialogs();
+    if (enchantmentDialog) {
+      enchantmentDialog.showModal();
+      playEnchantSound();
+    }
+  }
+
+  function openChestDialog() {
+    initAudio();
+    closeAllGameDialogs();
+    if (chestDialog) {
+      chestDialog.showModal();
+      playChestSound();
+    }
+  }
+
+  function openBookDialog() {
+    initAudio();
+    closeAllGameDialogs();
+    if (bookDialog) {
+      bookDialog.showModal();
+      playPageFlipSound();
+    }
+  }
+
+  function openPauseMenu() {
+    initAudio();
+    closeAllGameDialogs();
+    if (pauseMenuDialog) {
+      pauseMenuDialog.showModal();
+      playClickSound(1.0);
+    }
+  }
+
+  // Generic backdrop click handler for native dialogs
+  function setupBackdropClose(dialogEl, onClose) {
+    if (!dialogEl) return;
+    dialogEl.addEventListener('click', (e) => {
+      const rect = dialogEl.getBoundingClientRect();
+      const inDialog =
+        rect.top <= e.clientY &&
+        e.clientY <= rect.top + rect.height &&
+        rect.left <= e.clientX &&
+        e.clientX <= rect.left + rect.width;
+      if (!inDialog) {
+        dialogEl.close();
+        if (onClose) onClose();
+      }
+    });
+  }
+
+  // --- 1. VILLAGER TRADE SYSTEM ---
+  let playerEmeralds = 64;
+  let currentSelectedTrade = {
+    id: 'webapp',
+    cost: 16,
+    name: 'Custom Web Application',
+    desc: 'Complete custom responsive frontend website with HTML5, modern CSS3, animations, and dynamic JavaScript.',
+    rarity: 'RARE REQUISITION'
+  };
+
+  const emeraldCountEl = document.getElementById('player-emerald-count');
+  const btnMineEmerald = document.getElementById('btn-mine-emerald');
+  const tradeCostBadge = document.getElementById('trade-cost-badge');
+  const btnTradeCostLabel = document.getElementById('btn-trade-cost-label');
+  const tradeServiceTitle = document.getElementById('trade-service-title');
+  const tradeServiceDesc = document.getElementById('trade-service-desc');
+  const tradeServiceRarity = document.getElementById('trade-service-rarity');
+  const btnExecuteTrade = document.getElementById('btn-execute-trade');
+  const tradeOfferItems = document.querySelectorAll('.trade-offer-item');
+  const btnTradeClose = document.getElementById('btn-trade-close');
+
+  function updateEmeraldDisplay() {
+    if (emeraldCountEl) emeraldCountEl.textContent = playerEmeralds;
+    if (btnTradeCostLabel) btnTradeCostLabel.textContent = currentSelectedTrade.cost;
+    if (tradeCostBadge) tradeCostBadge.textContent = currentSelectedTrade.cost;
+  }
+
+  tradeOfferItems.forEach((item) => {
+    item.addEventListener('click', () => {
+      tradeOfferItems.forEach((it) => it.classList.remove('active'));
+      item.classList.add('active');
+
+      const costNum = parseInt(item.dataset.cost, 10);
+      currentSelectedTrade = {
+        id: item.dataset.tradeId,
+        cost: costNum,
+        name: item.dataset.name,
+        desc: item.dataset.desc,
+        rarity: costNum >= 24 ? 'EPIC REQUISITION' : (costNum >= 12 ? 'RARE REQUISITION' : 'COMMON REQUISITION')
+      };
+
+      if (tradeServiceTitle) tradeServiceTitle.textContent = currentSelectedTrade.name;
+      if (tradeServiceDesc) tradeServiceDesc.textContent = currentSelectedTrade.desc;
+      if (tradeServiceRarity) tradeServiceRarity.textContent = currentSelectedTrade.rarity;
+      updateEmeraldDisplay();
+      playVillagerHrrr();
+    });
+  });
+
+  if (btnMineEmerald) {
+    btnMineEmerald.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playerEmeralds += 5;
+      updateEmeraldDisplay();
+      playEmeraldClinkSound();
+      showToast('+5 Emeralds Mined! ⛏️', `Emerald Pouch: ${playerEmeralds} Emeralds`, 'assets/icons/emerald.svg');
+    });
+  }
+
+  if (btnExecuteTrade) {
+    btnExecuteTrade.addEventListener('click', () => {
+      initAudio();
+      if (playerEmeralds < currentSelectedTrade.cost) {
+        playDamageSound();
+        showToast('Not Enough Emeralds!', `Needs ${currentSelectedTrade.cost} Emeralds. Click +5 ⛏️ to mine more!`, 'assets/icons/emerald.svg');
+        return;
+      }
+
+      playerEmeralds -= currentSelectedTrade.cost;
+      updateEmeraldDisplay();
+      playVillagerTradeYes();
+
+      // Grant XP for trading
+      currentXpPercent += 20;
+      if (currentXpPercent >= 100) {
+        currentXpPercent = 15;
+        currentLevel += 1;
+        if (levelDisplay) levelDisplay.textContent = currentLevel;
+        playLevelUpSound();
+      }
+      if (xpProgress) xpProgress.style.width = `${currentXpPercent}%`;
+
+      showToast('Trade Completed! 💚', `You commissioned: ${currentSelectedTrade.name}!`, 'assets/icons/emerald.svg');
+
+      // Dispatch Requisition Mail
+      const subject = encodeURIComponent(`[Quest Commission] ${currentSelectedTrade.name}`);
+      const body = encodeURIComponent(
+        `Greetings Yash,\n\nI just traded ${currentSelectedTrade.cost} Emeralds on your Minecraft portfolio to commission the following quest:\n\nService: ${currentSelectedTrade.name}\nScope: ${currentSelectedTrade.desc}\n\nClient Base: Ready to collaborate!\n\nBest regards.`
+      );
+      setTimeout(() => {
+        window.location.href = `mailto:yashvishwakarma48@gmail.com?subject=${subject}&body=${body}`;
+      }, 1200);
+    });
+  }
+
+  if (btnTradeClose) {
+    btnTradeClose.addEventListener('click', () => {
+      playClickSound(0.8);
+      villagerTradeDialog.close();
+    });
+  }
+  setupBackdropClose(villagerTradeDialog, () => playClickSound(0.8));
+
+  // --- 2. ENCHANTMENT TABLE SYSTEM ---
+  const enchantTierRows = document.querySelectorAll('.enchant-tier-row');
+  const enchCardTitle = document.getElementById('ench-card-title');
+  const enchCardDesc = document.getElementById('ench-card-desc');
+  const btnEnchantClose = document.getElementById('btn-enchant-close');
+  const enchantPlayerXp = document.getElementById('enchant-player-xp');
+
+  enchantTierRows.forEach((row) => {
+    row.addEventListener('click', () => {
+      enchantTierRows.forEach((r) => r.classList.remove('active'));
+      row.classList.add('active');
+
+      const skill = row.dataset.skill || 'Coding Mastery';
+      const lore = row.dataset.lore || '';
+
+      if (enchCardTitle) enchCardTitle.textContent = skill;
+      if (enchCardDesc) enchCardDesc.textContent = lore;
+      if (enchantPlayerXp) enchantPlayerXp.textContent = currentLevel;
+
+      playEnchantSound();
+      showToast('Power Enchanted! ✨', skill, 'assets/icons/enchanted-book.svg');
+    });
+  });
+
+  if (btnEnchantClose) {
+    btnEnchantClose.addEventListener('click', () => {
+      playClickSound(0.8);
+      enchantmentDialog.close();
+    });
+  }
+  setupBackdropClose(enchantmentDialog, () => playClickSound(0.8));
+
+  // --- 3. ENDER CHEST PROJECT INVENTORY ---
+  const chestSlots = document.querySelectorAll('.chest-slot.filled');
+  const drawerItemTitle = document.getElementById('drawer-item-title');
+  const drawerItemBadge = document.getElementById('drawer-item-badge');
+  const drawerItemDesc = document.getElementById('drawer-item-desc');
+  const drawerTechTag = document.getElementById('drawer-tech-tag');
+  const btnChestAction = document.getElementById('btn-chest-action');
+  const btnChestClose = document.getElementById('btn-chest-close');
+  let currentChestLink = 'https://yashdeveloper9.github.io/portfolio/';
+
+  chestSlots.forEach((slot) => {
+    slot.addEventListener('click', () => {
+      chestSlots.forEach((s) => s.classList.remove('active'));
+      slot.classList.add('active');
+
+      const name = slot.dataset.name || 'Artifact';
+      const rarity = (slot.dataset.rarity || 'common').toUpperCase();
+      const tech = slot.dataset.tech || '';
+      const desc = slot.dataset.desc || '';
+      currentChestLink = slot.dataset.link || '#';
+
+      if (drawerItemTitle) drawerItemTitle.textContent = name;
+      if (drawerItemBadge) drawerItemBadge.textContent = `${rarity} ARTIFACT`;
+      if (drawerItemDesc) drawerItemDesc.textContent = desc;
+      if (drawerTechTag) drawerTechTag.textContent = `Tech: ${tech}`;
+
+      playChestSound();
+    });
+  });
+
+  if (btnChestAction) {
+    btnChestAction.addEventListener('click', () => {
+      if (currentChestLink.includes('.jpg') || currentChestLink.includes('.png')) {
+        openLightbox(currentChestLink, drawerItemTitle ? drawerItemTitle.textContent : 'Artifact');
+      } else if (currentChestLink !== '#') {
+        window.open(currentChestLink, '_blank');
+      } else {
+        showToast('Artifact Inspected', drawerItemTitle ? drawerItemTitle.textContent : 'Chest Item', 'assets/icons/chest.svg');
+      }
+    });
+  }
+
+  if (btnChestClose) {
+    btnChestClose.addEventListener('click', () => {
+      playClickSound(0.8);
+      chestDialog.close();
+    });
+  }
+  setupBackdropClose(chestDialog, () => playClickSound(0.8));
+
+  // --- 4. BOOK & QUILL CONTACT PARCHMENT ---
+  const btnBookClose = document.getElementById('btn-book-close');
+  const btnBookSign = document.getElementById('btn-book-sign');
+  const btnBookReset = document.getElementById('btn-book-reset');
+  const bookSenderName = document.getElementById('book-sender-name');
+  const bookSenderEmail = document.getElementById('book-sender-email');
+  const bookServiceType = document.getElementById('book-service-type');
+  const bookMessage = document.getElementById('book-message');
+
+  if (btnBookClose) {
+    btnBookClose.addEventListener('click', () => {
+      playPageFlipSound();
+      bookDialog.close();
+    });
+  }
+  setupBackdropClose(bookDialog, () => playPageFlipSound());
+
+  if (btnBookReset) {
+    btnBookReset.addEventListener('click', () => {
+      if (bookSenderName) bookSenderName.value = '';
+      if (bookSenderEmail) bookSenderEmail.value = '';
+      if (bookMessage) bookMessage.value = '';
+      playPageFlipSound();
+    });
+  }
+
+  if (btnBookSign) {
+    btnBookSign.addEventListener('click', () => {
+      const name = bookSenderName ? bookSenderName.value.trim() : '';
+      const email = bookSenderEmail ? bookSenderEmail.value.trim() : '';
+      const type = bookServiceType ? bookServiceType.value : 'Inquiry';
+      const msg = bookMessage ? bookMessage.value.trim() : '';
+
+      if (!name || !email) {
+        playDamageSound();
+        showToast('Sign Required', 'Please enter your Name and Contact details on Page 1!', 'assets/icons/book-quill.svg');
+        if (bookSenderName) bookSenderName.focus();
+        return;
+      }
+
+      playLevelUpSound();
+      showToast('Dispatch Signed! 📜', `Sending message from ${name} to Yash...`, 'assets/icons/book-quill.svg');
+
+      const subject = encodeURIComponent(`[Quest Dispatch: ${type}] from ${name}`);
+      const body = encodeURIComponent(
+        `Dear Yash,\n\nSender: ${name}\nContact: ${email}\nRequisition Type: ${type}\n\nMessage:\n${msg || 'I am interested in collaborating on a web/Python project.'}\n\n-- Dispatched via Minecraft Portfolio Book & Quill`
+      );
+
+      setTimeout(() => {
+        window.location.href = `mailto:yashvishwakarma48@gmail.com?subject=${subject}&body=${body}`;
+      }, 1000);
+    });
+  }
+
+  // --- 5. MINECRAFT PAUSE MENU ---
+  const btnPauseResume = document.getElementById('btn-pause-resume');
+  const btnPauseTrades = document.getElementById('btn-pause-trades');
+  const btnPauseEnchant = document.getElementById('btn-pause-enchant');
+  const btnPauseChest = document.getElementById('btn-pause-chest');
+  const btnPauseAdvancements = document.getElementById('btn-pause-advancements');
+  const btnPauseContact = document.getElementById('btn-pause-contact');
+  const btnPauseOptions = document.getElementById('btn-pause-options');
+  const btnHeaderTrades = document.getElementById('btn-trades');
+  const btnHeaderPause = document.getElementById('btn-pause-menu');
+
+  if (btnPauseResume) {
+    btnPauseResume.addEventListener('click', () => {
+      playClickSound(1.0);
+      pauseMenuDialog.close();
+    });
+  }
+  if (btnPauseTrades) {
+    btnPauseTrades.addEventListener('click', openTradeDialog);
+  }
+  if (btnPauseEnchant) {
+    btnPauseEnchant.addEventListener('click', openEnchantDialog);
+  }
+  if (btnPauseChest) {
+    btnPauseChest.addEventListener('click', openChestDialog);
+  }
+  if (btnPauseAdvancements) {
+    btnPauseAdvancements.addEventListener('click', () => {
+      closeAllGameDialogs();
+      openJourneyModal('certificates');
+    });
+  }
+  if (btnPauseContact) {
+    btnPauseContact.addEventListener('click', openBookDialog);
+  }
+  if (btnPauseOptions) {
+    btnPauseOptions.addEventListener('click', () => {
+      closeAllGameDialogs();
+      if (settingsDialog) settingsDialog.showModal();
+    });
+  }
+
+  if (btnHeaderTrades) {
+    btnHeaderTrades.addEventListener('click', openTradeDialog);
+  }
+  if (btnHeaderPause) {
+    btnHeaderPause.addEventListener('click', openPauseMenu);
+  }
+  setupBackdropClose(pauseMenuDialog, () => playClickSound(0.8));
 
   // =========================================================================
   // 6. VITALS & XP BAR INTERACTION

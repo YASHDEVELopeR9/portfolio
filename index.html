@@ -45,6 +45,11 @@
     </div>
 
     <div class="header-right">
+      <button class="header-action-btn" id="btn-trades" title="Open Villager Trade Screen (Buy Services with Emeralds)" aria-label="Villager Trades">
+        <span class="btn-icon">🟢</span>
+        <span class="btn-text">TRADES</span>
+      </button>
+
       <button class="header-action-btn" id="btn-sound" title="Toggle Game Audio (SFX)" aria-label="Toggle Sound">
         <span class="btn-icon" id="sound-icon">🔊</span>
         <span class="btn-text">SFX: ON</span>
@@ -58,6 +63,11 @@
       <button class="header-action-btn" id="btn-time" title="Toggle Day / Night Ambience" aria-label="Toggle Day / Night">
         <span class="btn-icon" id="time-icon">🌙</span>
         <span class="btn-text">NIGHT</span>
+      </button>
+
+      <button class="header-action-btn" id="btn-pause-menu" title="Game Menu (or press ESC)" aria-label="Pause Menu">
+        <span class="btn-icon">⏸️</span>
+        <span class="btn-text">MENU</span>
       </button>
 
       <button class="header-action-btn" id="btn-settings" title="Game Settings & Info" aria-label="Settings">
@@ -228,57 +238,57 @@
         <!-- Active Slot Selection Indicator Box -->
         <div class="hotbar-selection-box" id="hotbar-selector"></div>
 
-        <!-- Slot 1: Grass Block -->
-        <div class="hotbar-slot" data-slot="1" data-name="Cherry Grass Block" data-rarity="common" data-lore="Planted in fertile Cherry Grove soil. Radiates vibrant biome nature." data-key="1">
+        <!-- Slot 1: Grass Block (Overworld 3D View) -->
+        <div class="hotbar-slot" data-slot="1" data-action="world" data-name="Overworld Biome" data-rarity="common" data-lore="Focus on the 3D Cherry Grove avatar viewport. Close active GUI menus." data-key="1">
           <span class="slot-num">1</span>
           <img src="assets/icons/grass-block.svg" alt="Grass Block" class="slot-icon">
         </div>
 
-        <!-- Slot 2: Player Head (Active Default) -->
-        <div class="hotbar-slot active" data-slot="2" data-name="Yash's Head" data-rarity="rare" data-lore="Yash Vishwakarma - Web & Python Builder. Dewas, MP. Ready for quests." data-key="2">
+        <!-- Slot 2: Player Head (Player Profile Sheet) -->
+        <div class="hotbar-slot active" data-slot="2" data-action="profile" data-name="Player Character Sheet" data-rarity="rare" data-lore="View Yash Vishwakarma's player profile, badges, stats, and spawn location." data-key="2">
           <span class="slot-num">2</span>
           <img src="assets/icons/player-head.svg" alt="Player Head" class="slot-icon">
         </div>
 
-        <!-- Slot 3: Enchanted Book -->
-        <div class="hotbar-slot enchanted" data-slot="3" data-name="Tome of Web Crafting IV" data-rarity="epic" data-lore="Enchanted with HTML5, CSS3, JavaScript, Python, WordPress, and Google AI Agents." data-key="3">
+        <!-- Slot 3: Enchanted Book (Enchantment Table) -->
+        <div class="hotbar-slot enchanted" data-slot="3" data-action="enchant" data-name="Enchantment Table (Skills)" data-rarity="epic" data-lore="Open the Enchantment Table! Inspect coding powers: HTML5/CSS3, JavaScript/Three.js, Python, and AI Agents." data-key="3">
           <span class="slot-num">3</span>
           <img src="assets/icons/enchanted-book.svg" alt="Enchanted Book" class="slot-icon">
           <div class="enchanted-glint"></div>
         </div>
 
-        <!-- Slot 4: Chest -->
-        <div class="hotbar-slot" data-slot="4" data-name="Ender Storage Chest" data-rarity="rare" data-lore="Holds responsive portfolio projects, WordPress theme setups, and code practice." data-key="4">
+        <!-- Slot 4: Chest (Ender Chest Project Storage) -->
+        <div class="hotbar-slot" data-slot="4" data-action="chest" data-name="Ender Chest (Projects)" data-rarity="rare" data-lore="Open the 27-slot Ender Chest to inspect Yash's web apps, WordPress setups, and code repositories." data-key="4">
           <span class="slot-num">4</span>
           <img src="assets/icons/chest.svg" alt="Chest" class="slot-icon">
         </div>
 
-        <!-- Slot 5: Clock -->
-        <div class="hotbar-slot" data-slot="5" data-name="Chrono Compass" data-rarity="common" data-lore="Synchronized with Dewas, MP (Indian Standard Time) & world cycles." data-key="5">
+        <!-- Slot 5: Clock (Chrono Compass & World Info) -->
+        <div class="hotbar-slot" data-slot="5" data-action="time" data-name="Chrono Compass" data-rarity="common" data-lore="Synchronized with Dewas, MP (IST). Click to shift between Day & Night ambience." data-key="5">
           <span class="slot-num">5</span>
           <img src="assets/icons/clock.svg" alt="Clock" class="slot-icon">
         </div>
 
-        <!-- Slot 6: Nether Star -->
-        <div class="hotbar-slot" data-slot="6" data-name="Nether Star of Credentials" data-rarity="epic" data-lore="Click to open the Official Certificates & Resume Gallery!" data-key="6">
+        <!-- Slot 6: Nether Star (Advancements & Certifications) -->
+        <div class="hotbar-slot" data-slot="6" data-action="journey" data-name="Nether Star (Advancements)" data-rarity="epic" data-lore="Open the Official Certificates Gallery: Google AI Agents, Kaggle Python, Wardhan WordPress." data-key="6">
           <span class="slot-num">6</span>
           <img src="assets/icons/nether-star.svg" alt="Nether Star" class="slot-icon star-glow">
         </div>
 
-        <!-- Slot 7: Emerald -->
-        <div class="hotbar-slot" data-slot="7" data-name="Emerald of Commerce" data-rarity="rare" data-lore="Accepted currency for hiring Yash in IT, web design, and development roles." data-key="7">
+        <!-- Slot 7: Emerald (Villager Trades - Buy Services with Emeralds!) -->
+        <div class="hotbar-slot" data-slot="7" data-action="trade" data-name="Villager Trades (Services Market)" data-rarity="legendary" data-lore="Open the Villager Trade Screen! Spend emeralds to hire Yash for Web, Python, WordPress, or AI projects!" data-key="7">
           <span class="slot-num">7</span>
-          <img src="assets/icons/emerald.svg" alt="Emerald" class="slot-icon">
+          <img src="assets/icons/emerald.svg" alt="Emerald" class="slot-icon star-glow">
         </div>
 
-        <!-- Slot 8: Book & Quill -->
-        <div class="hotbar-slot" data-slot="8" data-name="Author's Chronicle" data-lore="Send a signal to yashvishwakarma48@gmail.com or call 8103650250." data-rarity="common" data-key="8">
+        <!-- Slot 8: Book & Quill (Contact / Message Parchment) -->
+        <div class="hotbar-slot" data-slot="8" data-action="book" data-name="Book & Quill (Send Message)" data-lore="Open the dispatch parchment to sign and send a direct quest requisition to Yash." data-rarity="common" data-key="8">
           <span class="slot-num">8</span>
           <img src="assets/icons/book-quill.svg" alt="Book & Quill" class="slot-icon">
         </div>
 
-        <!-- Slot 9: Ender Pearl -->
-        <div class="hotbar-slot" data-slot="9" data-name="Quantum Ender Pearl" data-rarity="rare" data-lore="Teleport instantly to Yash's credentials, resume, and contact channels." data-key="9">
+        <!-- Slot 9: Ender Pearl (Quantum Teleport / Resume) -->
+        <div class="hotbar-slot" data-slot="9" data-action="resume" data-name="Quantum Ender Pearl" data-rarity="rare" data-lore="Teleport directly to Yash's verified resume and full document inspection." data-key="9">
           <span class="slot-num">9</span>
           <img src="assets/icons/ender-pearl.svg" alt="Ender Pearl" class="slot-icon">
         </div>
@@ -603,6 +613,521 @@
       <div class="dialog-footer">
         <button class="mc-btn" id="btn-settings-save">
           <span class="mc-btn-inner">Save & Return</span>
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- =========================================================================
+       VILLAGER TRADE SCREEN (Buy Services with Emeralds)
+       ========================================================================= -->
+  <dialog class="mc-dialog" id="villager-trade-dialog">
+    <div class="mc-dialog-window villager-trade-window">
+      <!-- Title Bar -->
+      <div class="dialog-title-bar">
+        <div class="title-text">
+          <span class="title-icon">🟢</span>
+          <span>VILLAGER TRADING — YASH (CODE CRAFTSMAN LEVEL 5)</span>
+        </div>
+        <div class="dialog-header-right">
+          <div class="emerald-balance-badge" title="Your Emerald Pouch (Click +5 to mine more!)">
+            <span class="emerald-icon">🟢</span>
+            <span class="emerald-count" id="player-emerald-count">64</span>
+            <button class="mc-btn btn-xs btn-mine-emerald" id="btn-mine-emerald" title="Click to mine +5 Emeralds!">⛏️ +5</button>
+          </div>
+          <button class="dialog-close-btn" id="btn-trade-close" aria-label="Close Trades">✕</button>
+        </div>
+      </div>
+
+      <!-- Trade Window Main Body -->
+      <div class="villager-trade-body">
+        <!-- Left Sidebar: Trade Offers List -->
+        <div class="trade-offers-list" id="trade-offers-list">
+          <div class="trade-list-header">OFFER CATALOG</div>
+
+          <!-- Trade 1: Responsive Web App -->
+          <div class="trade-offer-item active" data-trade-id="webapp" data-cost="16" data-name="Custom Web Application" data-desc="Complete custom responsive frontend website with HTML5, modern CSS3, animations, and dynamic JavaScript." data-icon="🌐">
+            <div class="offer-cost">
+              <span class="cost-num">16</span>
+              <img src="assets/icons/emerald.svg" alt="Emerald" class="cost-emerald-icon">
+            </div>
+            <span class="offer-arrow">➔</span>
+            <div class="offer-product">
+              <span class="product-icon">🌐</span>
+              <div class="product-info">
+                <span class="product-name">Custom Web App</span>
+                <span class="product-tier">HTML5 • CSS3 • JS</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trade 2: Python Automation -->
+          <div class="trade-offer-item" data-trade-id="python" data-cost="24" data-name="Python Automation & Logic" data-desc="Certified Kaggle Python scripting, task automation, custom bots, data processing, and backend algorithmic scripts." data-icon="🐍">
+            <div class="offer-cost">
+              <span class="cost-num">24</span>
+              <img src="assets/icons/emerald.svg" alt="Emerald" class="cost-emerald-icon">
+            </div>
+            <span class="offer-arrow">➔</span>
+            <div class="offer-product">
+              <span class="product-icon">🐍</span>
+              <div class="product-info">
+                <span class="product-name">Python Automation</span>
+                <span class="product-tier">Kaggle Certified</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trade 3: WordPress CMS -->
+          <div class="trade-offer-item" data-trade-id="wordpress" data-cost="12" data-name="WordPress CMS & Theme Setup" data-desc="Wardhan certified WordPress setup, custom responsive landing pages, SEO-optimized business websites, and plugin integration." data-icon="🧩">
+            <div class="offer-cost">
+              <span class="cost-num">12</span>
+              <img src="assets/icons/emerald.svg" alt="Emerald" class="cost-emerald-icon">
+            </div>
+            <span class="offer-arrow">➔</span>
+            <div class="offer-product">
+              <span class="product-icon">🧩</span>
+              <div class="product-info">
+                <span class="product-name">WordPress Website</span>
+                <span class="product-tier">Wardhan Certified</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trade 4: Google AI Agents -->
+          <div class="trade-offer-item" data-trade-id="ai_agents" data-cost="32" data-name="AI Agent Multi-Tool System" data-desc="Google 5-Day Intensive certified AI agent architectures, autonomous prompt pipelines, and intelligent API workflows." data-icon="🤖">
+            <div class="offer-cost">
+              <span class="cost-num">32</span>
+              <img src="assets/icons/emerald.svg" alt="Emerald" class="cost-emerald-icon">
+            </div>
+            <span class="offer-arrow">➔</span>
+            <div class="offer-product">
+              <span class="product-icon">🤖</span>
+              <div class="product-info">
+                <span class="product-name">AI Agent System</span>
+                <span class="product-tier">Google AI Certified</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trade 5: Quick Consult -->
+          <div class="trade-offer-item" data-trade-id="consult" data-cost="1" data-name="Quick Tech Chat & Strategy" data-desc="Direct 1-on-1 discussion regarding project scope, frontend design tips, or collaboration inquiries." data-icon="☕">
+            <div class="offer-cost">
+              <span class="cost-num">1</span>
+              <img src="assets/icons/emerald.svg" alt="Emerald" class="cost-emerald-icon">
+            </div>
+            <span class="offer-arrow">➔</span>
+            <div class="offer-product">
+              <span class="product-icon">☕</span>
+              <div class="product-info">
+                <span class="product-name">1-on-1 Consultation</span>
+                <span class="product-tier">Direct Collaboration</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: Active Trading Workbench -->
+        <div class="trade-workbench-zone">
+          <!-- NPC Villager Portrait & Dialogue -->
+          <div class="npc-trader-header">
+            <div class="npc-avatar-box">
+              <img src="assets/player_avatar.jpg" alt="Villager Yash" class="npc-avatar-img">
+            </div>
+            <div class="npc-dialogue-bubble">
+              <span class="npc-name">Yash • Master Web Craftsman</span>
+              <p class="npc-speech" id="npc-speech">"Hrrr! Put emeralds in the trade slot to commission this quest!"</p>
+            </div>
+          </div>
+
+          <!-- Active Slots Workbench -->
+          <div class="trade-slots-bench">
+            <!-- Input Slot: Emeralds -->
+            <div class="mc-trade-slot-wrapper">
+              <span class="slot-label">Required Cost</span>
+              <div class="mc-inset-slot trade-slot-active">
+                <img src="assets/icons/emerald.svg" alt="Emerald" class="slot-emerald-icon">
+                <span class="slot-count-badge" id="trade-cost-badge">16</span>
+              </div>
+            </div>
+
+            <!-- Plus Sign -->
+            <span class="bench-operator">+</span>
+
+            <!-- Input Slot 2: Project Scope / Requirements -->
+            <div class="mc-trade-slot-wrapper">
+              <span class="slot-label">Your Requisition</span>
+              <div class="mc-inset-slot trade-slot-req">
+                <img src="assets/icons/book-quill.svg" alt="Requirements Scroll" class="slot-req-icon">
+                <span class="slot-count-badge">1</span>
+              </div>
+            </div>
+
+            <!-- Big Minecraft Trade Arrow -->
+            <div class="trade-arrow-container">
+              <span class="big-trade-arrow">➔</span>
+            </div>
+
+            <!-- Output Slot: Result Service Scroll -->
+            <div class="mc-trade-slot-wrapper">
+              <span class="slot-label">Service Contract</span>
+              <div class="mc-inset-slot trade-slot-output">
+                <img src="assets/icons/enchanted-book.svg" alt="Service Contract" class="slot-result-icon">
+                <span class="slot-count-badge">1</span>
+                <div class="enchanted-glint"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected Trade Details Card -->
+          <div class="trade-details-card">
+            <div class="trade-title-row">
+              <h3 class="trade-service-title" id="trade-service-title">Custom Web Application</h3>
+              <span class="trade-rarity-pill" id="trade-service-rarity">RARE REQUISITION</span>
+            </div>
+            <p class="trade-service-desc" id="trade-service-desc">
+              Complete custom responsive frontend website with HTML5, modern CSS3, animations, and dynamic JavaScript.
+            </p>
+            <div class="trade-inclusions">
+              <span class="inc-tag">✓ Responsive Mobile/Desktop</span>
+              <span class="inc-tag">✓ Clean Semantic Code</span>
+              <span class="inc-tag">✓ Fast Turnaround</span>
+            </div>
+          </div>
+
+          <!-- Trade Actions Footer -->
+          <div class="trade-action-bar">
+            <button class="mc-btn mc-btn-green btn-execute-trade" id="btn-execute-trade">
+              <span class="mc-btn-inner">🟢 TRADE / HIRE YASH (<span id="btn-trade-cost-label">16</span> EMERALDS)</span>
+            </button>
+            <a href="mailto:yashvishwakarma48@gmail.com?subject=Quest%20Requisition%20for%20Yash" class="trade-email-fallback">
+              Prefer classic email? Send Requisition ↗
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- =========================================================================
+       ENCHANTMENT TABLE SCREEN (Skills & Masteries)
+       ========================================================================= -->
+  <dialog class="mc-dialog" id="enchantment-dialog">
+    <div class="mc-dialog-window enchant-window">
+      <div class="dialog-title-bar">
+        <div class="title-text">
+          <span class="title-icon">🔮</span>
+          <span>ENCHANTMENT TABLE — CODING POWERS & MASTERIES</span>
+        </div>
+        <div class="dialog-header-right">
+          <span class="enchant-xp-badge">XP Level: <strong id="enchant-player-xp">38</strong></span>
+          <button class="dialog-close-btn" id="btn-enchant-close" aria-label="Close Enchantment">✕</button>
+        </div>
+      </div>
+
+      <div class="enchant-body">
+        <!-- Left Side: Table & Floating Book & Slots -->
+        <div class="enchant-visual-column">
+          <div class="floating-spellbook-container">
+            <!-- Animated Galactic Runes floating upward -->
+            <div class="galactic-runes-stream">
+              <span class="rune r1">ᔑ</span>
+              <span class="rune r2">ʖ</span>
+              <span class="rune r3">ᓵ</span>
+              <span class="rune r4">↸</span>
+              <span class="rune r5">ᒷ</span>
+              <span class="rune r6">⎓</span>
+              <span class="rune r7">⊣</span>
+            </div>
+            <div class="spellbook-wrapper">
+              <img src="assets/icons/enchanted-book.svg" alt="Floating Spellbook" class="floating-spellbook">
+              <div class="book-magic-aura"></div>
+            </div>
+          </div>
+
+          <!-- Inset Gear & Lapis Slots -->
+          <div class="enchant-slots-dock">
+            <div class="enchant-dock-slot" title="Developer's Diamond Tool">
+              <span class="slot-sublabel">Primary Tool</span>
+              <div class="mc-inset-slot slot-tool">
+                <span class="slot-tool-icon">🗡️</span>
+              </div>
+            </div>
+            <div class="enchant-dock-slot" title="Lapis Lazuli (3 Required)">
+              <span class="slot-sublabel">Lapis Lazuli</span>
+              <div class="mc-inset-slot slot-lapis">
+                <span class="lapis-gem">🔷</span>
+                <span class="slot-count-badge">3</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: 3 Enchantment Rows with Runes & English translation -->
+        <div class="enchant-options-column">
+          <div class="enchant-instructions">
+            Hover over runes to translate. Click an enchantment to inspect mastery!
+          </div>
+
+          <!-- Tier 1: HTML5 & CSS3 -->
+          <div class="enchant-tier-row active" data-tier="1" data-xp="10" data-skill="HTML5 & Modern CSS V" data-lore="Semantic structure, responsive layouts, flexbox, CSS grid, keyframe motion, and pixel-perfect aesthetics.">
+            <div class="tier-xp-cost">10</div>
+            <div class="tier-runes-group">
+              <span class="tier-cryptic-runes">ᒷꖎᒷᒲᒷリℸ ᓭℸ∷⚍ᓵℸ⚍∷ᒷ</span>
+              <span class="tier-translated-name">HTML5 & Modern CSS V</span>
+            </div>
+            <span class="tier-level-num">I</span>
+          </div>
+
+          <!-- Tier 2: JavaScript & Three.js -->
+          <div class="enchant-tier-row" data-tier="2" data-xp="20" data-skill="JavaScript & 3D WebGL IV" data-lore="Interactive DOM controls, procedural Web Audio API synthesis, dynamic 3D rendering with Three.js, event loops.">
+            <div class="tier-xp-cost">20</div>
+            <div class="tier-runes-group">
+              <span class="tier-cryptic-runes">↸||リᔑᒲ╎ᓵ ᓭᓵ∷╎!¡ℸ</span>
+              <span class="tier-translated-name">JavaScript & Three.js Engine IV</span>
+            </div>
+            <span class="tier-level-num">II</span>
+          </div>
+
+          <!-- Tier 3: Python Coder & Google AI Agents -->
+          <div class="enchant-tier-row" data-tier="3" data-xp="30" data-skill="Python Mastery & Google AI Agents V" data-lore="Certified Kaggle Python Coder & Code Forker; Google 5-Day Intensive Certified for autonomous AI Agent workflows.">
+            <div class="tier-xp-cost">30</div>
+            <div class="tier-runes-group">
+              <span class="tier-cryptic-runes">ᔑ╎ ᔑ⊣ᒷリℸᓭ ᔑ⚍ℸ𝙹ᒲᔑℸ╎𝙹リ</span>
+              <span class="tier-translated-name">Python Coder & AI Agents V</span>
+            </div>
+            <span class="tier-level-num">III</span>
+          </div>
+
+          <!-- Active Enchantment Detail Card -->
+          <div class="enchant-preview-box" id="enchant-preview-box">
+            <div class="ench-card-header">
+              <span class="ench-card-icon" id="ench-card-icon">⚡</span>
+              <h4 class="ench-card-title" id="ench-card-title">HTML5 & Modern CSS V</h4>
+            </div>
+            <p class="ench-card-desc" id="ench-card-desc">
+              Semantic structure, responsive layouts, flexbox, CSS grid, keyframe motion, and pixel-perfect aesthetics.
+            </p>
+            <div class="ench-stat-tags">
+              <span class="stat-tag">Mastery: Level V</span>
+              <span class="stat-tag">Production Ready</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- =========================================================================
+       ENDER CHEST PROJECT INVENTORY (27-Slot Storage)
+       ========================================================================= -->
+  <dialog class="mc-dialog" id="chest-dialog">
+    <div class="mc-dialog-window chest-window">
+      <div class="dialog-title-bar">
+        <div class="title-text">
+          <span class="title-icon">📦</span>
+          <span>ENDER CHEST — 27-SLOT CREATIONS & REPOSITORIES</span>
+        </div>
+        <button class="dialog-close-btn" id="btn-chest-close" aria-label="Close Chest">✕</button>
+      </div>
+
+      <div class="chest-body">
+        <!-- 9x3 Grid of Minecraft Chest Slots -->
+        <div class="chest-grid" id="chest-grid">
+          <!-- Slot 1: Minecraft Portfolio -->
+          <div class="chest-slot filled active" data-name="Minecraft 3D Web Portfolio" data-rarity="legendary" data-type="Web Application" data-tech="HTML5, CSS3, JS, Three.js, Web Audio" data-desc="Interactive video game themed developer portfolio featuring 3D avatar viewport, hotbar navigation, and villager trading." data-link="https://yashdeveloper9.github.io/portfolio/">
+            <img src="assets/icons/grass-block.svg" alt="Minecraft Web App" class="chest-item-icon">
+            <span class="chest-item-count">1</span>
+          </div>
+
+          <!-- Slot 2: WordPress Showcase -->
+          <div class="chest-slot filled" data-name="WordPress Custom Client Website" data-rarity="rare" data-type="CMS Project" data-tech="WordPress, PHP, CSS3, Bootstrap" data-desc="Certified WordPress training project with Wardhan Training & Placement company. Responsive themes and structured pages." data-link="#">
+            <img src="assets/icons/enchanted-book.svg" alt="WordPress Project" class="chest-item-icon">
+            <span class="chest-item-count">1</span>
+          </div>
+
+          <!-- Slot 3: Python Automation Suite -->
+          <div class="chest-slot filled" data-name="Python Coder & Logic Suite" data-rarity="rare" data-type="Automation Scripting" data-tech="Python 3, Kaggle Notebooks, Algorithmic Logic" data-desc="Certified Kaggle Python Coder practice suite with data manipulation, algorithmic problem solving, and script workflows." data-link="#">
+            <img src="assets/icons/chest.svg" alt="Python Suite" class="chest-item-icon">
+            <span class="chest-item-count">1</span>
+          </div>
+
+          <!-- Slot 4: Google AI Agents Workflow -->
+          <div class="chest-slot filled" data-name="Google AI Agents Intensive System" data-rarity="epic" data-type="AI Architecture" data-tech="Google Gemini APIs, AI Agents, Python" data-desc="Comprehensive 5-day AI agents intensive course certification with Google & Kaggle, demonstrating multi-agent workflows." data-link="#">
+            <img src="assets/icons/nether-star.svg" alt="Google AI Agents" class="chest-item-icon star-glow">
+            <span class="chest-item-count">1</span>
+          </div>
+
+          <!-- Slot 5: 3D Character Mesh & Shaders -->
+          <div class="chest-slot filled" data-name="3D GLB Character Renderer" data-rarity="epic" data-type="Graphics Engine" data-tech="WebGL, Three.js, PBR Texturing" data-desc="High-performance client-side WebGL renderer displaying Yash's 3D avatar with horizontal cursor rotation and lighting." data-link="#">
+            <img src="assets/icons/player-head.svg" alt="3D Avatar" class="chest-item-icon">
+            <span class="chest-item-count">1</span>
+          </div>
+
+          <!-- Slot 6: High School Education -->
+          <div class="chest-slot filled" data-name="Higher Secondary MPBSE 2025" data-rarity="common" data-type="Educational Milestone" data-tech="MP Board of Secondary Education" data-desc="Completed 12th Higher Secondary with successful pass certificate in 2025." data-link="#">
+            <img src="assets/icons/clock.svg" alt="MPBSE Education" class="chest-item-icon">
+            <span class="chest-item-count">1</span>
+          </div>
+
+          <!-- Slot 7: Kaggle Code Forker Badge -->
+          <div class="chest-slot filled" data-name="Kaggle Code Forker Artifact" data-rarity="rare" data-type="Open Source Collaboration" data-tech="Kaggle, Git, Data Science Notebooks" data-desc="Official Kaggle recognition for active notebook exploration, code collaboration, and model inspection." data-link="#">
+            <img src="assets/icons/book-quill.svg" alt="Kaggle Code Forker" class="chest-item-icon">
+            <span class="chest-item-count">1</span>
+          </div>
+
+          <!-- Slot 8: Official Resume & Credentials -->
+          <div class="chest-slot filled" data-name="Official Resume of Yash Vishwakarma" data-rarity="legendary" data-type="Official Document" data-tech="Career Portfolio & Verified Qualifications" data-desc="Full resume with qualifications, contact details, skill matrices, and ready-to-hire candidate summary." data-link="assets/certificates/resume_yash_vishwakarma.jpg">
+            <img src="assets/icons/ender-pearl.svg" alt="Resume" class="chest-item-icon">
+            <span class="chest-item-count">1</span>
+          </div>
+
+          <!-- Slot 9: Dewas Spawn Base -->
+          <div class="chest-slot filled" data-name="Base Camp Coordinates" data-rarity="common" data-type="Headquarters" data-tech="Dewas, Madhya Pradesh, India" data-desc="Home base location: D2/64 Awas Nager, Dewas (M.P) 455001. Open to remote and on-site opportunities." data-link="#">
+            <img src="assets/icons/emerald.svg" alt="Spawn Point" class="chest-item-icon">
+            <span class="chest-item-count">64</span>
+          </div>
+
+          <!-- Slots 10-27: Empty Chest Inset Slots -->
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+          <div class="chest-slot empty"></div>
+        </div>
+
+        <!-- Selected Item Lore & Action Drawer -->
+        <div class="chest-inspect-drawer" id="chest-inspect-drawer">
+          <div class="drawer-header">
+            <h4 class="drawer-item-title" id="drawer-item-title">Minecraft 3D Web Portfolio</h4>
+            <span class="drawer-item-badge" id="drawer-item-badge">LEGENDARY ARTIFACT</span>
+          </div>
+          <p class="drawer-item-desc" id="drawer-item-desc">
+            Interactive video game themed developer portfolio featuring 3D avatar viewport, hotbar navigation, and villager trading.
+          </p>
+          <div class="drawer-meta-row">
+            <span class="drawer-tech-tag" id="drawer-tech-tag">Tech: HTML5, CSS3, JS, Three.js</span>
+            <button class="mc-btn btn-xs" id="btn-chest-action">
+              <span class="mc-btn-inner">Inspect / Open ↗</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- =========================================================================
+       BOOK & QUILL CONTACT PARCHMENT
+       ========================================================================= -->
+  <dialog class="mc-dialog" id="book-dialog">
+    <div class="mc-dialog-window book-window">
+      <div class="dialog-title-bar">
+        <div class="title-text">
+          <span class="title-icon">📖</span>
+          <span>BOOK & QUILL — WRITE TRANSMISSION TO YASH</span>
+        </div>
+        <button class="dialog-close-btn" id="btn-book-close" aria-label="Close Book">✕</button>
+      </div>
+
+      <div class="book-parchment-container">
+        <!-- Page 1 (Left) -->
+        <div class="parchment-page left-page">
+          <div class="page-corner-num">Page 1 of 2</div>
+          <h3 class="parchment-title">Quest Dispatch</h3>
+          <p class="parchment-intro">
+            Send an instant transmission to Yash Vishwakarma's personal terminal.
+          </p>
+
+          <form id="book-form" class="book-form" onsubmit="return false;">
+            <div class="book-field">
+              <label for="book-sender-name">Your Name / Guild:</label>
+              <input type="text" id="book-sender-name" class="book-input" placeholder="e.g. Alex / Tech Lead" required>
+            </div>
+
+            <div class="book-field">
+              <label for="book-sender-email">Your Contact Signal (Email/Phone):</label>
+              <input type="text" id="book-sender-email" class="book-input" placeholder="e.g. recruiter@company.com" required>
+            </div>
+
+            <div class="book-field">
+              <label for="book-service-type">Requisition Type:</label>
+              <select id="book-service-type" class="book-select">
+                <option value="Full-Time Web / IT Role">Full-Time Web Developer Role</option>
+                <option value="WordPress Site Project">WordPress Design & Build</option>
+                <option value="Python Automation Project">Python Automation / Tooling</option>
+                <option value="AI Agents Consultation">AI Agent Implementation</option>
+                <option value="General Question">General Inquiry / Coffee Chat</option>
+              </select>
+            </div>
+        </div>
+
+        <!-- Page 2 (Right) -->
+        <div class="parchment-page right-page">
+          <div class="page-corner-num">Page 2 of 2</div>
+          <div class="book-field">
+            <label for="book-message">Requisition Brief / Message:</label>
+            <textarea id="book-message" class="book-textarea" rows="7" placeholder="Write your message or project requirements here..."></textarea>
+          </div>
+
+          <div class="book-direct-details">
+            <span class="direct-detail">Direct Email: yashvishwakarma48@gmail.com</span>
+            <span class="direct-detail">Direct Phone: +91 8103650250</span>
+            <span class="direct-detail">Base: Dewas, Madhya Pradesh (455001)</span>
+          </div>
+
+          <div class="book-actions">
+            <button class="mc-btn mc-btn-green" id="btn-book-sign">
+              <span class="mc-btn-inner">🖋️ Sign & Send</span>
+            </button>
+            <button class="mc-btn" id="btn-book-reset">
+              <span class="mc-btn-inner">Reset</span>
+            </button>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- =========================================================================
+       MINECRAFT PAUSE MENU (ESC)
+       ========================================================================= -->
+  <dialog class="mc-dialog" id="pause-menu-dialog">
+    <div class="mc-dialog-window pause-menu-window">
+      <h2 class="pause-title">GAME PAUSED</h2>
+      <div class="pause-menu-buttons">
+        <button class="mc-btn pause-btn" id="btn-pause-resume">
+          <span class="mc-btn-inner">Back to Game</span>
+        </button>
+        <button class="mc-btn pause-btn" id="btn-pause-trades">
+          <span class="mc-btn-inner">🟢 Villager Trades (Services Market)</span>
+        </button>
+        <button class="mc-btn pause-btn" id="btn-pause-enchant">
+          <span class="mc-btn-inner">🔮 Enchantment Table (Skills)</span>
+        </button>
+        <button class="mc-btn pause-btn" id="btn-pause-chest">
+          <span class="mc-btn-inner">📦 Ender Chest (Projects & Inventory)</span>
+        </button>
+        <button class="mc-btn pause-btn" id="btn-pause-advancements">
+          <span class="mc-btn-inner">📜 Advancements & Certificates</span>
+        </button>
+        <button class="mc-btn pause-btn" id="btn-pause-contact">
+          <span class="mc-btn-inner">📖 Book & Quill (Contact Yash)</span>
+        </button>
+        <button class="mc-btn pause-btn" id="btn-pause-options">
+          <span class="mc-btn-inner">⚙️ Options & Video Settings</span>
         </button>
       </div>
     </div>
