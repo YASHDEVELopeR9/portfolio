@@ -962,6 +962,48 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- DIRECT EMAIL DISPATCHER VIA FORMSUBMIT AJAX & GMAIL WEB FALLBACK ---
+  const YASH_EMAIL = 'yashvishwakarma968@gmail.com';
+
+  async function dispatchDirectEmail(payload, subject, plainBody) {
+    try {
+      const res = await fetch(`https://formsubmit.co/ajax/${YASH_EMAIL}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          ...payload,
+          _subject: subject || 'New Quest Requisition - Minecraft Portfolio',
+          _template: 'table',
+          _captcha: 'false'
+        })
+      });
+
+      const data = await res.json().catch(() => ({ success: 'true' }));
+      const isActivationNeeded = data.message && typeof data.message === 'string' && data.message.toLowerCase().includes('activation');
+      const isSuccess = data.success === 'true' || data.success === true || (res.ok && !isActivationNeeded);
+
+      return {
+        success: isSuccess,
+        needsActivation: isActivationNeeded,
+        message: data.message || 'Delivered',
+        subject: subject,
+        body: plainBody
+      };
+    } catch (err) {
+      console.warn('FormSubmit network error, fallback available:', err);
+      return {
+        success: false,
+        needsActivation: false,
+        error: err,
+        subject: subject,
+        body: plainBody
+      };
+    }
+  }
+
   // --- 1. VILLAGER TRADE SYSTEM ---
   let playerEmeralds = 64;
   let currentSelectedTrade = {
@@ -1047,13 +1089,16 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Trade Completed! 💚', `You commissioned: ${currentSelectedTrade.name}!`, 'assets/icons/emerald.svg');
 
       // Dispatch Requisition / Hiring Mail to yashvishwakarma968@gmail.com
-      const subject = encodeURIComponent(`[Hire Quest Commission] ${currentSelectedTrade.name} - Yash Vishwakarma`);
-      const body = encodeURIComponent(
-        `Greetings Yash,\n\nI want to hire you for the following project from your Minecraft Portfolio:\n\nService: ${currentSelectedTrade.name}\nScope: ${currentSelectedTrade.desc}\nInvestment: ${currentSelectedTrade.cost} Emeralds\n\nClient Status: Ready to collaborate on timeline and start date!\n\nBest regards.`
-      );
-      setTimeout(() => {
-        window.location.href = `mailto:yashvishwakarma968@gmail.com?subject=${subject}&body=${body}`;
-      }, 1200);
+      const subject = `[Hire Quest Commission] ${currentSelectedTrade.name} - Yash Vishwakarma`;
+      const body =
+        `Greetings Yash,\n\nI want to hire you for the following project from your Minecraft Portfolio:\n\nService: ${currentSelectedTrade.name}\nScope: ${currentSelectedTrade.desc}\nInvestment: ${currentSelectedTrade.cost} Emeralds\n\nClient Status: Ready to collaborate on timeline and start date!\n\nBest regards.`;
+
+      dispatchDirectEmail({
+        commission_service: currentSelectedTrade.name,
+        scope_details: currentSelectedTrade.desc,
+        investment_emeralds: currentSelectedTrade.cost,
+        source: 'Villager Trading Post Requisition'
+      }, subject, body);
     });
   }
 
@@ -1174,7 +1219,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (btnBookSign) {
-    btnBookSign.addEventListener('click', () => {
+    btnBookSign.addEventListener('click', async () => {
       const name = bookSenderName ? bookSenderName.value.trim() : '';
       const email = bookSenderEmail ? bookSenderEmail.value.trim() : '';
       const type = bookServiceType ? bookServiceType.value : 'Inquiry';
@@ -1187,17 +1232,49 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      playLevelUpSound();
-      showToast('Dispatch Signed! 📜', `Sending message from ${name} to Yash...`, 'assets/icons/book-quill.svg');
+      btnBookSign.disabled = true;
+      const btnInner = btnBookSign.querySelector('.mc-btn-inner');
+      if (btnInner) btnInner.textContent = '⏳ Sending to Gmail...';
 
-      const subject = encodeURIComponent(`[Hire / Quest Dispatch: ${type}] from ${name}`);
-      const body = encodeURIComponent(
-        `Dear Yash,\n\nSender Name: ${name}\nContact Details: ${email}\nRequisition Type: ${type}\n\nProject Brief & Requirements:\n${msg || 'I am interested in hiring you for a web development / Python automation project.'}\n\n-- Dispatched via Minecraft Portfolio Book & Quill to yashvishwakarma968@gmail.com`
-      );
+      const subject = `[Hire / Quest Dispatch: ${type}] from ${name}`;
+      const plainBody =
+        `Dear Yash,\n\n` +
+        `Sender Name: ${name}\n` +
+        `Contact Details: ${email}\n` +
+        `Requisition Type: ${type}\n\n` +
+        `Project Brief & Requirements:\n${msg || 'I am interested in hiring you for a web development / Python automation project.'}\n\n` +
+        `-- Dispatched via Minecraft Portfolio Book & Quill to ${YASH_EMAIL}`;
+
+      const result = await dispatchDirectEmail({
+        sender_name: name,
+        sender_contact: email,
+        requisition_type: type,
+        message: msg || 'No additional message provided.'
+      }, subject, plainBody);
+
+      playLevelUpSound();
+      if (result.success) {
+        if (btnInner) btnInner.textContent = '✅ Sent to Yash!';
+        showToast('Dispatch Delivered! 📜', `Sent straight to ${YASH_EMAIL}!`, 'assets/icons/book-quill.svg');
+      } else if (result.needsActivation) {
+        if (btnInner) btnInner.textContent = '📧 Check Gmail';
+        showToast('Check Gmail to Activate 📧', 'Click "Activate Form" in your email to enable automatic forwarding.', 'assets/icons/book-quill.svg');
+      } else {
+        if (btnInner) btnInner.textContent = '🚀 Opening Gmail...';
+        const gmailWebUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${YASH_EMAIL}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainBody)}`;
+        const win = window.open(gmailWebUrl, '_blank');
+        if (!win) {
+          window.location.href = `mailto:${YASH_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainBody)}`;
+        }
+      }
 
       setTimeout(() => {
-        window.location.href = `mailto:yashvishwakarma968@gmail.com?subject=${subject}&body=${body}`;
-      }, 1000);
+        btnBookSign.disabled = false;
+        if (btnInner) btnInner.textContent = '🖋️ Sign & Send';
+        if (result.success) {
+          bookDialog.close();
+        }
+      }, 2500);
     });
   }
 
@@ -1245,13 +1322,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  const hireStatusFeedback = document.getElementById('hire-status-feedback');
+
   if (btnSubmitHire) {
-    btnSubmitHire.addEventListener('click', () => {
-      const name = document.getElementById('hire-name')?.value.trim();
-      const contact = document.getElementById('hire-contact')?.value.trim();
-      const role = document.getElementById('hire-role')?.value.trim();
-      const salary = document.getElementById('hire-salary')?.value.trim();
-      const msg = document.getElementById('hire-message')?.value.trim();
+    btnSubmitHire.addEventListener('click', async () => {
+      const nameInput = document.getElementById('hire-name');
+      const contactInput = document.getElementById('hire-contact');
+      const roleInput = document.getElementById('hire-role');
+      const salaryInput = document.getElementById('hire-salary');
+      const msgInput = document.getElementById('hire-message');
+
+      const name = nameInput?.value.trim();
+      const contact = contactInput?.value.trim();
+      const role = roleInput?.value.trim();
+      const salary = salaryInput?.value.trim();
+      const msg = msgInput?.value.trim();
 
       if (!name || !contact || !role || !salary) {
         playDamageSound();
@@ -1259,12 +1344,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      playLevelUpSound();
-      playXpChime();
-      showToast('Offer Dispatched! ⚔️', `Hire offer for ${role} sent to yashvishwakarma968@gmail.com!`, 'assets/icons/emerald.svg');
+      btnSubmitHire.disabled = true;
+      const btnInner = btnSubmitHire.querySelector('.mc-btn-inner');
+      if (btnInner) btnInner.textContent = '⏳ DISPATCHING TO GMAIL...';
+      if (hireStatusFeedback) {
+        hireStatusFeedback.style.display = 'block';
+        hireStatusFeedback.innerHTML = `⏳ Transmitting quest contract directly to <strong>${YASH_EMAIL}</strong>...`;
+      }
 
-      const subject = encodeURIComponent(`[JOB / QUEST OFFER: ${role}] from ${name} (Budget: ${salary})`);
-      const body = encodeURIComponent(
+      const subject = `⚔️ [QUEST HIRE OFFER: ${role}] from ${name} (Budget: ${salary})`;
+      const plainBody = 
         `=========================================\n` +
         `⚔️ QUEST HIRE OFFER FOR YASH VISHWAKARMA\n` +
         `=========================================\n\n` +
@@ -1275,23 +1364,75 @@ document.addEventListener('DOMContentLoaded', () => {
         `📝 Job Description / Requirements:\n${msg || 'We want to hire you for an upcoming role/project. Please reply with your availability.'}\n\n` +
         `-----------------------------------------\n` +
         `📍 Dispatched via Minecraft Portfolio Quest Contract\n` +
-        `Direct Inbox: yashvishwakarma968@gmail.com`
-      );
+        `Direct Inbox: ${YASH_EMAIL}`;
 
-      // Celebration petals burst
-      for (let i = 0; i < 24; i++) {
-        const p = new Petal();
-        p.x = window.innerWidth / 2 + (Math.random() - 0.5) * 400;
-        p.y = window.innerHeight / 2;
-        p.speedY = -Math.random() * 5 - 2;
-        p.speedX = (Math.random() - 0.5) * 8;
-        petals.push(p);
+      const payload = {
+        recruiter_name: name,
+        contact_number_or_email: contact,
+        role_of_job: role,
+        offered_salary_budget: salary,
+        message_requirements: msg || 'No additional message provided.'
+      };
+
+      const result = await dispatchDirectEmail(payload, subject, plainBody);
+
+      if (result.success) {
+        playLevelUpSound();
+        playXpChime();
+        for (let i = 0; i < 32; i++) {
+          const p = new Petal();
+          p.x = window.innerWidth / 2 + (Math.random() - 0.5) * 400;
+          p.y = window.innerHeight / 2;
+          p.speedY = -Math.random() * 5 - 2;
+          p.speedX = (Math.random() - 0.5) * 8;
+          petals.push(p);
+        }
+        if (btnInner) btnInner.textContent = '✅ DELIVERED TO YASH GMAIL!';
+        if (hireStatusFeedback) {
+          hireStatusFeedback.innerHTML = `✅ <strong>Offer Delivered!</strong> Quest contract successfully dispatched to <strong>${YASH_EMAIL}</strong>.`;
+        }
+        showToast('Offer Delivered! ⚔️', `Directly sent to ${YASH_EMAIL}!`, 'assets/icons/emerald.svg');
+
+        setTimeout(() => {
+          closeHireDialog();
+          btnSubmitHire.disabled = false;
+          if (btnInner) btnInner.textContent = '⚔️ SIGN & SEND HIRE OFFER';
+          if (hireStatusFeedback) hireStatusFeedback.style.display = 'none';
+          if (nameInput) nameInput.value = '';
+          if (contactInput) contactInput.value = '';
+          if (roleInput) roleInput.value = '';
+          if (salaryInput) salaryInput.value = '';
+          if (msgInput) msgInput.value = '';
+        }, 3000);
+      } else if (result.needsActivation) {
+        playLevelUpSound();
+        if (btnInner) btnInner.textContent = '📧 ACTIVATION SENT TO GMAIL';
+        const gmailWebUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${YASH_EMAIL}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainBody)}`;
+        if (hireStatusFeedback) {
+          hireStatusFeedback.innerHTML = 
+            `📧 <strong>Activation Email Sent:</strong> FormSubmit sent an activation link to <strong>${YASH_EMAIL}</strong>.<br>` +
+            `Please check your Gmail inbox (or Spam / Updates) and click <em>"Activate Form"</em> once.<br><br>` +
+            `<a href="${gmailWebUrl}" target="_blank" rel="noopener">⚡ Click Here to Also Open Pre-filled in Gmail Web</a>`;
+        }
+        showToast('Check Gmail! 📧', 'Click "Activate Form" in your email to enable automatic forwarding.', 'assets/icons/book-quill.svg');
+        btnSubmitHire.disabled = false;
+      } else {
+        if (btnInner) btnInner.textContent = '🚀 OPENING GMAIL...';
+        const gmailWebUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${YASH_EMAIL}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainBody)}`;
+        const mailtoUrl = `mailto:${YASH_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainBody)}`;
+        if (hireStatusFeedback) {
+          hireStatusFeedback.innerHTML = `⚡ Opening direct email client to send to <strong>${YASH_EMAIL}</strong>...`;
+        }
+        const win = window.open(gmailWebUrl, '_blank');
+        if (!win) {
+          window.location.href = mailtoUrl;
+        }
+        setTimeout(() => {
+          btnSubmitHire.disabled = false;
+          if (btnInner) btnInner.textContent = '⚔️ SIGN & SEND HIRE OFFER';
+          closeHireDialog();
+        }, 2500);
       }
-
-      setTimeout(() => {
-        window.location.href = `mailto:yashvishwakarma968@gmail.com?subject=${subject}&body=${body}`;
-        closeHireDialog();
-      }, 1000);
     });
   }
 

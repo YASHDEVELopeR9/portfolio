@@ -1197,6 +1197,7 @@
               <input 
                 type="text" 
                 id="hire-name" 
+                name="name"
                 class="hire-input" 
                 placeholder="e.g. Rahul Sharma / Tech Corp" 
                 required
@@ -1211,6 +1212,7 @@
               <input 
                 type="text" 
                 id="hire-contact" 
+                name="contact"
                 class="hire-input" 
                 placeholder="e.g. +91 9876543210 or hr@company.com" 
                 required
@@ -1225,6 +1227,7 @@
               <input 
                 type="text" 
                 id="hire-role" 
+                name="role"
                 class="hire-input" 
                 placeholder="e.g. Frontend Web Developer / Python Automation Engineer" 
                 required
@@ -1247,6 +1250,7 @@
               <input 
                 type="text" 
                 id="hire-salary" 
+                name="salary"
                 class="hire-input" 
                 placeholder="e.g. ₹5,00,000 - ₹8,00,000 / year or $3,000 / month or ₹45,000 fixed" 
                 required
@@ -1267,6 +1271,7 @@
               </label>
               <textarea 
                 id="hire-message" 
+                name="message"
                 class="hire-textarea" 
                 rows="3" 
                 placeholder="Describe project requirements, timeline, deliverables, or interview details..."
@@ -1276,14 +1281,15 @@
 
           <!-- Bottom Footer Details & Actions -->
           <div class="hire-footer">
-            <div class="hire-target-notice">
+            <div class="hire-target-notice" id="hire-target-notice">
               <span>✉️ Dispatches straight to: <strong>yashvishwakarma968@gmail.com</strong></span>
             </div>
+            <div class="hire-status-feedback" id="hire-status-feedback" style="display:none;"></div>
             <div class="hire-action-buttons">
-              <button class="mc-btn mc-btn-green btn-hire-submit" id="btn-submit-hire">
+              <button class="mc-btn mc-btn-green btn-hire-submit" id="btn-submit-hire" type="button">
                 <span class="mc-btn-inner">⚔️ SIGN & SEND HIRE OFFER</span>
               </button>
-              <button class="mc-btn btn-sm btn-hire-cancel" id="btn-cancel-hire">
+              <button class="mc-btn btn-sm btn-hire-cancel" id="btn-cancel-hire" type="button">
                 <span class="mc-btn-inner">Cancel</span>
               </button>
             </div>
