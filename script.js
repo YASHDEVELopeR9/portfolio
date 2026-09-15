@@ -1441,6 +1441,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btnProfileHire.addEventListener('click', openHireDialog);
   }
 
+  const btnMobileHire = document.getElementById('btn-mobile-hire');
+  if (btnMobileHire) {
+    btnMobileHire.addEventListener('click', openHireDialog);
+  }
+
   const btnTradeOpenHire = document.getElementById('btn-trade-open-hire');
   if (btnTradeOpenHire) {
     btnTradeOpenHire.addEventListener('click', () => {

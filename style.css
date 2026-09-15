@@ -823,6 +823,11 @@ body.mode-2d-only .character-3d-zone {
   letter-spacing: 0.5px;
 }
 
+/* Mobile Hire Container (Hidden on Desktop by default) */
+.mobile-hire-container {
+  display: none;
+}
+
 .speech-bubble {
   position: absolute;
   top: 15%;
@@ -2953,11 +2958,76 @@ body.mode-2d-only .character-3d-zone {
   }
 
   .model-interaction-hint {
-    bottom: 10px;
+    bottom: 66px;
     right: 50%;
     transform: translateX(50%);
     font-size: 8px;
     white-space: nowrap;
+  }
+
+  /* Mobile Hire for the Quest Button (Positioned at down side of 3D character) */
+  .mobile-hire-container {
+    display: block !important;
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(92vw, 360px);
+    z-index: 60;
+    pointer-events: auto;
+  }
+
+  .mobile-hire-btn {
+    width: 100%;
+    display: block;
+    padding: 2px;
+    background-color: #4b4f5a;
+    border: 3px solid;
+    border-top-color: #7b8292;
+    border-left-color: #7b8292;
+    border-right-color: #1a1b1f;
+    border-bottom-color: #1a1b1f;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.75);
+    cursor: pointer;
+    text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  .mobile-hire-btn .mc-btn-inner {
+    display: block;
+    background-color: #555966;
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.28) 0px,
+      rgba(0, 0, 0, 0.28) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    padding: 12px 18px;
+    color: #ffffff;
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-shadow: 2px 2px 0 #18191c;
+    text-align: center;
+    text-transform: uppercase;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .mobile-hire-btn:hover .mc-btn-inner,
+  .mobile-hire-btn:active .mc-btn-inner {
+    background-color: #636877;
+    color: #fffb91;
+  }
+
+  .mobile-hire-btn:active {
+    border-top-color: #1a1b1f;
+    border-left-color: #1a1b1f;
+    border-right-color: #7b8292;
+    border-bottom-color: #7b8292;
+    transform: translateY(2px);
   }
 
   .header-bar {
