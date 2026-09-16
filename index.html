@@ -10,17 +10,54 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=VT323&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="preload" as="image" href="assets/cherry_grove_bg.jpg">
+  <link rel="preload" as="fetch" href="assets/character_articulated.glb" crossorigin="anonymous">
   <!-- Three.js 3D WebGL Engine & Loaders -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body class="theme-day">
+  <!-- =========================================================================
+       YASH VISHWAKARMA GAMER THEME LOADING SCREEN
+       ========================================================================= -->
+  <div class="gamer-loading-screen" id="gamer-loading-screen">
+    <div class="gamer-loading-card">
+      <div class="gamer-logo-wrapper">
+        <div class="gamer-avatar-badge">
+          <img src="assets/player_avatar.jpg" alt="Yash Gamer Logo">
+          <span class="gamer-online-gem"></span>
+        </div>
+        <h1 class="gamer-loading-title">YASH VISHWAKARMA</h1>
+        <div class="gamer-loading-subtitle">
+          <span class="gamer-tag-mode">SURVIVAL HARDCORE</span>
+          <span class="gamer-tag-dot">•</span>
+          <span class="gamer-tag-level">LEVEL 38 DEVELOPER & GAMER</span>
+        </div>
+      </div>
+
+      <div class="gamer-progress-container">
+        <div class="gamer-progress-track">
+          <div class="gamer-progress-bar" id="gamer-progress-bar"></div>
+        </div>
+        <div class="gamer-progress-info">
+          <span class="gamer-progress-status" id="gamer-progress-status">BUILDING CHERRY GROVE REALM...</span>
+          <span class="gamer-progress-percent" id="gamer-progress-percent">0%</span>
+        </div>
+      </div>
+
+      <div class="gamer-loading-tip" id="gamer-loading-tip">
+        ⚔️ TIP: Drag to turn 3D avatar • Click character for Minecraft Emote Wheel!
+      </div>
+    </div>
+  </div>
+
   <!-- Screen scanline CRT effect (optional toggle) -->
   <div id="crt-overlay" class="crt-overlay"></div>
 
   <!-- Background Cherry Grove Scene (Clean Landscape without standing character) -->
   <div class="scene-background" id="scene-bg">
+    <img src="assets/cherry_grove_bg.jpg" alt="Minecraft Cherry Grove Biome" class="scene-bg-img" loading="eager" fetchpriority="high">
     <div class="scene-overlay"></div>
     <div class="scene-lighting"></div>
   </div>
@@ -236,11 +273,6 @@
         <div class="model-interaction-hint">
           <span>🖱️ Move Cursor or Drag to Turn (No Zoom)</span>
         </div>
-      </div>
-
-      <!-- Speech Bubble -->
-      <div class="speech-bubble" id="char-speech-bubble">
-        <span>"Hi, I'm Yash! Move your cursor or drag to turn me in 3D!"</span>
       </div>
     </section>
   </main>

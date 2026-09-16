@@ -1912,31 +1912,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // =========================================================================
-  // 8. CHARACTER EASTER EGG & GREETING
+  // =========================================================================
+  // 8. CHARACTER ZONE INTERACTION (Click opens Minecraft Emote Wheel)
   // =========================================================================
   const characterZone = document.getElementById('character-zone');
-  const speechBubble = document.getElementById('char-speech-bubble');
-  const greetings = [
-    '"Hi! I’m Yash Vishwakarma — Web Developer, WordPress Designer & Python Coder!"',
-    '"Check out my Kaggle & Google AI Agent certificates in the Journey Log!"',
-    '"I craft responsive websites using HTML, CSS, JavaScript, Python & WordPress."',
-    '"Tip: Press keys 1 through 9 to cycle my hotbar items!"',
-    '"Drag me with your mouse in 3D or switch my armor materials above!"'
-  ];
-  let greetingIdx = 0;
-  let bubbleTimeout = null;
-
-  if (characterZone && speechBubble) {
-    characterZone.addEventListener('click', () => {
-      playPopSound(5);
-      greetingIdx = (greetingIdx + 1) % greetings.length;
-      speechBubble.querySelector('span').textContent = greetings[greetingIdx];
-      speechBubble.classList.add('active');
-
-      clearTimeout(bubbleTimeout);
-      bubbleTimeout = setTimeout(() => {
-        speechBubble.classList.remove('active');
-      }, 4500);
+  if (characterZone) {
+    characterZone.addEventListener('click', (e) => {
+      // If clicking inside control bar or buttons, don't interfere
+      if (e.target.closest('.model-control-bar') || e.target.closest('button')) return;
+      openEmoteWheel();
     });
   }
 
@@ -1957,10 +1941,46 @@ document.addEventListener('DOMContentLoaded', () => {
   let modelMeshGroup = null;
   let modelPivot = null;
   let activeEmote = null;
+  const characterNodes = {
+    head: null,
+    leftArm: null,
+    rightArm: null,
+    torso: null,
+    leftLeg: null,
+    rightLeg: null
+  };
   let fitCameraToModel = () => {};
   let currentModelMaterial = 'colored'; // Default to the colorful PBR model!
   let is3DModeActive = true;
   const originalMeshMaterials = new Map();
+
+  // Gamer Theme Loading Screen System
+  const gamerLoadingScreen = document.getElementById('gamer-loading-screen');
+  const gamerProgressBar = document.getElementById('gamer-progress-bar');
+  const gamerProgressStatus = document.getElementById('gamer-progress-status');
+  const gamerProgressPercent = document.getElementById('gamer-progress-percent');
+  let currentLoadPercent = 12;
+
+  function updateGamerProgress(percent, statusText) {
+    currentLoadPercent = Math.max(currentLoadPercent, Math.min(100, Math.round(percent)));
+    if (gamerProgressBar) gamerProgressBar.style.width = `${currentLoadPercent}%`;
+    if (gamerProgressPercent) gamerProgressPercent.textContent = `${currentLoadPercent}%`;
+    if (gamerProgressStatus && statusText) gamerProgressStatus.textContent = statusText;
+  }
+
+  function finishGamerLoading() {
+    updateGamerProgress(100, 'CHERRY GROVE REALM READY!');
+    setTimeout(() => {
+      if (gamerLoadingScreen && !gamerLoadingScreen.classList.contains('hidden')) {
+        gamerLoadingScreen.classList.add('hidden');
+        playLevelUpSound();
+        showToast('Survival Guide V1.0.0', 'Welcome Yash! 3D Articulated Avatar & Emotes Ready.', 'assets/icons/player-head.svg');
+      }
+    }, 400);
+  }
+
+  // Safety timer to guarantee dismiss
+  setTimeout(finishGamerLoading, 6500);
 
   // Pointer & Cursor Movement State (Strictly Left & Right, Zero Zoom)
   let isDragging = false;
@@ -2137,6 +2157,14 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
 
+        // Cache articulated body parts
+        characterNodes.head = modelMeshGroup.getObjectByName('head');
+        characterNodes.leftArm = modelMeshGroup.getObjectByName('left_arm');
+        characterNodes.rightArm = modelMeshGroup.getObjectByName('right_arm');
+        characterNodes.torso = modelMeshGroup.getObjectByName('torso');
+        characterNodes.leftLeg = modelMeshGroup.getObjectByName('left_leg');
+        characterNodes.rightLeg = modelMeshGroup.getObjectByName('right_leg');
+
         // Center and normalize model mesh
         const bbox = new THREE.Box3().setFromObject(modelMeshGroup);
         const center = bbox.getCenter(new THREE.Vector3());
@@ -2164,10 +2192,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Render immediate initial frame
         threeRenderer.render(threeScene, threeCamera);
 
-        // Hide loading spinner
+        // Dismiss loading screen and spinner
         if (modelLoading) {
           modelLoading.classList.add('loaded');
         }
+        finishGamerLoading();
       }
 
       function loadModelFromFile(file) {
@@ -2197,8 +2226,9 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsArrayBuffer(file);
       }
 
-      // Candidate paths to check in order
+      // Candidate paths to check in order (prioritize articulated character model)
       const candidatePaths = [
+        'assets/character_articulated.glb',
         'assets/character.glb',
         'colored 3d.glb',
         'assets/colored 3d.glb',
@@ -2207,6 +2237,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       function tryLoadCandidate(idx) {
         if (idx >= candidatePaths.length) {
+          finishGamerLoading();
           if (modelLoading) {
             modelLoading.innerHTML = `
               <span>Load "colored 3d.glb"</span>
@@ -2233,10 +2264,13 @@ document.addEventListener('DOMContentLoaded', () => {
             setupModelScene(gltf);
           },
           (xhr) => {
-            if (xhr.lengthComputable && modelLoading) {
+            if (xhr.lengthComputable) {
               const percent = Math.round((xhr.loaded / xhr.total) * 100);
-              const span = modelLoading.querySelector('span');
-              if (span) span.textContent = `Loading Colored 3D Mesh (${percent}%)...`;
+              updateGamerProgress(percent, `LOADING CHERRY GROVE AVATAR (${percent}%)...`);
+              if (modelLoading) {
+                const span = modelLoading.querySelector('span');
+                if (span) span.textContent = `Loading Colored 3D Mesh (${percent}%)...`;
+              }
             }
           },
           (error) => {
@@ -2375,6 +2409,180 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastRenderTime = 0;
     const mobileFrameInterval = isMobile ? (1000 / 38) : 0;
 
+    function applyArticulatedEmote(key, p) {
+      const cn = characterNodes;
+      if (!cn.head && !cn.rightArm && !cn.torso) return;
+
+      switch (key) {
+        case 'wave': {
+          // Right arm raises high up and waves enthusiastically back and forth
+          const raise = Math.sin(p * Math.PI);
+          if (cn.rightArm) {
+            cn.rightArm.rotation.z = raise * 2.2; // raise arm up high toward sky
+            cn.rightArm.rotation.x = Math.sin(p * Math.PI * 10) * 0.55 * raise; // rapid hand wave
+            cn.rightArm.rotation.y = Math.sin(p * Math.PI * 10) * 0.25 * raise;
+          }
+          if (cn.head) {
+            cn.head.rotation.z = Math.sin(p * Math.PI * 6) * 0.18 * raise; // friendly head tilt
+            cn.head.rotation.x = Math.sin(p * Math.PI * 4) * 0.12 * raise; // friendly nod
+          }
+          if (cn.leftArm) {
+            cn.leftArm.rotation.x = Math.sin(p * Math.PI * 4) * 0.15 * raise; // resting arm counter-balance
+          }
+          break;
+        }
+
+        case 'cheer': {
+          // Victory Cheer: BOTH arms shoot straight up in the air in a triumphant V!
+          const jumpProgress = Math.sin(p * Math.PI);
+          if (cn.leftArm) {
+            cn.leftArm.rotation.z = -jumpProgress * 2.3; // left arm straight up!
+            cn.leftArm.rotation.x = Math.sin(p * Math.PI * 6) * 0.35 * jumpProgress;
+          }
+          if (cn.rightArm) {
+            cn.rightArm.rotation.z = jumpProgress * 2.3; // right arm straight up!
+            cn.rightArm.rotation.x = Math.sin(p * Math.PI * 6) * 0.35 * jumpProgress;
+          }
+          if (cn.head) {
+            cn.head.rotation.x = -0.35 * jumpProgress; // look up at the sky in celebration!
+          }
+          if (cn.leftLeg && cn.rightLeg) {
+            cn.leftLeg.rotation.x = Math.sin(p * Math.PI * 6) * 0.35 * jumpProgress;
+            cn.rightLeg.rotation.x = -Math.sin(p * Math.PI * 6) * 0.35 * jumpProgress;
+          }
+          break;
+        }
+
+        case 'bow': {
+          // Hero's Bow: Torso bends forward at waist (38 degrees), head looks down respectfully, arms tuck back
+          const bowProgress = Math.sin(p * Math.PI);
+          if (cn.torso) {
+            cn.torso.rotation.x = 0.65 * bowProgress; // deep forward bow
+          }
+          if (cn.head) {
+            cn.head.rotation.x = 0.35 * bowProgress; // head bowed down
+          }
+          if (cn.leftArm) {
+            cn.leftArm.rotation.x = 0.45 * bowProgress; // arms tuck politely backwards
+          }
+          if (cn.rightArm) {
+            cn.rightArm.rotation.x = 0.45 * bowProgress;
+          }
+          break;
+        }
+
+        case 'point': {
+          // Adventure Point: Right arm extends straight forward toward the quest horizon!
+          const pointProgress = Math.sin(p * Math.PI);
+          if (cn.rightArm) {
+            cn.rightArm.rotation.x = -1.55 * pointProgress; // arm horizontal pointing forward
+            cn.rightArm.rotation.y = 0.25 * pointProgress;  // aim slightly inward
+          }
+          if (cn.leftArm) {
+            cn.leftArm.rotation.x = 0.25 * pointProgress; // hand on hip
+            cn.leftArm.rotation.z = -0.35 * pointProgress;
+          }
+          if (cn.head) {
+            cn.head.rotation.y = 0.35 * pointProgress; // head looks in pointing direction
+            cn.head.rotation.x = -0.1 * pointProgress;
+          }
+          if (cn.leftLeg) {
+            cn.leftLeg.rotation.x = -0.3 * pointProgress; // hero stance step
+          }
+          break;
+        }
+
+        case 'clap': {
+          // Applause: Both arms come forward and clap together rhythmically in front of the chest!
+          const clapProgress = Math.sin(p * Math.PI);
+          const clapBeat = Math.sin(p * Math.PI * 14);
+          if (cn.leftArm) {
+            cn.leftArm.rotation.x = -0.85 * clapProgress; // arm forward
+            cn.leftArm.rotation.z = (-0.4 + clapBeat * 0.25) * clapProgress; // hand claps inwards
+            cn.leftArm.rotation.y = 0.35 * clapProgress;
+          }
+          if (cn.rightArm) {
+            cn.rightArm.rotation.x = -0.85 * clapProgress; // arm forward
+            cn.rightArm.rotation.z = (0.4 - clapBeat * 0.25) * clapProgress; // hand claps inwards
+            cn.rightArm.rotation.y = -0.35 * clapProgress;
+          }
+          if (cn.head) {
+            cn.head.rotation.x = Math.abs(Math.sin(p * Math.PI * 6)) * 0.12 * clapProgress; // enthusiastic nodding
+          }
+          break;
+        }
+
+        case 'disco': {
+          // Disco Groove: Alternating arm pumps, leg steps, and head bobbing to the beat!
+          const discoProgress = Math.sin(p * Math.PI);
+          const beat = Math.sin(p * Math.PI * 6);
+          if (cn.leftArm) {
+            cn.leftArm.rotation.z = (-Math.abs(beat) * 1.9) * discoProgress;
+            cn.leftArm.rotation.x = (beat * 0.5) * discoProgress;
+          }
+          if (cn.rightArm) {
+            cn.rightArm.rotation.z = (Math.abs(Math.cos(p * Math.PI * 6)) * 1.9) * discoProgress;
+            cn.rightArm.rotation.x = (-beat * 0.5) * discoProgress;
+          }
+          if (cn.head) {
+            cn.head.rotation.z = (Math.sin(p * Math.PI * 6) * 0.2) * discoProgress;
+            cn.head.rotation.y = (Math.sin(p * Math.PI * 3) * 0.3) * discoProgress;
+          }
+          if (cn.leftLeg && cn.rightLeg) {
+            cn.leftLeg.rotation.x = (beat * 0.35) * discoProgress;
+            cn.rightLeg.rotation.x = (-beat * 0.35) * discoProgress;
+          }
+          break;
+        }
+
+        case 'tornado': {
+          // Tornado Spin: Arms spread wide like wings, head tilts as body whirls in a 1080 cyclone
+          const spinProgress = Math.sin(p * Math.PI);
+          if (cn.leftArm) {
+            cn.leftArm.rotation.z = -1.45 * spinProgress; // arm spread horizontal
+          }
+          if (cn.rightArm) {
+            cn.rightArm.rotation.z = 1.45 * spinProgress; // arm spread horizontal
+          }
+          if (cn.head) {
+            cn.head.rotation.y = Math.sin(p * Math.PI * 10) * 0.25;
+          }
+          break;
+        }
+
+        case 'flip': {
+          // 360° Backflip: Arms swing back on crouch, tuck during flip, extend on landing
+          if (p < 0.2) {
+            const t = p / 0.2;
+            if (cn.leftArm && cn.rightArm) {
+              cn.leftArm.rotation.x = 0.7 * t; // swing back
+              cn.rightArm.rotation.x = 0.7 * t;
+            }
+            if (cn.leftLeg && cn.rightLeg) {
+              cn.leftLeg.rotation.x = 0.35 * t; // crouch bend
+              cn.rightLeg.rotation.x = 0.35 * t;
+            }
+          } else if (p < 0.85) {
+            if (cn.leftArm && cn.rightArm) {
+              cn.leftArm.rotation.x = -1.3; // tuck tight in air
+              cn.rightArm.rotation.x = -1.3;
+            }
+            if (cn.leftLeg && cn.rightLeg) {
+              cn.leftLeg.rotation.x = -0.5; // legs tucked
+              cn.rightLeg.rotation.x = -0.5;
+            }
+          } else {
+            const t = (p - 0.85) / 0.15;
+            if (cn.leftArm && cn.rightArm) {
+              cn.leftArm.rotation.z = -0.4 * (1 - t); // arms out for balance
+              cn.rightArm.rotation.z = 0.4 * (1 - t);
+            }
+          }
+          break;
+        }
+      }
+    }
+
     function updateActiveEmote(now) {
       if (!activeEmote) {
         return {
@@ -2387,20 +2595,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const elapsed = now - activeEmote.startTime;
       const p = Math.min(1.0, elapsed / activeEmote.duration);
 
+      // Apply articulated transformations to limbs
+      applyArticulatedEmote(activeEmote.key, p);
+
       let posX = 0, posY = 0, posZ = 0;
       let rotX = 0, rotY = 0, rotZ = 0;
       let scaleX = 1, scaleY = 1, scaleZ = 1;
 
       switch (activeEmote.key) {
         case 'flip': {
-          // 360° Somersault Backflip with crouch, jump arc, full flip, squash landing
-          if (p < 0.15) {
-            const t = p / 0.15;
+          if (p < 0.2) {
+            const t = p / 0.2;
             posY = -0.14 * Math.sin(t * Math.PI * 0.5);
             scaleY = 1.0 - 0.20 * Math.sin(t * Math.PI * 0.5);
             scaleX = scaleZ = 1.0 + 0.10 * Math.sin(t * Math.PI * 0.5);
           } else if (p < 0.85) {
-            const t = (p - 0.15) / 0.70;
+            const t = (p - 0.2) / 0.65;
             posY = Math.sin(t * Math.PI) * 0.90;
             rotX = -Math.PI * 2 * t;
             scaleY = 1.08;
@@ -2415,69 +2625,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         case 'wave': {
-          // Side-to-side torso tilt, friendly nod, happy mini-hops
-          rotZ = Math.sin(p * Math.PI * 6) * 0.18 * Math.sin(p * Math.PI);
-          rotX = Math.sin(p * Math.PI * 4) * 0.08 * Math.sin(p * Math.PI);
-          posY = Math.abs(Math.sin(p * Math.PI * 3)) * 0.12 * Math.sin(p * Math.PI);
-          scaleY = 1.0 + Math.sin(p * Math.PI * 6) * 0.05 * Math.sin(p * Math.PI);
+          rotZ = Math.sin(p * Math.PI * 6) * 0.08 * Math.sin(p * Math.PI);
+          posY = Math.abs(Math.sin(p * Math.PI * 3)) * 0.10 * Math.sin(p * Math.PI);
           break;
         }
 
         case 'cheer': {
-          // Rapid victory jumps, hands stretch up, celebratory wobble
           posY = Math.abs(Math.sin(p * Math.PI * 5)) * 0.44 * Math.sin(p * Math.PI);
-          rotZ = Math.sin(p * Math.PI * 8) * 0.14 * Math.sin(p * Math.PI);
-          scaleY = 1.0 + (Math.sin(p * Math.PI * 5) * 0.14) * Math.sin(p * Math.PI);
-          scaleX = scaleZ = 1.0 - (Math.sin(p * Math.PI * 5) * 0.07) * Math.sin(p * Math.PI);
+          rotZ = Math.sin(p * Math.PI * 8) * 0.08 * Math.sin(p * Math.PI);
+          scaleY = 1.0 + (Math.sin(p * Math.PI * 5) * 0.10) * Math.sin(p * Math.PI);
+          scaleX = scaleZ = 1.0 - (Math.sin(p * Math.PI * 5) * 0.05) * Math.sin(p * Math.PI);
           break;
         }
 
         case 'disco': {
-          // Funky dance: step side-to-side, bounce, head tilt, groove rotation
-          posX = Math.sin(p * Math.PI * 6) * 0.22 * Math.sin(p * Math.PI);
-          posY = Math.abs(Math.cos(p * Math.PI * 6)) * 0.14 * Math.sin(p * Math.PI);
-          rotZ = Math.sin(p * Math.PI * 6) * 0.22 * Math.sin(p * Math.PI);
-          rotY = Math.sin(p * Math.PI * 3) * 0.35 * Math.sin(p * Math.PI);
-          scaleY = 1.0 + Math.sin(p * Math.PI * 12) * 0.06 * Math.sin(p * Math.PI);
+          posX = Math.sin(p * Math.PI * 6) * 0.18 * Math.sin(p * Math.PI);
+          posY = Math.abs(Math.cos(p * Math.PI * 6)) * 0.12 * Math.sin(p * Math.PI);
+          rotZ = Math.sin(p * Math.PI * 6) * 0.12 * Math.sin(p * Math.PI);
+          rotY = Math.sin(p * Math.PI * 3) * 0.25 * Math.sin(p * Math.PI);
           break;
         }
 
         case 'bow': {
-          // Deep respectful waist bend (38 deg forward), hold, return
-          const bend = Math.sin(p * Math.PI);
-          rotX = 0.65 * bend;
-          posY = -0.18 * bend;
-          posZ = -0.08 * bend;
+          posY = -0.10 * Math.sin(p * Math.PI);
+          posZ = -0.05 * Math.sin(p * Math.PI);
           break;
         }
 
         case 'point': {
-          // Adventure pose: heroic step forward and aim into the distance
-          const bend = Math.sin(p * Math.PI);
-          rotX = 0.22 * bend;
-          rotY = 0.38 * bend;
-          posZ = 0.25 * bend;
-          posY = 0.06 * bend;
-          scaleY = 1.0 + 0.06 * bend;
+          posZ = 0.20 * Math.sin(p * Math.PI);
+          posY = 0.04 * Math.sin(p * Math.PI);
           break;
         }
 
         case 'tornado': {
-          // Whirlwind cyclone 1080° (3 full revolutions) rising into air
-          rotY = p * Math.PI * 6;
+          rotY = p * Math.PI * 6; // 3 full 360 degree whirlwind spins
           posY = Math.sin(p * Math.PI) * 0.35;
-          scaleY = 1.0 + Math.sin(p * Math.PI) * 0.14;
-          scaleX = scaleZ = 1.0 - Math.sin(p * Math.PI) * 0.07;
+          scaleY = 1.0 + Math.sin(p * Math.PI) * 0.12;
+          scaleX = scaleZ = 1.0 - Math.sin(p * Math.PI) * 0.06;
           break;
         }
 
         case 'clap': {
-          // Rhythmic clapping pulse squash-and-stretch
-          const pulse = Math.sin(p * Math.PI * 12);
-          scaleY = 1.0 + pulse * 0.08 * Math.sin(p * Math.PI);
-          scaleX = scaleZ = 1.0 - pulse * 0.05 * Math.sin(p * Math.PI);
-          rotX = Math.abs(Math.sin(p * Math.PI * 6)) * 0.12 * Math.sin(p * Math.PI);
-          posY = Math.abs(pulse) * 0.04 * Math.sin(p * Math.PI);
+          const pulse = Math.sin(p * Math.PI * 14);
+          scaleY = 1.0 + pulse * 0.04 * Math.sin(p * Math.PI);
+          scaleX = scaleZ = 1.0 - pulse * 0.02 * Math.sin(p * Math.PI);
+          posY = Math.abs(pulse) * 0.03 * Math.sin(p * Math.PI);
           break;
         }
       }
@@ -2501,6 +2694,32 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       try {
         if (modelPivot) {
+          // Reset articulated joints to zero
+          if (characterNodes.head) characterNodes.head.rotation.set(0, 0, 0);
+          if (characterNodes.leftArm) characterNodes.leftArm.rotation.set(0, 0, 0);
+          if (characterNodes.rightArm) characterNodes.rightArm.rotation.set(0, 0, 0);
+          if (characterNodes.torso) characterNodes.torso.rotation.set(0, 0, 0);
+          if (characterNodes.leftLeg) characterNodes.leftLeg.rotation.set(0, 0, 0);
+          if (characterNodes.rightLeg) characterNodes.rightLeg.rotation.set(0, 0, 0);
+
+          if (!activeEmote) {
+            // Subtle natural Minecraft idle breathing & arm sway
+            const idleTime = timestamp * 0.0022;
+            if (characterNodes.torso) {
+              characterNodes.torso.rotation.x = Math.sin(idleTime) * 0.018;
+            }
+            if (characterNodes.head) {
+              characterNodes.head.rotation.x = Math.sin(idleTime + 0.6) * 0.025;
+              characterNodes.head.rotation.y = Math.sin(idleTime * 0.5) * 0.04;
+            }
+            if (characterNodes.leftArm) {
+              characterNodes.leftArm.rotation.x = Math.sin(idleTime) * 0.06;
+            }
+            if (characterNodes.rightArm) {
+              characterNodes.rightArm.rotation.x = -Math.sin(idleTime) * 0.06;
+            }
+          }
+
           const et = updateActiveEmote(timestamp);
 
           if (isDragging) {
