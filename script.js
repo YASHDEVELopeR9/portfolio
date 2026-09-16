@@ -233,6 +233,93 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 120);
   }
 
+  // --- MINECRAFT EMOTE SOUND SYNTHESIZERS ---
+  function playJumpSound() {
+    if (!sfxEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(170, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(420, audioCtx.currentTime + 0.16);
+    gain.gain.setValueAtTime(0.26, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.22);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.23);
+  }
+
+  function playSwordSweepSound() {
+    if (!sfxEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(480, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(70, audioCtx.currentTime + 0.26);
+    gain.gain.setValueAtTime(0.24, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.27);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.28);
+  }
+
+  function playClapSound() {
+    if (!sfxEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    for (let i = 0; i < 4; i++) {
+      setTimeout(() => {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(260 + Math.random() * 40, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.28, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.07);
+      }, i * 160);
+    }
+  }
+
+  function playDiscoBeat() {
+    if (!sfxEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+    const chords = [
+      [261.63, 329.63, 392.00],
+      [293.66, 369.99, 440.00],
+      [329.63, 392.00, 493.88],
+      [392.00, 493.88, 587.33]
+    ];
+    chords.forEach((chord, barIdx) => {
+      setTimeout(() => {
+        if (!audioCtx) return;
+        chord.forEach((freq, noteIdx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          const t = audioCtx.currentTime + noteIdx * 0.05;
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.18, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + 0.36);
+        });
+      }, barIdx * 350);
+    });
+  }
+
   // Enchantment Table Magical Resonance Chime
   function playEnchantSound() {
     if (!sfxEnabled) return;
@@ -881,9 +968,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const bookDialog = document.getElementById('book-dialog');
   const pauseMenuDialog = document.getElementById('pause-menu-dialog');
   const hireDialog = document.getElementById('hire-dialog');
+  const emoteWheelDialog = document.getElementById('emote-wheel-dialog');
 
   function closeAllGameDialogs() {
-    [journeyDialog, lightboxDialog, settingsDialog, villagerTradeDialog, enchantmentDialog, chestDialog, bookDialog, pauseMenuDialog, hireDialog].forEach((d) => {
+    [journeyDialog, lightboxDialog, settingsDialog, villagerTradeDialog, enchantmentDialog, chestDialog, bookDialog, pauseMenuDialog, hireDialog, emoteWheelDialog].forEach((d) => {
       if (d && d.open) {
         d.close();
       }
@@ -1511,6 +1599,182 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   setupBackdropClose(pauseMenuDialog, () => playClickSound(0.8));
 
+  // --- 5C. MINECRAFT EMOTE RADIAL WHEEL SYSTEM ---
+  const btnOpenEmotes = document.getElementById('btn-open-emotes');
+  const btnCloseWheel = document.getElementById('btn-close-wheel');
+  const hubEmoteTitle = document.getElementById('hub-emote-title');
+  const emoteSliceBtns = document.querySelectorAll('.emote-slice-btn');
+  const emoteWheelWedges = document.querySelectorAll('.wheel-wedge');
+
+  const emoteDisplayNames = {
+    point: 'Adventure Point',
+    cheer: 'Victory Cheer',
+    disco: 'Disco Groove',
+    bow: "Hero's Bow",
+    clap: 'Applause',
+    flip: '360° Backflip',
+    wave: 'Friendly Wave',
+    tornado: 'Tornado Spin'
+  };
+
+  function highlightEmote(emoteKey) {
+    if (hubEmoteTitle && emoteKey && emoteDisplayNames[emoteKey]) {
+      hubEmoteTitle.textContent = emoteDisplayNames[emoteKey];
+    }
+    emoteSliceBtns.forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.emote === emoteKey);
+    });
+    emoteWheelWedges.forEach((wedge) => {
+      wedge.classList.toggle('active', wedge.dataset.emote === emoteKey);
+    });
+  }
+
+  function unhighlightEmote() {
+    if (hubEmoteTitle) hubEmoteTitle.textContent = 'SELECT EMOTE';
+    emoteSliceBtns.forEach((btn) => btn.classList.remove('active'));
+    emoteWheelWedges.forEach((wedge) => wedge.classList.remove('active'));
+  }
+
+  function openEmoteWheel() {
+    initAudio();
+    closeAllGameDialogs();
+    if (emoteWheelDialog) {
+      unhighlightEmote();
+      emoteWheelDialog.showModal();
+      playPopSound(5);
+    }
+  }
+
+  function closeEmoteWheel() {
+    if (emoteWheelDialog && emoteWheelDialog.open) {
+      playClickSound(0.8);
+      emoteWheelDialog.close();
+    }
+  }
+
+  if (btnOpenEmotes) {
+    btnOpenEmotes.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openEmoteWheel();
+    });
+  }
+
+  if (btnCloseWheel) {
+    btnCloseWheel.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeEmoteWheel();
+    });
+  }
+
+  setupBackdropClose(emoteWheelDialog, () => playClickSound(0.8));
+
+  // Connect slice buttons
+  emoteSliceBtns.forEach((btn) => {
+    const emoteKey = btn.dataset.emote;
+    btn.addEventListener('mouseenter', () => highlightEmote(emoteKey));
+    btn.addEventListener('mouseleave', unhighlightEmote);
+    btn.addEventListener('focus', () => highlightEmote(emoteKey));
+    btn.addEventListener('blur', unhighlightEmote);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeEmoteWheel();
+      triggerEmote(emoteKey);
+    });
+  });
+
+  // Connect SVG wedges
+  emoteWheelWedges.forEach((wedge) => {
+    const emoteKey = wedge.dataset.emote;
+    wedge.addEventListener('mouseenter', () => highlightEmote(emoteKey));
+    wedge.addEventListener('mouseleave', unhighlightEmote);
+    wedge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeEmoteWheel();
+      triggerEmote(emoteKey);
+    });
+  });
+
+  function spawnParticleBurst(count = 24) {
+    if (typeof Petal === 'undefined' || !petals) return;
+    for (let i = 0; i < count; i++) {
+      const p = new Petal();
+      p.x = window.innerWidth / 2 + (Math.random() - 0.5) * 280;
+      p.y = window.innerHeight * 0.45 + (Math.random() - 0.5) * 180;
+      p.speedY = -Math.random() * 5 - 1.5;
+      p.speedX = (Math.random() - 0.5) * 7;
+      petals.push(p);
+    }
+  }
+
+  function triggerEmote(emoteKey) {
+    initAudio();
+    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    let duration = 1600;
+
+    switch (emoteKey) {
+      case 'flip':
+        duration = 1400;
+        playJumpSound();
+        showToast('360° Backflip 🤸', 'Yash executes an acrobatic Minecraft flip!', 'assets/icons/player-head.svg');
+        spawnParticleBurst(25);
+        break;
+
+      case 'wave':
+        duration = 1800;
+        playXpChime();
+        showToast('Friendly Wave 👋', 'Yash waves enthusiastically to you!', 'assets/icons/player-head.svg');
+        break;
+
+      case 'cheer':
+        duration = 2000;
+        playLevelUpSound();
+        showToast('Victory Cheer 🎉', 'Quest celebration! Advancement achieved!', 'assets/icons/nether-star.svg');
+        spawnParticleBurst(30);
+        break;
+
+      case 'disco':
+        duration = 2400;
+        playDiscoBeat();
+        showToast('Disco Groove 🕺', 'Minecraft retro rhythm dance activated!', 'assets/icons/player-head.svg');
+        break;
+
+      case 'bow':
+        duration = 1600;
+        playClickSound(1.2);
+        showToast("Hero's Bow 🙇", 'A respectful bow for the brave traveler.', 'assets/icons/player-head.svg');
+        break;
+
+      case 'point':
+        duration = 1600;
+        playClickSound(1.4);
+        showToast('Adventure Point 👉', 'Onward! Great quests and code await ahead.', 'assets/icons/compass.svg');
+        break;
+
+      case 'tornado':
+        duration = 1500;
+        playSwordSweepSound();
+        showToast('Tornado Spin 🌪️', 'Cyclone whirlwind spin unleashed!', 'assets/icons/diamond-sword.svg');
+        spawnParticleBurst(25);
+        break;
+
+      case 'clap':
+        duration = 1800;
+        playClapSound();
+        showToast('Applause 👏', 'Bravo! A round of applause for your visit!', 'assets/icons/player-head.svg');
+        break;
+
+      default:
+        showToast('Minecraft Emote 🎭', 'Emote performed!', 'assets/icons/player-head.svg');
+        break;
+    }
+
+    activeEmote = {
+      key: emoteKey,
+      startTime: now,
+      duration: duration
+    };
+  }
+
   // =========================================================================
   // 6. VITALS & XP BAR INTERACTION
   // =========================================================================
@@ -1692,6 +1956,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let threeScene, threeCamera, threeRenderer;
   let modelMeshGroup = null;
   let modelPivot = null;
+  let activeEmote = null;
   let fitCameraToModel = () => {};
   let currentModelMaterial = 'colored'; // Default to the colorful PBR model!
   let is3DModeActive = true;
@@ -2029,11 +2294,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 7. Cursor Movement & Drag Interaction (Move from cursor horizontally, Zero Zoom)
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let pointerStartTime = 0;
+
     function onCanvasPointerDown(e) {
       if (e.button !== undefined && e.button !== 0) return;
       if (e.target !== threeCanvas) return;
       isDragging = true;
       lastPointerX = e.clientX;
+      pointerStartX = e.clientX;
+      pointerStartY = e.clientY;
+      pointerStartTime = Date.now();
       currentVelocityY = 0;
       if (threeCanvas) threeCanvas.style.cursor = 'grabbing';
       try { threeCanvas.setPointerCapture(e.pointerId); } catch (_) {}
@@ -2060,6 +2332,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (threeCanvas) {
         threeCanvas.style.cursor = 'grab';
         try { threeCanvas.releasePointerCapture(e.pointerId); } catch (_) {}
+      }
+
+      // Quick tap or click detection: if cursor moved less than 10px in < 450ms, open Minecraft Emote Wheel!
+      const dist = Math.hypot(e.clientX - pointerStartX, e.clientY - pointerStartY);
+      const elapsed = Date.now() - pointerStartTime;
+      if (dist < 10 && elapsed < 450) {
+        openEmoteWheel();
       }
     }
 
@@ -2092,9 +2371,127 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // 8. Animation Render Loop (Strictly moves horizontally from cursor/drag, Zero Zoom)
+    // 8. Animation Render Loop (Procedural Emotes + Cursor/Drag Turntable, Zero Zoom)
     let lastRenderTime = 0;
     const mobileFrameInterval = isMobile ? (1000 / 38) : 0;
+
+    function updateActiveEmote(now) {
+      if (!activeEmote) {
+        return {
+          posX: 0, posY: 0, posZ: 0,
+          rotX: 0, rotY: 0, rotZ: 0,
+          scaleX: 1, scaleY: 1, scaleZ: 1
+        };
+      }
+
+      const elapsed = now - activeEmote.startTime;
+      const p = Math.min(1.0, elapsed / activeEmote.duration);
+
+      let posX = 0, posY = 0, posZ = 0;
+      let rotX = 0, rotY = 0, rotZ = 0;
+      let scaleX = 1, scaleY = 1, scaleZ = 1;
+
+      switch (activeEmote.key) {
+        case 'flip': {
+          // 360° Somersault Backflip with crouch, jump arc, full flip, squash landing
+          if (p < 0.15) {
+            const t = p / 0.15;
+            posY = -0.14 * Math.sin(t * Math.PI * 0.5);
+            scaleY = 1.0 - 0.20 * Math.sin(t * Math.PI * 0.5);
+            scaleX = scaleZ = 1.0 + 0.10 * Math.sin(t * Math.PI * 0.5);
+          } else if (p < 0.85) {
+            const t = (p - 0.15) / 0.70;
+            posY = Math.sin(t * Math.PI) * 0.90;
+            rotX = -Math.PI * 2 * t;
+            scaleY = 1.08;
+            scaleX = scaleZ = 0.94;
+          } else {
+            const t = (p - 0.85) / 0.15;
+            posY = -0.09 * (1 - t) * Math.sin(t * Math.PI);
+            scaleY = 1.0 - 0.16 * Math.sin(t * Math.PI);
+            scaleX = scaleZ = 1.0 + 0.08 * Math.sin(t * Math.PI);
+          }
+          break;
+        }
+
+        case 'wave': {
+          // Side-to-side torso tilt, friendly nod, happy mini-hops
+          rotZ = Math.sin(p * Math.PI * 6) * 0.18 * Math.sin(p * Math.PI);
+          rotX = Math.sin(p * Math.PI * 4) * 0.08 * Math.sin(p * Math.PI);
+          posY = Math.abs(Math.sin(p * Math.PI * 3)) * 0.12 * Math.sin(p * Math.PI);
+          scaleY = 1.0 + Math.sin(p * Math.PI * 6) * 0.05 * Math.sin(p * Math.PI);
+          break;
+        }
+
+        case 'cheer': {
+          // Rapid victory jumps, hands stretch up, celebratory wobble
+          posY = Math.abs(Math.sin(p * Math.PI * 5)) * 0.44 * Math.sin(p * Math.PI);
+          rotZ = Math.sin(p * Math.PI * 8) * 0.14 * Math.sin(p * Math.PI);
+          scaleY = 1.0 + (Math.sin(p * Math.PI * 5) * 0.14) * Math.sin(p * Math.PI);
+          scaleX = scaleZ = 1.0 - (Math.sin(p * Math.PI * 5) * 0.07) * Math.sin(p * Math.PI);
+          break;
+        }
+
+        case 'disco': {
+          // Funky dance: step side-to-side, bounce, head tilt, groove rotation
+          posX = Math.sin(p * Math.PI * 6) * 0.22 * Math.sin(p * Math.PI);
+          posY = Math.abs(Math.cos(p * Math.PI * 6)) * 0.14 * Math.sin(p * Math.PI);
+          rotZ = Math.sin(p * Math.PI * 6) * 0.22 * Math.sin(p * Math.PI);
+          rotY = Math.sin(p * Math.PI * 3) * 0.35 * Math.sin(p * Math.PI);
+          scaleY = 1.0 + Math.sin(p * Math.PI * 12) * 0.06 * Math.sin(p * Math.PI);
+          break;
+        }
+
+        case 'bow': {
+          // Deep respectful waist bend (38 deg forward), hold, return
+          const bend = Math.sin(p * Math.PI);
+          rotX = 0.65 * bend;
+          posY = -0.18 * bend;
+          posZ = -0.08 * bend;
+          break;
+        }
+
+        case 'point': {
+          // Adventure pose: heroic step forward and aim into the distance
+          const bend = Math.sin(p * Math.PI);
+          rotX = 0.22 * bend;
+          rotY = 0.38 * bend;
+          posZ = 0.25 * bend;
+          posY = 0.06 * bend;
+          scaleY = 1.0 + 0.06 * bend;
+          break;
+        }
+
+        case 'tornado': {
+          // Whirlwind cyclone 1080° (3 full revolutions) rising into air
+          rotY = p * Math.PI * 6;
+          posY = Math.sin(p * Math.PI) * 0.35;
+          scaleY = 1.0 + Math.sin(p * Math.PI) * 0.14;
+          scaleX = scaleZ = 1.0 - Math.sin(p * Math.PI) * 0.07;
+          break;
+        }
+
+        case 'clap': {
+          // Rhythmic clapping pulse squash-and-stretch
+          const pulse = Math.sin(p * Math.PI * 12);
+          scaleY = 1.0 + pulse * 0.08 * Math.sin(p * Math.PI);
+          scaleX = scaleZ = 1.0 - pulse * 0.05 * Math.sin(p * Math.PI);
+          rotX = Math.abs(Math.sin(p * Math.PI * 6)) * 0.12 * Math.sin(p * Math.PI);
+          posY = Math.abs(pulse) * 0.04 * Math.sin(p * Math.PI);
+          break;
+        }
+      }
+
+      if (p >= 1.0) {
+        activeEmote = null;
+      }
+
+      return {
+        posX, posY, posZ,
+        rotX, rotY, rotZ,
+        scaleX, scaleY, scaleZ
+      };
+    }
 
     function renderThree(timestamp = 0) {
       requestAnimationFrame(renderThree);
@@ -2104,9 +2501,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       try {
         if (modelPivot) {
-          // Strictly lock pitch and roll to 0
-          modelPivot.rotation.x = 0;
-          modelPivot.rotation.z = 0;
+          const et = updateActiveEmote(timestamp);
 
           if (isDragging) {
             modelPivot.rotation.y = dragRotation;
@@ -2116,16 +2511,23 @@ document.addEventListener('DOMContentLoaded', () => {
               dragRotation += currentVelocityY;
               modelPivot.rotation.y = dragRotation;
               currentVelocityY *= 0.90;
-            } else if (autoSpinEnabled) {
-              // Smooth continuous horizontal turntable spin
+            } else if (autoSpinEnabled && !activeEmote) {
+              // Smooth continuous horizontal turntable spin (paused during emote)
               dragRotation += autoSpinSpeed;
               modelPivot.rotation.y = dragRotation;
-            } else {
+            } else if (!activeEmote) {
               // Smoothly turn character left and right to face the cursor!
               const targetY = dragRotation + targetCursorAngle;
               modelPivot.rotation.y += (targetY - modelPivot.rotation.y) * 0.08;
             }
           }
+
+          // Apply Emote procedural transforms
+          modelPivot.position.set(et.posX, et.posY, et.posZ);
+          modelPivot.rotation.x = et.rotX;
+          modelPivot.rotation.y += et.rotY;
+          modelPivot.rotation.z = et.rotZ;
+          modelPivot.scale.set(et.scaleX, et.scaleY, et.scaleZ);
         }
 
         // Camera stays permanently locked at optimal distance (Zero Zoom)

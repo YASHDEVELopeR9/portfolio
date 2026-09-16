@@ -3114,3 +3114,294 @@ body.mode-2d-only .character-3d-zone {
     max-width: 92vw;
   }
 }
+
+/* ==========================================================================
+   MINECRAFT EMOTE RADIAL WHEEL GUI (Matching Reference Bedrock/Java GUI)
+   ========================================================================== */
+.emote-wheel-dialog {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  outline: none;
+  overflow: visible;
+  max-width: 100vw;
+  max-height: 100vh;
+}
+
+.emote-wheel-dialog::backdrop {
+  background: rgba(10, 12, 16, 0.72);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  animation: wheelFadeIn 0.2s ease-out;
+}
+
+.emote-wheel-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.emote-wheel-container {
+  position: relative;
+  width: min(88vw, 390px);
+  height: min(88vw, 390px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: wheelPopIn 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@keyframes wheelPopIn {
+  from { transform: scale(0.65); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes wheelFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.emote-wheel-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 8px 28px rgba(0, 0, 0, 0.85));
+}
+
+.wheel-outer-poly {
+  fill: none;
+  stroke: #5a6478;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.wheel-inner-poly {
+  fill: #141720;
+  stroke: var(--accent-cyan);
+  stroke-width: 2px;
+  stroke-linejoin: round;
+}
+
+.wheel-divider {
+  stroke: #454e60;
+  stroke-width: 2px;
+}
+
+.wheel-wedge {
+  fill: rgba(32, 38, 50, 0.88);
+  stroke: #4b566b;
+  stroke-width: 1.5px;
+  cursor: pointer;
+  transition: fill 0.15s ease, stroke 0.15s ease, filter 0.15s ease;
+}
+
+.wheel-wedge:hover,
+.wheel-wedge.active {
+  fill: rgba(0, 240, 255, 0.35);
+  stroke: var(--accent-cyan);
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.7));
+}
+
+/* 8 Interactive Slice Buttons */
+.emote-slice-btn {
+  position: absolute;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  z-index: 15;
+  padding: 8px;
+  outline: none;
+  transition: transform 0.15s ease;
+  touch-action: manipulation;
+}
+
+/* Slice Positions */
+.slice-top {
+  left: 50%;
+  top: 17%;
+  transform: translate(-50%, -50%);
+}
+
+.slice-top-right {
+  left: 77%;
+  top: 27%;
+  transform: translate(-50%, -50%);
+}
+
+.slice-right {
+  left: 85%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.slice-bottom-right {
+  left: 77%;
+  top: 73%;
+  transform: translate(-50%, -50%);
+}
+
+.slice-bottom {
+  left: 50%;
+  top: 83%;
+  transform: translate(-50%, -50%);
+}
+
+.slice-bottom-left {
+  left: 23%;
+  top: 73%;
+  transform: translate(-50%, -50%);
+}
+
+.slice-left {
+  left: 15%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.slice-top-left {
+  left: 23%;
+  top: 27%;
+  transform: translate(-50%, -50%);
+}
+
+.emote-slice-btn .slice-icon {
+  font-size: 26px;
+  line-height: 1;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.9));
+  transition: transform 0.15s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.emote-slice-btn .slice-label {
+  font-family: var(--font-pixel);
+  font-size: 8.5px;
+  color: #ffffff;
+  text-shadow: 2px 2px 0 #18191c;
+  letter-spacing: 0.5px;
+  transition: color 0.15s ease, text-shadow 0.15s ease;
+  white-space: nowrap;
+}
+
+.emote-slice-btn:hover,
+.emote-slice-btn.active {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+.emote-slice-btn:hover .slice-icon,
+.emote-slice-btn.active .slice-icon {
+  transform: scale(1.22);
+}
+
+.emote-slice-btn:hover .slice-label,
+.emote-slice-btn.active .slice-label {
+  color: #fffb91;
+  text-shadow: 0 0 6px rgba(255, 251, 145, 0.8), 2px 2px 0 #000;
+}
+
+/* Center Hub */
+.emote-wheel-hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(16, 20, 28, 0.96);
+  border: 2px solid var(--accent-cyan);
+  box-shadow: inset 0 0 14px rgba(0, 240, 255, 0.35), 0 4px 16px rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  z-index: 20;
+  text-align: center;
+}
+
+.hub-emote-title {
+  font-family: var(--font-pixel);
+  font-size: 8.5px;
+  color: var(--accent-cyan);
+  text-shadow: 0 0 8px var(--accent-cyan-glow), 1px 1px 0 #000;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+}
+
+.hub-page-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 2px 0;
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  color: #9aa1b3;
+}
+
+.hub-page-num {
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.hub-arrow {
+  color: #55ff55;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.hub-close-btn {
+  background: rgba(255, 85, 85, 0.12);
+  border: 1px solid #ff5555;
+  color: #ff5555;
+  font-family: var(--font-pixel);
+  font-size: 7.5px;
+  padding: 3px 7px;
+  cursor: pointer;
+  border-radius: 2px;
+  margin-top: 3px;
+  transition: all 0.15s ease;
+}
+
+.hub-close-btn:hover {
+  background: #ff5555;
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(255, 85, 85, 0.6);
+}
+
+@media (max-width: 600px) {
+  .emote-wheel-container {
+    width: min(92vw, 340px);
+    height: min(92vw, 340px);
+  }
+  .emote-slice-btn .slice-icon {
+    font-size: 22px;
+  }
+  .emote-slice-btn .slice-label {
+    font-size: 7.5px;
+  }
+  .emote-wheel-hub {
+    width: 105px;
+    height: 105px;
+  }
+  .hub-emote-title {
+    font-size: 7.5px;
+  }
+}

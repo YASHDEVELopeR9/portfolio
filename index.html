@@ -223,6 +223,7 @@
             <button class="model-tool-btn" id="btn-mat-gold" title="Golden Netherite">👑 Gold</button>
             <button class="model-tool-btn active" id="btn-toggle-rotate" title="Toggle Auto-Spin">🔄 Spin</button>
             <button class="model-tool-btn" id="btn-reset-cam" title="Reset View">🎯 Reset</button>
+            <button class="model-tool-btn" id="btn-open-emotes" title="Open Minecraft Emote Wheel">🎭 Emotes</button>
           </div>
         </div>
 
@@ -1337,6 +1338,124 @@
         <button class="mc-btn pause-btn" id="btn-pause-options">
           <span class="mc-btn-inner">⚙️ Options & Video Settings</span>
         </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- =========================================================================
+       MINECRAFT EMOTE RADIAL WHEEL MODAL (Octagonal 8-Slice GUI)
+       ========================================================================= -->
+  <dialog class="mc-dialog emote-wheel-dialog" id="emote-wheel-dialog">
+    <div class="emote-wheel-wrapper">
+      <div class="emote-wheel-container" id="emote-wheel-container">
+        <!-- SVG Octagonal Radial Pie Background with 8 Slices -->
+        <svg class="emote-wheel-svg" viewBox="0 0 400 400" aria-hidden="true">
+          <defs>
+            <radialGradient id="wheel-glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#2a3040" stop-opacity="0.95" />
+              <stop offset="70%" stop-color="#181d26" stop-opacity="0.92" />
+              <stop offset="100%" stop-color="#0e1117" stop-opacity="0.98" />
+            </radialGradient>
+            <linearGradient id="slice-hover-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="rgba(0, 240, 255, 0.45)" />
+              <stop offset="100%" stop-color="rgba(0, 180, 220, 0.2)" />
+            </linearGradient>
+          </defs>
+
+          <!-- Outer Octagonal Ring Border -->
+          <polygon class="wheel-outer-poly" points="140,20 260,20 380,140 380,260 260,380 140,380 20,260 20,140" />
+
+          <!-- 8 Radial Wedges -->
+          <!-- 1. Top (Point) -->
+          <path class="wheel-wedge" id="wedge-point" data-emote="point" d="M165,135 L140,20 L260,20 L235,135 Z" />
+          <!-- 2. Top-Right (Cheer) -->
+          <path class="wheel-wedge" id="wedge-cheer" data-emote="cheer" d="M235,135 L260,20 L380,140 L265,165 Z" />
+          <!-- 3. Right (Disco) -->
+          <path class="wheel-wedge" id="wedge-disco" data-emote="disco" d="M265,165 L380,140 L380,260 L265,235 Z" />
+          <!-- 4. Bottom-Right (Bow) -->
+          <path class="wheel-wedge" id="wedge-bow" data-emote="bow" d="M265,235 L380,260 L260,380 L235,265 Z" />
+          <!-- 5. Bottom (Clap) -->
+          <path class="wheel-wedge" id="wedge-clap" data-emote="clap" d="M235,265 L260,380 L140,380 L165,265 Z" />
+          <!-- 6. Bottom-Left (Flip) -->
+          <path class="wheel-wedge" id="wedge-flip" data-emote="flip" d="M165,265 L140,380 L20,260 L135,235 Z" />
+          <!-- 7. Left (Wave) -->
+          <path class="wheel-wedge" id="wedge-wave" data-emote="wave" d="M135,235 L20,260 L20,140 L135,165 Z" />
+          <!-- 8. Top-Left (Tornado) -->
+          <path class="wheel-wedge" id="wedge-tornado" data-emote="tornado" d="M135,165 L20,140 L140,20 L165,135 Z" />
+
+          <!-- Divider Lines Between Wedges -->
+          <line class="wheel-divider" x1="200" y1="200" x2="200" y2="20" />
+          <line class="wheel-divider" x1="200" y1="200" x2="380" y2="140" />
+          <line class="wheel-divider" x1="200" y1="200" x2="380" y2="260" />
+          <line class="wheel-divider" x1="200" y1="200" x2="200" y2="380" />
+          <line class="wheel-divider" x1="200" y1="200" x2="140" y2="380" />
+          <line class="wheel-divider" x1="200" y1="200" x2="20" y2="260" />
+          <line class="wheel-divider" x1="200" y1="200" x2="20" y2="140" />
+          <line class="wheel-divider" x1="200" y1="200" x2="140" y2="20" />
+
+          <!-- Inner Octagonal Hub Outline -->
+          <polygon class="wheel-inner-poly" points="165,135 235,135 265,165 265,235 235,265 165,265 135,235 135,165" />
+        </svg>
+
+        <!-- 8 Interactive Emote Slices Overlay -->
+        <!-- 1. Top (12:00) - Point -->
+        <button class="emote-slice-btn slice-top" data-emote="point" data-name="Adventure Point" aria-label="Point Emote">
+          <span class="slice-icon">👉</span>
+          <span class="slice-label">Point</span>
+        </button>
+
+        <!-- 2. Top-Right (1:30) - Cheer -->
+        <button class="emote-slice-btn slice-top-right" data-emote="cheer" data-name="Victory Cheer" aria-label="Cheer Emote">
+          <span class="slice-icon">🎉</span>
+          <span class="slice-label">Cheer</span>
+        </button>
+
+        <!-- 3. Right (3:00) - Disco Dance -->
+        <button class="emote-slice-btn slice-right" data-emote="disco" data-name="Disco Groove" aria-label="Disco Dance Emote">
+          <span class="slice-icon">🕺</span>
+          <span class="slice-label">Disco</span>
+        </button>
+
+        <!-- 4. Bottom-Right (4:30) - Respect Bow -->
+        <button class="emote-slice-btn slice-bottom-right" data-emote="bow" data-name="Hero's Bow" aria-label="Respect Bow Emote">
+          <span class="slice-icon">🙇</span>
+          <span class="slice-label">Bow</span>
+        </button>
+
+        <!-- 5. Bottom (6:00) - Applause -->
+        <button class="emote-slice-btn slice-bottom" data-emote="clap" data-name="Applause" aria-label="Applause Emote">
+          <span class="slice-icon">👏</span>
+          <span class="slice-label">Clap</span>
+        </button>
+
+        <!-- 6. Bottom-Left (7:30) - Backflip -->
+        <button class="emote-slice-btn slice-bottom-left" data-emote="flip" data-name="360° Backflip" aria-label="Backflip Emote">
+          <span class="slice-icon">🤸</span>
+          <span class="slice-label">Flip</span>
+        </button>
+
+        <!-- 7. Left (9:00) - Wave -->
+        <button class="emote-slice-btn slice-left" data-emote="wave" data-name="Friendly Wave" aria-label="Wave Emote">
+          <span class="slice-icon">👋</span>
+          <span class="slice-label">Wave</span>
+        </button>
+
+        <!-- 8. Top-Left (10:30) - Tornado Spin -->
+        <button class="emote-slice-btn slice-top-left" data-emote="tornado" data-name="Tornado Spin" aria-label="Tornado Spin Emote">
+          <span class="slice-icon">🌪️</span>
+          <span class="slice-label">Spin</span>
+        </button>
+
+        <!-- Center Hub with Pagination and Emote Title -->
+        <div class="emote-wheel-hub" id="emote-wheel-hub">
+          <div class="hub-emote-title" id="hub-emote-title">SELECT EMOTE</div>
+          <div class="hub-page-nav">
+            <span class="hub-arrow">&lt;</span>
+            <span class="hub-page-num">1</span>
+            <span class="hub-arrow">&gt;</span>
+          </div>
+          <button class="hub-close-btn" id="btn-close-wheel" title="Close Wheel">✕ CLOSE</button>
+        </div>
       </div>
     </div>
   </dialog>
