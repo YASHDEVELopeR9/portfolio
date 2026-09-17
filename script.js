@@ -2404,6 +2404,7 @@ document.addEventListener('DOMContentLoaded', () => {
       canvas: threeCanvas,
       alpha: true,
       antialias: !isMobile,
+      preserveDrawingBuffer: true,
       powerPreference: 'high-performance',
       precision: isMobile ? 'mediump' : 'highp'
     });
@@ -2416,10 +2417,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. Fixed Eye-Level Camera & Zero-Zoom Fitting
     fitCameraToModel = function() {
-      if (!threeCamera) return;
-      const aspect = threeCamera.aspect || (width / height) || 1.0;
-      const fovRad = (threeCamera.fov * Math.PI) / 360;
+      if (!threeCamera || !container) return;
+      const rect = container.getBoundingClientRect();
+      const currentW = rect.width || width || 400;
+      const currentH = rect.height || height || 500;
+      const aspect = currentW / currentH;
+      threeCamera.aspect = aspect;
+      threeCamera.updateProjectionMatrix();
+      if (threeRenderer) {
+        threeRenderer.setSize(currentW, currentH);
+      }
 
+      const fovRad = (threeCamera.fov * Math.PI) / 360;
       const targetHeight = 1.65;
       const fitFraction = 0.74;
       const distY = (targetHeight / 2) / (Math.tan(fovRad) * fitFraction);
@@ -2429,8 +2438,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       optimalCamDist = Math.max(distY, distX, 2.85);
 
-      threeCamera.position.set(0, 0.0, optimalCamDist);
-      threeCamera.lookAt(0, 0, 0);
+      threeCamera.position.set(0, 0.05, optimalCamDist);
+      threeCamera.lookAt(0, 0.05, 0);
     };
     fitCameraToModel();
 
@@ -2468,14 +2477,70 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
-    // 6. Build and Mount Authentic Minecraft Character
-    modelMeshGroup = buildMinecraftPlayer();
-    if (modelMeshGroup) {
+    // 6. Build and Mount Authentic Minecraft Character (Matching Reference Image Perfectly)
+    function setupModelScene(gltf) {
+      modelMeshGroup = gltf.scene;
+      modelMeshGroup.traverse((child) => {
+        if (child.isMesh) {
+          if (!child.geometry.attributes.normal) {
+            child.geometry.computeVertexNormals();
+          }
+          child.frustumCulled = true;
+          if (child.material) {
+            child.material.side = THREE.DoubleSide;
+            child.material.roughness = 0.6;
+            child.material.metalness = 0.15;
+            child.material.needsUpdate = true;
+            originalMeshMaterials.set(child.uuid, child.material);
+          }
+        }
+      });
+
+      characterNodes.head = modelMeshGroup.getObjectByName('head');
+      characterNodes.upperArmL = modelMeshGroup.getObjectByName('upperArmL') || modelMeshGroup.getObjectByName('left_arm');
+      characterNodes.forearmL = modelMeshGroup.getObjectByName('forearmL');
+      characterNodes.leftArm = characterNodes.upperArmL;
+      characterNodes.armLeft = characterNodes.upperArmL;
+
+      characterNodes.upperArmR = modelMeshGroup.getObjectByName('upperArmR') || modelMeshGroup.getObjectByName('right_arm');
+      characterNodes.forearmR = modelMeshGroup.getObjectByName('forearmR');
+      characterNodes.rightArm = characterNodes.upperArmR;
+      characterNodes.armRight = characterNodes.upperArmR;
+
+      characterNodes.chest = modelMeshGroup.getObjectByName('chest') || modelMeshGroup.getObjectByName('torso');
+      characterNodes.torso = characterNodes.chest;
+
+      characterNodes.upperLegL = modelMeshGroup.getObjectByName('upperLegL') || modelMeshGroup.getObjectByName('left_leg');
+      characterNodes.lowerLegL = modelMeshGroup.getObjectByName('lowerLegL');
+      characterNodes.leftLeg = characterNodes.upperLegL;
+      characterNodes.legLeft = characterNodes.upperLegL;
+
+      characterNodes.upperLegR = modelMeshGroup.getObjectByName('upperLegR') || modelMeshGroup.getObjectByName('right_leg');
+      characterNodes.lowerLegR = modelMeshGroup.getObjectByName('lowerLegR');
+      characterNodes.rightLeg = characterNodes.upperLegR;
+      characterNodes.legRight = characterNodes.upperLegR;
+
+      characterNodes.root = modelMeshGroup.getObjectByName('root') || modelMeshGroup;
+
+      const bbox = new THREE.Box3().setFromObject(modelMeshGroup);
+      const center = bbox.getCenter(new THREE.Vector3());
+      const size = bbox.getSize(new THREE.Vector3());
+
+      modelMeshGroup.position.set(-center.x, -center.y, -center.z);
+
+      const modelWrapper = new THREE.Group();
+      modelWrapper.add(modelMeshGroup);
+      modelWrapper.rotation.y = -Math.PI / 2; // Face forward (+Z)
+
+      const baseHeight = size.y || 1.0;
+      const targetScale = 1.65 / baseHeight;
+      modelWrapper.scale.set(targetScale, targetScale, targetScale);
+
       if (modelPivot) {
         threeScene.remove(modelPivot);
       }
       modelPivot = new THREE.Group();
-      modelPivot.add(modelMeshGroup);
+      modelPivot.add(modelWrapper);
       threeScene.add(modelPivot);
 
       fitCameraToModel();
@@ -2485,57 +2550,12 @@ document.addEventListener('DOMContentLoaded', () => {
         modelLoading.classList.add('loaded');
       }
       updateGamerProgress(100, 'CHERRY GROVE MINECRAFT AVATAR READY (100%)');
-      setTimeout(finishGamerLoading, 250);
+      finishGamerLoading();
     }
 
-    // Optional manual GLB loader for user file selection or drag-and-drop (never auto-overwrites)
-    if (typeof THREE.GLTFLoader !== 'undefined') {
-      const loader = new THREE.GLTFLoader();
-
-      function setupModelScene(gltf) {
-        modelMeshGroup = gltf.scene;
-        modelMeshGroup.traverse((child) => {
-          if (child.isMesh) {
-            if (!child.geometry.attributes.normal) {
-              child.geometry.computeVertexNormals();
-            }
-            child.frustumCulled = true;
-            if (child.material) {
-              child.material.side = isMobile ? THREE.FrontSide : THREE.DoubleSide;
-              child.material.roughness = 0.6;
-              child.material.metalness = 0.15;
-              child.material.needsUpdate = true;
-              originalMeshMaterials.set(child.uuid, child.material);
-            }
-          }
-        });
-
-        characterNodes.head = modelMeshGroup.getObjectByName('head');
-        characterNodes.upperArmL = modelMeshGroup.getObjectByName('upperArmL') || modelMeshGroup.getObjectByName('left_arm');
-        characterNodes.forearmL = modelMeshGroup.getObjectByName('forearmL');
-        characterNodes.leftArm = characterNodes.upperArmL;
-        characterNodes.upperArmR = modelMeshGroup.getObjectByName('upperArmR') || modelMeshGroup.getObjectByName('right_arm');
-        characterNodes.forearmR = modelMeshGroup.getObjectByName('forearmR');
-        characterNodes.rightArm = characterNodes.upperArmR;
-        characterNodes.chest = modelMeshGroup.getObjectByName('chest') || modelMeshGroup.getObjectByName('torso');
-        characterNodes.torso = characterNodes.chest;
-        characterNodes.upperLegL = modelMeshGroup.getObjectByName('upperLegL') || modelMeshGroup.getObjectByName('left_leg');
-        characterNodes.lowerLegL = modelMeshGroup.getObjectByName('lowerLegL');
-        characterNodes.leftLeg = characterNodes.upperLegL;
-        characterNodes.upperLegR = modelMeshGroup.getObjectByName('upperLegR') || modelMeshGroup.getObjectByName('right_leg');
-        characterNodes.lowerLegR = modelMeshGroup.getObjectByName('lowerLegR');
-        characterNodes.rightLeg = characterNodes.upperLegR;
-        characterNodes.root = modelMeshGroup.getObjectByName('root') || modelMeshGroup;
-
-        const bbox = new THREE.Box3().setFromObject(modelMeshGroup);
-        const center = bbox.getCenter(new THREE.Vector3());
-        const size = bbox.getSize(new THREE.Vector3());
-
-        modelMeshGroup.position.set(-center.x, -center.y, -center.z);
-        const baseHeight = size.y || 1.0;
-        const targetScale = 1.65 / baseHeight;
-        modelMeshGroup.scale.set(targetScale, targetScale, targetScale);
-
+    function fallbackProcedural() {
+      modelMeshGroup = buildMinecraftPlayer();
+      if (modelMeshGroup) {
         if (modelPivot) {
           threeScene.remove(modelPivot);
         }
@@ -2549,7 +2569,50 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modelLoading) {
           modelLoading.classList.add('loaded');
         }
-        finishGamerLoading();
+        updateGamerProgress(100, 'CHERRY GROVE MINECRAFT AVATAR READY (100%)');
+        setTimeout(finishGamerLoading, 250);
+      }
+    }
+
+    // Optional manual GLB loader for user file selection or drag-and-drop
+    if (typeof THREE.GLTFLoader !== 'undefined') {
+      const loader = new THREE.GLTFLoader();
+
+      const candidatePaths = [
+        'assets/character_articulated.glb',
+        'assets/character.glb',
+        'colored 3d.glb',
+        'assets/colored 3d.glb'
+      ];
+
+      function tryLoadCandidate(idx) {
+        if (idx >= candidatePaths.length) {
+          console.warn('All GLB candidate paths failed, using procedural fallback');
+          fallbackProcedural();
+          return;
+        }
+
+        const path = candidatePaths[idx];
+        loader.load(
+          path,
+          (gltf) => {
+            setupModelScene(gltf);
+          },
+          (xhr) => {
+            if (xhr.lengthComputable) {
+              const percent = Math.round((xhr.loaded / xhr.total) * 100);
+              updateGamerProgress(percent, `LOADING CHERRY GROVE AVATAR (${percent}%)...`);
+              if (modelLoading) {
+                const span = modelLoading.querySelector('span');
+                if (span) span.textContent = `Loading Colored 3D Mesh (${percent}%)...`;
+              }
+            }
+          },
+          (err) => {
+            console.warn(`Could not load model from ${path}, trying next fallback...`, err);
+            tryLoadCandidate(idx + 1);
+          }
+        );
       }
 
       function loadModelFromFile(file) {
@@ -2590,6 +2653,10 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
       }
+
+      tryLoadCandidate(0);
+    } else {
+      fallbackProcedural();
     }
 
     // 7. Cursor Movement & Drag Interaction (Move from cursor horizontally, Zero Zoom)
@@ -2676,18 +2743,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 8. Authentic Minecraft Bedrock Emote Engine & Animation Loop
     function resetCharacterPose() {
       const cn = characterNodes;
-      if (cn.root) {
-        cn.root.position.set(0, -0.82, 0);
-        cn.root.rotation.set(0, 0, 0);
-      }
-      if (cn.torso) {
-        cn.torso.position.set(0, 0, 0);
-        cn.torso.rotation.set(0, 0, 0);
-      }
-      if (cn.chest) {
-        cn.chest.position.set(0, 0, 0);
-        cn.chest.rotation.set(0, 0, 0);
-      }
+      if (cn.torso) cn.torso.rotation.set(0, 0, 0);
+      if (cn.chest) cn.chest.rotation.set(0, 0, 0);
       if (cn.head) cn.head.rotation.set(0, 0, 0);
       const armR = cn.armRight || cn.upperArmR || cn.rightArm;
       const armL = cn.armLeft || cn.upperArmL || cn.leftArm;
@@ -2706,6 +2763,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (legL) legL.rotation.set(0, 0, 0);
       if (forelegR) forelegR.rotation.set(0, 0, 0);
       if (forelegL) forelegL.rotation.set(0, 0, 0);
+
+      if (modelPivot) {
+        modelPivot.position.set(0, 0, 0);
+        modelPivot.rotation.x = 0;
+        modelPivot.rotation.z = 0;
+        modelPivot.scale.set(1, 1, 1);
+      }
     }
 
     function applyArticulatedEmote(key, emoteTime, duration) {
@@ -2718,7 +2782,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const legL = cn.legLeft || cn.upperLegL || cn.leftLeg;
       const torso = cn.torso || cn.chest;
       const head = cn.head;
-      const root = cn.root;
 
       // Clean animation envelope: 180ms ease-in, sustain action, 220ms ease-out
       const blendIn = Math.min(1.0, emoteTime / 0.18);
@@ -2745,8 +2808,8 @@ document.addEventListener('DOMContentLoaded', () => {
           if (armL) {
             armL.rotation.x = 0.10 * env;
           }
-          if (root) {
-            root.position.y = -0.82 + Math.abs(Math.sin(emoteTime * 7)) * 0.03 * env;
+          if (modelPivot) {
+            modelPivot.position.y = Math.abs(Math.sin(emoteTime * 7)) * 0.03 * env;
           }
           break;
         }
@@ -2768,8 +2831,8 @@ document.addEventListener('DOMContentLoaded', () => {
             head.rotation.x = -0.35 * env; // Look up at triumph
           }
           const hop = Math.max(0, jumpPhase) * 0.32 * env;
-          if (root) {
-            root.position.y = -0.82 + hop;
+          if (modelPivot) {
+            modelPivot.position.y = hop;
           }
           if (legR && legL && hop > 0.05) {
             legR.rotation.x = 0.25 * env;
@@ -2794,8 +2857,8 @@ document.addEventListener('DOMContentLoaded', () => {
           if (head) {
             head.rotation.x = Math.max(0, clapBeat) * 0.12 * env;
           }
-          if (root) {
-            root.position.y = -0.82 + Math.max(0, clapBeat) * 0.02 * env;
+          if (modelPivot) {
+            modelPivot.position.y = Math.max(0, clapBeat) * 0.02 * env;
           }
           break;
         }
@@ -2822,11 +2885,14 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'bow': {
           // Official Minecraft Bedrock "Hero's Bow" Emote
           const bowEase = Math.sin(Math.min(1.0, emoteTime / duration) * Math.PI);
-          if (torso) torso.rotation.x = 0.65 * bowEase;
+          if (torso) torso.rotation.x = 0.55 * bowEase;
           if (head) head.rotation.x = 0.35 * bowEase;
           if (armR) armR.rotation.x = 0.35 * bowEase;
           if (armL) armL.rotation.x = 0.35 * bowEase;
-          if (root) root.position.y = -0.82 - 0.04 * bowEase;
+          if (modelPivot) {
+            modelPivot.position.y = -0.04 * bowEase;
+            modelPivot.rotation.x = 0.15 * bowEase;
+          }
           break;
         }
 
@@ -2849,7 +2915,10 @@ document.addEventListener('DOMContentLoaded', () => {
           if (forearmL) forearmL.rotation.x = -0.35 * env;
           if (legR) legR.rotation.x = -step * 0.65 * env;
           if (legL) legL.rotation.x = step * 0.65 * env;
-          if (root) root.position.y = -0.82 + Math.abs(cosStep) * 0.06 * env;
+          if (modelPivot) {
+            modelPivot.position.y = Math.abs(cosStep) * 0.06 * env;
+            modelPivot.rotation.z = step * 0.08 * env;
+          }
           break;
         }
 
@@ -2858,9 +2927,9 @@ document.addEventListener('DOMContentLoaded', () => {
           if (armR) armR.rotation.z = 1.55 * env;
           if (armL) armL.rotation.z = -1.55 * env;
           const spinProgress = Math.min(1.0, emoteTime / duration);
-          if (root) {
-            root.rotation.y = spinProgress * Math.PI * 4;
-            root.position.y = -0.82 + Math.sin(spinProgress * Math.PI) * 0.35;
+          if (modelPivot) {
+            modelPivot.rotation.y = dragRotation + spinProgress * Math.PI * 4;
+            modelPivot.position.y = Math.sin(spinProgress * Math.PI) * 0.35;
           }
           break;
         }
@@ -2870,22 +2939,22 @@ document.addEventListener('DOMContentLoaded', () => {
           const p = Math.min(1.0, emoteTime / duration);
           if (p < 0.22) {
             const t = p / 0.22;
-            if (root) root.position.y = -0.82 - 0.15 * Math.sin(t * Math.PI * 0.5);
+            if (modelPivot) modelPivot.position.y = -0.15 * Math.sin(t * Math.PI * 0.5);
             if (armR && armL) armR.rotation.x = armL.rotation.x = 0.7 * t;
             if (legR && legL) legR.rotation.x = legL.rotation.x = -0.4 * t;
           } else if (p < 0.80) {
             const t = (p - 0.22) / 0.58;
-            if (root) {
-              root.position.y = -0.82 + Math.sin(t * Math.PI) * 0.9;
-              root.rotation.x = -Math.PI * 2 * t;
+            if (modelPivot) {
+              modelPivot.position.y = Math.sin(t * Math.PI) * 0.9;
+              modelPivot.rotation.x = -Math.PI * 2 * t;
             }
             if (armR && armL) armR.rotation.x = armL.rotation.x = -2.0;
             if (legR && legL) legR.rotation.x = legL.rotation.x = 1.0;
           } else {
             const t = (p - 0.80) / 0.20;
-            if (root) {
-              root.rotation.x = 0;
-              root.position.y = -0.82 - 0.08 * (1 - t) * Math.sin(t * Math.PI);
+            if (modelPivot) {
+              modelPivot.rotation.x = 0;
+              modelPivot.position.y = -0.08 * (1 - t) * Math.sin(t * Math.PI);
             }
           }
           break;
@@ -2917,31 +2986,30 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        if (characterNodes.root && threeScene) {
+        if (threeScene) {
           if (activeEmote) {
             // Smoothly auto-center character to face front during emotes
             dragRotation += (0 - dragRotation) * 0.12;
-            if (modelPivot) {
+            if (modelPivot && activeEmote.key !== 'tornado') {
               modelPivot.rotation.y += (0 - modelPivot.rotation.y) * 0.12;
             }
             updateActiveEmote(dt);
           } else {
             // Natural Minecraft idle breathing & arm sway
             const idleTime = timestamp * 0.0022;
-            const torsoNode = characterNodes.torso || characterNodes.chest;
-            if (torsoNode) {
-              torsoNode.position.y = Math.sin(idleTime) * 0.012;
+            if (modelPivot) {
+              modelPivot.position.y = Math.sin(idleTime) * 0.008;
             }
             if (characterNodes.head) {
               characterNodes.head.rotation.x = Math.sin(idleTime + 0.6) * 0.025;
             }
             const leftArmNode = characterNodes.armLeft || characterNodes.upperArmL || characterNodes.leftArm;
             if (leftArmNode) {
-              leftArmNode.rotation.x = Math.sin(idleTime) * 0.05;
+              leftArmNode.rotation.x = Math.sin(idleTime) * 0.04;
             }
             const rightArmNode = characterNodes.armRight || characterNodes.upperArmR || characterNodes.rightArm;
             if (rightArmNode) {
-              rightArmNode.rotation.x = -Math.sin(idleTime) * 0.05;
+              rightArmNode.rotation.x = -Math.sin(idleTime) * 0.04;
             }
 
             // Turntable controls
