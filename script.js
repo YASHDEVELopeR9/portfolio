@@ -1708,69 +1708,69 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function triggerEmote(emoteKey) {
     initAudio();
-    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-    let duration = 1600;
+    let duration = 2200;
 
     switch (emoteKey) {
       case 'flip':
-        duration = 1400;
+        duration = 1800;
         playJumpSound();
         showToast('360° Backflip 🤸', 'Yash executes an acrobatic Minecraft flip!', 'assets/icons/player-head.svg');
         spawnParticleBurst(25);
         break;
 
       case 'wave':
-        duration = 1800;
+        duration = 2200;
         playXpChime();
         showToast('Friendly Wave 👋', 'Yash waves enthusiastically to you!', 'assets/icons/player-head.svg');
         break;
 
       case 'cheer':
-        duration = 2000;
+        duration = 2400;
         playLevelUpSound();
         showToast('Victory Cheer 🎉', 'Quest celebration! Advancement achieved!', 'assets/icons/nether-star.svg');
         spawnParticleBurst(30);
         break;
 
       case 'disco':
-        duration = 2400;
+        duration = 2500;
         playDiscoBeat();
         showToast('Disco Groove 🕺', 'Minecraft retro rhythm dance activated!', 'assets/icons/player-head.svg');
         break;
 
       case 'bow':
-        duration = 1600;
+        duration = 2200;
         playClickSound(1.2);
         showToast("Hero's Bow 🙇", 'A respectful bow for the brave traveler.', 'assets/icons/player-head.svg');
         break;
 
       case 'point':
-        duration = 1600;
+        duration = 2000;
         playClickSound(1.4);
         showToast('Adventure Point 👉', 'Onward! Great quests and code await ahead.', 'assets/icons/compass.svg');
         break;
 
       case 'tornado':
-        duration = 1500;
+        duration = 2000;
         playSwordSweepSound();
         showToast('Tornado Spin 🌪️', 'Cyclone whirlwind spin unleashed!', 'assets/icons/diamond-sword.svg');
         spawnParticleBurst(25);
         break;
 
       case 'clap':
-        duration = 1800;
+        duration = 2200;
         playClapSound();
         showToast('Applause 👏', 'Bravo! A round of applause for your visit!', 'assets/icons/player-head.svg');
         break;
 
       default:
+        duration = 2000;
         showToast('Minecraft Emote 🎭', 'Emote performed!', 'assets/icons/player-head.svg');
         break;
     }
 
     activeEmote = {
       key: emoteKey,
-      startTime: now,
+      timer: 0.001,
       duration: duration
     };
   }
@@ -2044,366 +2044,342 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // =========================================================================
-  // VOXEL CHARACTER BUILDER & RIG ENGINE (build_voxel_character.py specification)
+  // AUTHENTIC MINECRAFT BEDROCK PLAYER MODEL & EMOTE ENGINE
   // =========================================================================
-  function buildVoxelCharacter() {
+  function buildMinecraftPlayer() {
     if (typeof THREE === 'undefined') return null;
 
-    function createFaceTexture() {
+    function makePixelTex(w, h, drawFn) {
       if (typeof document === 'undefined') return null;
       const c = document.createElement('canvas');
-      c.width = 32; c.height = 32;
+      c.width = w; c.height = h;
       const ctx = c.getContext('2d');
-      // Skin tone
-      ctx.fillStyle = '#f0b887';
-      ctx.fillRect(0, 0, 32, 32);
-
-      // Curly hair fringe & bangs
-      ctx.fillStyle = '#2e1a12';
-      ctx.fillRect(0, 0, 32, 8);
-      ctx.fillRect(2, 8, 4, 3);
-      ctx.fillRect(9, 8, 5, 2);
-      ctx.fillRect(17, 8, 5, 3);
-      ctx.fillRect(25, 8, 5, 2);
-
-      // Sideburns
-      ctx.fillRect(0, 8, 3, 14);
-      ctx.fillRect(29, 8, 3, 14);
-
-      // Eyebrows
-      ctx.fillStyle = '#22130d';
-      ctx.fillRect(5, 11, 7, 2);
-      ctx.fillRect(20, 11, 7, 2);
-
-      // Eyes (white sclera + dark pupil + specular shine)
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(5, 13, 7, 5);
-      ctx.fillRect(20, 13, 7, 5);
-      ctx.fillStyle = '#3a2012';
-      ctx.fillRect(8, 13, 4, 5);
-      ctx.fillRect(20, 13, 4, 5);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(8, 13, 2, 2);
-      ctx.fillRect(20, 13, 2, 2);
-
-      // Nose accent
-      ctx.fillStyle = '#dc9e6e';
-      ctx.fillRect(14, 18, 4, 3);
-
-      // Beard & mustache
-      ctx.fillStyle = '#2e1a12';
-      ctx.fillRect(0, 24, 32, 8);
-      ctx.fillRect(3, 21, 5, 3);
-      ctx.fillRect(24, 21, 5, 3);
-      ctx.fillRect(10, 21, 12, 3); // mustache
-
-      // Friendly smile / mouth
-      ctx.fillStyle = '#9e4e3e';
-      ctx.fillRect(13, 25, 6, 2);
-
+      drawFn(ctx, w, h);
       const tex = new THREE.CanvasTexture(c);
       tex.magFilter = THREE.NearestFilter;
       tex.minFilter = THREE.NearestFilter;
+      tex.generateMipmaps = false;
       return tex;
     }
 
-    function createPlaidTexture() {
-      if (typeof document === 'undefined') return null;
-      const c = document.createElement('canvas');
-      c.width = 32; c.height = 32;
-      const ctx = c.getContext('2d');
-      // Brown shirt base
-      ctx.fillStyle = '#5c2e24';
-      ctx.fillRect(0, 0, 32, 32);
+    // Color Palette
+    const H = '#1a0f0a'; // Curly hair base
+    const C = '#2e1910'; // Hair curl highlight
+    const S = '#e5a672'; // Warm skin tone
+    const W = '#ffffff'; // Sclera white
+    const P = '#2b1810'; // Eye pupil
+    const B = '#1a0f0a'; // Beard and mustache
+    const N = '#ce8b58'; // Nose shadow
+    const M = '#964e42'; // Smile accent
 
-      // Dark brown grid
-      ctx.fillStyle = '#3a1c15';
-      ctx.fillRect(6, 0, 4, 32);
-      ctx.fillRect(22, 0, 4, 32);
-      ctx.fillRect(0, 6, 32, 4);
-      ctx.fillRect(0, 22, 32, 4);
+    const faceGrid = [
+      [H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H],
+      [H,H,C,C,H,H,C,C,H,H,C,C,H,H,H,H],
+      [H,H,H,H,H,H,H,H,H,H,H,H,H,H,H,H],
+      [H,H,H,S,S,H,H,H,H,H,S,S,H,H,H,H],
+      [H,S,S,S,S,S,S,S,S,S,S,S,S,S,S,H],
+      [H,S,B,B,B,S,S,S,S,B,B,B,S,S,S,H],
+      [H,S,W,P,P,S,S,S,S,P,P,W,S,S,S,H],
+      [H,S,W,P,P,S,S,S,S,P,P,W,S,S,S,H],
+      [H,S,S,S,S,S,N,N,S,S,S,S,S,S,S,H],
+      [H,S,S,B,B,B,B,B,B,B,B,S,S,S,S,H],
+      [H,S,S,S,M,M,M,M,M,M,S,S,S,S,S,H],
+      [H,B,B,B,B,B,B,B,B,B,B,B,B,B,B,H],
+      [H,B,B,B,B,B,B,B,B,B,B,B,B,B,B,H],
+      [H,B,B,B,B,B,B,B,B,B,B,B,B,B,B,H],
+      [H,H,B,B,B,B,B,B,B,B,B,B,B,B,H,H],
+      [H,H,H,B,B,B,B,B,B,B,B,B,H,H,H,H]
+    ];
 
-      // Warm tan grid lines
-      ctx.fillStyle = '#825239';
-      ctx.fillRect(14, 0, 2, 32);
-      ctx.fillRect(30, 0, 2, 32);
-      ctx.fillRect(0, 14, 32, 2);
-      ctx.fillRect(0, 30, 32, 2);
+    // 1. Face Texture (16x16 pixel-perfect Minecraft art)
+    const faceTex = makePixelTex(16, 16, (ctx) => {
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 16; x++) {
+          ctx.fillStyle = faceGrid[y][x];
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    });
 
-      const tex = new THREE.CanvasTexture(c);
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(2, 2);
-      tex.magFilter = THREE.NearestFilter;
-      tex.minFilter = THREE.NearestFilter;
-      return tex;
-    }
-
-    function createJeansTexture() {
-      if (typeof document === 'undefined') return null;
-      const c = document.createElement('canvas');
-      c.width = 32; c.height = 32;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = '#9eb8dc';
-      ctx.fillRect(0, 0, 32, 32);
-
-      // Denim weave
-      ctx.fillStyle = '#88a4cb';
-      for (let x = 0; x < 32; x += 4) {
-        for (let y = 0; y < 32; y += 4) {
+    // 2. Hair Solid / Curly Textures (Sides, Top, Back)
+    const hairTex = makePixelTex(16, 16, (ctx) => {
+      ctx.fillStyle = H; ctx.fillRect(0, 0, 16, 16);
+      ctx.fillStyle = C;
+      for (let y = 0; y < 16; y += 4) {
+        for (let x = 0; x < 16; x += 4) {
           if ((x + y) % 8 === 0) ctx.fillRect(x, y, 2, 2);
         }
       }
-      // Seam line
-      ctx.fillStyle = '#6f8ab2';
-      ctx.fillRect(15, 0, 2, 32);
-
-      const tex = new THREE.CanvasTexture(c);
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(2, 2);
-      tex.magFilter = THREE.NearestFilter;
-      tex.minFilter = THREE.NearestFilter;
-      return tex;
-    }
-
-    const faceTex = createFaceTexture();
-    const plaidTex = createPlaidTexture();
-    const jeansTex = createJeansTexture();
-
-    // Materials from build_voxel_character.py
-    const MAT_SKIN = new THREE.MeshStandardMaterial({ color: 0xf0b887, roughness: 0.65, metalness: 0.05 });
-    const MAT_HAIR = new THREE.MeshStandardMaterial({ color: 0x2e1a12, roughness: 0.85, metalness: 0.05 });
-    const MAT_SHIRT = new THREE.MeshStandardMaterial({
-      color: 0x5c2e24,
-      map: plaidTex || null,
-      roughness: 0.70,
-      metalness: 0.05
     });
-    const MAT_PANTS = new THREE.MeshStandardMaterial({
-      color: 0x9eb8dc,
-      map: jeansTex || null,
-      roughness: 0.75,
-      metalness: 0.05
+
+    // 3. Brown Plaid Flannel Shirt Texture (Torso)
+    const plaidTex = makePixelTex(16, 16, (ctx) => {
+      ctx.fillStyle = '#5c2e1f'; ctx.fillRect(0, 0, 16, 16);
+      ctx.fillStyle = '#7c442c';
+      ctx.fillRect(3, 0, 2, 16); ctx.fillRect(11, 0, 2, 16);
+      ctx.fillRect(0, 3, 16, 2); ctx.fillRect(0, 11, 16, 2);
+      ctx.fillStyle = '#3a1c12';
+      ctx.fillRect(3, 3, 2, 2); ctx.fillRect(11, 3, 2, 2);
+      ctx.fillRect(3, 11, 2, 2); ctx.fillRect(11, 11, 2, 2);
+      // Center button placket
+      ctx.fillStyle = '#26130c';
+      ctx.fillRect(7, 0, 2, 16);
+      ctx.fillStyle = '#f0ede6';
+      ctx.fillRect(7, 4, 2, 1); ctx.fillRect(7, 9, 2, 1); ctx.fillRect(7, 14, 2, 1);
     });
-    const MAT_SHOE_D = new THREE.MeshStandardMaterial({ color: 0x33476b, roughness: 0.60, metalness: 0.10 });
-    const MAT_SHOE_L = new THREE.MeshStandardMaterial({ color: 0xe6e6e0, roughness: 0.50, metalness: 0.10 });
-    const MAT_GLASSES = new THREE.MeshStandardMaterial({ color: 0x0d0d0f, roughness: 0.20, metalness: 0.85 });
-    const MAT_WATCH = new THREE.MeshStandardMaterial({ color: 0x8c8f94, roughness: 0.25, metalness: 0.90 });
-    const MAT_BRACE_R = new THREE.MeshStandardMaterial({ color: 0xbf1a1a, roughness: 0.50, metalness: 0.15 });
-    const MAT_BRACE_B = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.50, metalness: 0.20 });
 
-    const MAT_HEAD_FACE = faceTex ? [
-      MAT_SKIN, // +X
-      MAT_SKIN, // -X
-      MAT_HAIR, // +Y
-      MAT_SKIN, // -Y
-      new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.65 }), // +Z Face!
-      MAT_HAIR  // -Z Back of head
-    ] : MAT_SKIN;
+    // 4. Plaid Arm Sleeves Texture
+    const plaidArmTex = makePixelTex(8, 16, (ctx) => {
+      ctx.fillStyle = '#5c2e1f'; ctx.fillRect(0, 0, 8, 16);
+      ctx.fillStyle = '#7c442c';
+      ctx.fillRect(2, 0, 2, 16); ctx.fillRect(0, 4, 8, 2); ctx.fillRect(0, 12, 8, 2);
+      ctx.fillStyle = '#3a1c12';
+      ctx.fillRect(2, 4, 2, 2); ctx.fillRect(2, 12, 2, 2);
+    });
 
-    function makeBlock(w, h, d, mat, x, y, z) {
-      const geom = new THREE.BoxGeometry(w, h, d);
+    // 5. Jeans Denim Texture
+    const jeansTex = makePixelTex(8, 16, (ctx) => {
+      ctx.fillStyle = '#3d5e82'; ctx.fillRect(0, 0, 8, 16);
+      ctx.fillStyle = '#2c435e';
+      ctx.fillRect(0, 0, 8, 2); // Belt line
+      ctx.fillStyle = '#4e739c';
+      ctx.fillRect(1, 4, 6, 8); // Faded denim knee
+      ctx.fillStyle = '#2c435e';
+      ctx.fillRect(7, 0, 1, 16); // Seam stitch
+    });
+
+    // 6. Two-Tone Skate Sneakers Texture
+    const shoeTex = makePixelTex(8, 8, (ctx) => {
+      ctx.fillStyle = '#22262e'; ctx.fillRect(0, 0, 8, 8);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 5, 8, 3); // White vulcanized sole
+      ctx.fillRect(2, 1, 4, 2); // White laces
+    });
+
+    const matFace = [
+      new THREE.MeshStandardMaterial({ map: hairTex, roughness: 0.8 }),
+      new THREE.MeshStandardMaterial({ map: hairTex, roughness: 0.8 }),
+      new THREE.MeshStandardMaterial({ map: hairTex, roughness: 0.8 }),
+      new THREE.MeshStandardMaterial({ color: S, roughness: 0.8 }),
+      new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.8 }),
+      new THREE.MeshStandardMaterial({ map: hairTex, roughness: 0.8 })
+    ];
+
+    const matShirtTorso = [
+      new THREE.MeshStandardMaterial({ map: plaidArmTex, roughness: 0.8 }),
+      new THREE.MeshStandardMaterial({ map: plaidArmTex, roughness: 0.8 }),
+      new THREE.MeshStandardMaterial({ map: plaidTex, roughness: 0.8 }),
+      new THREE.MeshStandardMaterial({ color: '#2c435e', roughness: 0.8 }),
+      new THREE.MeshStandardMaterial({ map: plaidTex, roughness: 0.8 }),
+      new THREE.MeshStandardMaterial({ map: plaidTex, roughness: 0.8 })
+    ];
+
+    const matPlaidArm = new THREE.MeshStandardMaterial({ map: plaidArmTex, roughness: 0.8 });
+    const matSkin = new THREE.MeshStandardMaterial({ color: S, roughness: 0.8 });
+    const matJeans = new THREE.MeshStandardMaterial({ map: jeansTex, roughness: 0.85 });
+    const matShoe = new THREE.MeshStandardMaterial({ map: shoeTex, roughness: 0.7 });
+    const matGlasses = new THREE.MeshStandardMaterial({ color: 0x111115, roughness: 0.2, metalness: 0.85 });
+    const matWatch = new THREE.MeshStandardMaterial({ color: 0xd0d3d8, roughness: 0.25, metalness: 0.85 });
+    const matBraceR = new THREE.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.5 });
+    const matBraceB = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.5 });
+
+    // Mathematical standard Minecraft unit: 1 pixel = 0.052 units (Total height = 32 * 0.052 = 1.664 units)
+    const U = 0.052;
+
+    function createBox(w, h, d, mat) {
+      const geom = new THREE.BoxGeometry(w * U, h * U, d * U);
       const mesh = new THREE.Mesh(geom, mat);
-      mesh.position.set(x, y, z);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
+      if (mesh.material) {
+        originalMeshMaterials.set(mesh.uuid, mesh.material);
+      }
       return mesh;
     }
 
-    // Hierarchical Bones Rig matching build_voxel_character.py
-    const charRoot = new THREE.Group();
-    charRoot.name = 'root';
-    charRoot.position.set(0, -0.05, 0); // centered vertical pivot
+    const playerRoot = new THREE.Group();
+    playerRoot.name = 'root';
+    playerRoot.position.set(0, -0.82, 0);
 
-    // Hips block
-    const hipsMesh = makeBlock(0.42, 0.20, 0.26, MAT_PANTS, 0, 0.03, 0);
-    hipsMesh.name = 'hips';
-    charRoot.add(hipsMesh);
+    // HIPS / LOWER WAIST
+    const hips = new THREE.Group();
+    hips.name = 'hips';
+    hips.position.set(0, 12 * U, 0);
+    playerRoot.add(hips);
 
-    // Chest / Torso Joint (at 1.30 -> relative to root 0.95: +0.35)
-    const chestJoint = new THREE.Group();
-    chestJoint.name = 'chest';
-    chestJoint.position.set(0, 0.35, 0);
-    charRoot.add(chestJoint);
+    // TORSO / CHEST (8 wide, 12 tall, 4 deep)
+    const torso = new THREE.Group();
+    torso.name = 'torso';
+    torso.position.set(0, 0, 0);
+    hips.add(torso);
 
-    const chestMesh = makeBlock(0.46, 0.42, 0.28, MAT_SHIRT, 0, 0, 0);
-    chestMesh.name = 'chestMesh';
-    chestJoint.add(chestMesh);
+    const torsoMesh = createBox(8, 12, 4, matShirtTorso);
+    torsoMesh.name = 'torsoMesh';
+    torsoMesh.position.set(0, 6 * U, 0);
+    torso.add(torsoMesh);
 
-    // Sunglasses on collar
-    const glassesMesh = makeBlock(0.20, 0.10, 0.05, MAT_GLASSES, 0, 0.08, 0.155);
-    glassesMesh.name = 'glasses';
-    chestJoint.add(glassesMesh);
+    // Collar sunglasses clipped to shirt collar
+    const glasses = createBox(4, 2, 0.8, matGlasses);
+    glasses.name = 'glasses';
+    glasses.position.set(0, 10 * U, 2.3 * U);
+    torso.add(glasses);
 
-    // Head Joint (at 1.53 -> relative to chest 1.30: +0.23)
-    const headJoint = new THREE.Group();
-    headJoint.name = 'head';
-    headJoint.position.set(0, 0.23, 0);
-    chestJoint.add(headJoint);
+    // HEAD (8 wide, 8 tall, 8 deep, pivots at top of torso: Y = 12 * U)
+    const head = new THREE.Group();
+    head.name = 'head';
+    head.position.set(0, 12 * U, 0);
+    torso.add(head);
 
-    const neckMesh = makeBlock(0.16, 0.08, 0.16, MAT_SKIN, 0, 0, 0);
-    neckMesh.name = 'neck';
-    headJoint.add(neckMesh);
-
-    const headMesh = makeBlock(0.34, 0.32, 0.32, MAT_HEAD_FACE, 0, 0.20, 0);
+    const headMesh = createBox(8, 8, 8, matFace);
     headMesh.name = 'headMesh';
-    headJoint.add(headMesh);
+    headMesh.position.set(0, 4 * U, 0);
+    head.add(headMesh);
 
-    const hairTopMesh = makeBlock(0.36, 0.16, 0.34, MAT_HAIR, 0, 0.40, 0.01);
-    hairTopMesh.name = 'hairTop';
-    headJoint.add(hairTopMesh);
+    // 3D Curly Hair layers on head
+    const hairTop = createBox(8.4, 1.8, 8.4, new THREE.MeshStandardMaterial({ color: '#1c1008', roughness: 0.85 }));
+    hairTop.position.set(0, 7.3 * U, 0);
+    head.add(hairTop);
 
-    const hairBackMesh = makeBlock(0.34, 0.30, 0.10, MAT_HAIR, 0, 0.25, -0.12);
-    hairBackMesh.name = 'hairBack';
-    headJoint.add(hairBackMesh);
+    const hairBack = createBox(8.2, 6.0, 1.2, new THREE.MeshStandardMaterial({ color: '#1c1008', roughness: 0.85 }));
+    hairBack.position.set(0, 4.0 * U, -4.1 * U);
+    head.add(hairBack);
 
-    const beardMesh = makeBlock(0.30, 0.14, 0.10, MAT_HAIR, 0, 0.09, 0.13);
-    beardMesh.name = 'beard';
-    headJoint.add(beardMesh);
+    // RIGHT ARM (Shoulder pivot at X = +6 * U, Y = 11 * U)
+    const rightArm = new THREE.Group();
+    rightArm.name = 'rightArm';
+    rightArm.position.set(6 * U, 11 * U, 0);
+    torso.add(rightArm);
 
-    // Left Arm (Shoulder at -0.32, 1.51 -> relative to chest: -0.32, +0.21, 0)
-    const upperArmL = new THREE.Group();
-    upperArmL.name = 'upperArmL';
-    upperArmL.position.set(-0.32, 0.21, 0);
-    chestJoint.add(upperArmL);
+    const rightUpperArm = createBox(4, 6, 4, matPlaidArm);
+    rightUpperArm.name = 'rightUpperArm';
+    rightUpperArm.position.set(0, -3 * U, 0);
+    rightArm.add(rightUpperArm);
 
-    const upperArmLMesh = makeBlock(0.16, 0.38, 0.16, MAT_SHIRT, 0, -0.19, 0);
-    upperArmLMesh.name = 'upperArmLMesh';
-    upperArmL.add(upperArmLMesh);
+    const rightForearm = new THREE.Group();
+    rightForearm.name = 'rightForearm';
+    rightForearm.position.set(0, -6 * U, 0);
+    rightArm.add(rightForearm);
 
-    // Left Forearm / Elbow Joint (-0.38 relative to shoulder)
-    const forearmL = new THREE.Group();
-    forearmL.name = 'forearmL';
-    forearmL.position.set(0, -0.38, 0);
-    upperArmL.add(forearmL);
+    const rightForearmMesh = createBox(4, 6, 4, matSkin);
+    rightForearmMesh.name = 'rightForearmMesh';
+    rightForearmMesh.position.set(0, -3 * U, 0);
+    rightForearm.add(rightForearmMesh);
 
-    const forearmLMesh = makeBlock(0.15, 0.34, 0.15, MAT_SKIN, 0, -0.15, 0);
-    forearmLMesh.name = 'forearmLMesh';
-    forearmL.add(forearmLMesh);
+    const watch = createBox(4.4, 1.2, 4.4, matWatch);
+    watch.name = 'watch';
+    watch.position.set(0, -4.5 * U, 0);
+    rightForearm.add(watch);
 
-    const handLMesh = makeBlock(0.15, 0.14, 0.10, MAT_SKIN, 0, -0.35, 0);
-    handLMesh.name = 'handLMesh';
-    forearmL.add(handLMesh);
+    // LEFT ARM (Shoulder pivot at X = -6 * U, Y = 11 * U)
+    const leftArm = new THREE.Group();
+    leftArm.name = 'leftArm';
+    leftArm.position.set(-6 * U, 11 * U, 0);
+    torso.add(leftArm);
 
-    const braceRedMesh = makeBlock(0.165, 0.03, 0.165, MAT_BRACE_R, 0, -0.30, 0);
-    braceRedMesh.name = 'braceRed';
-    forearmL.add(braceRedMesh);
+    const leftUpperArm = createBox(4, 6, 4, matPlaidArm);
+    leftUpperArm.name = 'leftUpperArm';
+    leftUpperArm.position.set(0, -3 * U, 0);
+    leftArm.add(leftUpperArm);
 
-    const braceBlkMesh = makeBlock(0.165, 0.03, 0.165, MAT_BRACE_B, 0, -0.34, 0);
-    braceBlkMesh.name = 'braceBlk';
-    forearmL.add(braceBlkMesh);
+    const leftForearm = new THREE.Group();
+    leftForearm.name = 'leftForearm';
+    leftForearm.position.set(0, -6 * U, 0);
+    leftArm.add(leftForearm);
 
-    // Right Arm (Shoulder at 0.32, 1.51 -> relative to chest: +0.32, +0.21, 0)
-    const upperArmR = new THREE.Group();
-    upperArmR.name = 'upperArmR';
-    upperArmR.position.set(0.32, 0.21, 0);
-    chestJoint.add(upperArmR);
+    const leftForearmMesh = createBox(4, 6, 4, matSkin);
+    leftForearmMesh.name = 'leftForearmMesh';
+    leftForearmMesh.position.set(0, -3 * U, 0);
+    leftForearm.add(leftForearmMesh);
 
-    const upperArmRMesh = makeBlock(0.16, 0.38, 0.16, MAT_SHIRT, 0, -0.19, 0);
-    upperArmRMesh.name = 'upperArmRMesh';
-    upperArmR.add(upperArmRMesh);
+    const braceR = createBox(4.3, 0.7, 4.3, matBraceR);
+    braceR.name = 'braceR';
+    braceR.position.set(0, -4.2 * U, 0);
+    leftForearm.add(braceR);
 
-    // Right Forearm / Elbow Joint (-0.38 relative to shoulder)
-    const forearmR = new THREE.Group();
-    forearmR.name = 'forearmR';
-    forearmR.position.set(0, -0.38, 0);
-    upperArmR.add(forearmR);
+    const braceB = createBox(4.3, 0.7, 4.3, matBraceB);
+    braceB.name = 'braceB';
+    braceB.position.set(0, -5.0 * U, 0);
+    leftForearm.add(braceB);
 
-    const forearmRMesh = makeBlock(0.15, 0.34, 0.15, MAT_SKIN, 0, -0.15, 0);
-    forearmRMesh.name = 'forearmRMesh';
-    forearmR.add(forearmRMesh);
+    // RIGHT LEG (Hip pivot at X = +2 * U, Y = 0 relative to hips)
+    const rightLeg = new THREE.Group();
+    rightLeg.name = 'rightLeg';
+    rightLeg.position.set(2 * U, 0, 0);
+    hips.add(rightLeg);
 
-    const handRMesh = makeBlock(0.15, 0.14, 0.10, MAT_SKIN, 0, -0.35, 0);
-    handRMesh.name = 'handRMesh';
-    forearmR.add(handRMesh);
+    const rightUpperLeg = createBox(4, 6, 4, matJeans);
+    rightUpperLeg.name = 'rightUpperLeg';
+    rightUpperLeg.position.set(0, -3 * U, 0);
+    rightLeg.add(rightUpperLeg);
 
-    const watchMesh = makeBlock(0.175, 0.06, 0.175, MAT_WATCH, 0, -0.31, 0);
-    watchMesh.name = 'watch';
-    forearmR.add(watchMesh);
+    const rightLowerLeg = new THREE.Group();
+    rightLowerLeg.name = 'rightLowerLeg';
+    rightLowerLeg.position.set(0, -6 * U, 0);
+    rightLeg.add(rightLowerLeg);
 
-    // Left Leg (Hip at -0.14, 0.95 -> relative to root: -0.14, 0, 0)
-    const upperLegL = new THREE.Group();
-    upperLegL.name = 'upperLegL';
-    upperLegL.position.set(-0.14, 0, 0);
-    charRoot.add(upperLegL);
+    const rightLowerLegMesh = createBox(4, 4, 4, matJeans);
+    rightLowerLegMesh.name = 'rightLowerLegMesh';
+    rightLowerLegMesh.position.set(0, -2 * U, 0);
+    rightLowerLeg.add(rightLowerLegMesh);
 
-    const upperLegLMesh = makeBlock(0.24, 0.40, 0.24, MAT_PANTS, 0, -0.20, 0);
-    upperLegLMesh.name = 'upperLegLMesh';
-    upperLegL.add(upperLegLMesh);
+    const rightShoeMesh = createBox(4, 2, 4.2, matShoe);
+    rightShoeMesh.name = 'rightShoeMesh';
+    rightShoeMesh.position.set(0, -5 * U, 0.1 * U);
+    rightLowerLeg.add(rightShoeMesh);
 
-    // Left Knee Joint (-0.40 from hip)
-    const lowerLegL = new THREE.Group();
-    lowerLegL.name = 'lowerLegL';
-    lowerLegL.position.set(0, -0.40, 0);
-    upperLegL.add(lowerLegL);
+    // LEFT LEG (Hip pivot at X = -2 * U, Y = 0 relative to hips)
+    const leftLeg = new THREE.Group();
+    leftLeg.name = 'leftLeg';
+    leftLeg.position.set(-2 * U, 0, 0);
+    hips.add(leftLeg);
 
-    const lowerLegLMesh = makeBlock(0.22, 0.45, 0.22, MAT_PANTS, 0, -0.225, 0);
-    lowerLegLMesh.name = 'lowerLegLMesh';
-    lowerLegL.add(lowerLegLMesh);
+    const leftUpperLeg = createBox(4, 6, 4, matJeans);
+    leftUpperLeg.name = 'leftUpperLeg';
+    leftUpperLeg.position.set(0, -3 * U, 0);
+    leftLeg.add(leftUpperLeg);
 
-    const footLMesh = makeBlock(0.24, 0.12, 0.34, MAT_SHOE_D, 0, -0.49, 0.05);
-    footLMesh.name = 'footLMesh';
-    lowerLegL.add(footLMesh);
+    const leftLowerLeg = new THREE.Group();
+    leftLowerLeg.name = 'leftLowerLeg';
+    leftLowerLeg.position.set(0, -6 * U, 0);
+    leftLeg.add(leftLowerLeg);
 
-    const soleLMesh = makeBlock(0.24, 0.04, 0.34, MAT_SHOE_L, 0, -0.55, 0.05);
-    soleLMesh.name = 'soleLMesh';
-    lowerLegL.add(soleLMesh);
+    const leftLowerLegMesh = createBox(4, 4, 4, matJeans);
+    leftLowerLegMesh.name = 'leftLowerLegMesh';
+    leftLowerLegMesh.position.set(0, -2 * U, 0);
+    leftLowerLeg.add(leftLowerLegMesh);
 
-    // Right Leg (Hip at 0.14, 0.95 -> relative to root: +0.14, 0, 0)
-    const upperLegR = new THREE.Group();
-    upperLegR.name = 'upperLegR';
-    upperLegR.position.set(0.14, 0, 0);
-    charRoot.add(upperLegR);
+    const leftShoeMesh = createBox(4, 2, 4.2, matShoe);
+    leftShoeMesh.name = 'leftShoeMesh';
+    leftShoeMesh.position.set(0, -5 * U, 0.1 * U);
+    leftLowerLeg.add(leftShoeMesh);
 
-    const upperLegRMesh = makeBlock(0.24, 0.40, 0.24, MAT_PANTS, 0, -0.20, 0);
-    upperLegRMesh.name = 'upperLegRMesh';
-    upperLegR.add(upperLegRMesh);
+    // Register node references for emote articulation
+    characterNodes.root = playerRoot;
+    characterNodes.torso = torso;
+    characterNodes.chest = torso;
+    characterNodes.head = head;
+    characterNodes.armRight = rightArm;
+    characterNodes.upperArmR = rightArm;
+    characterNodes.rightArm = rightArm;
+    characterNodes.forearmRight = rightForearm;
+    characterNodes.forearmR = rightForearm;
+    characterNodes.armLeft = leftArm;
+    characterNodes.upperArmL = leftArm;
+    characterNodes.leftArm = leftArm;
+    characterNodes.forearmLeft = leftForearm;
+    characterNodes.forearmL = leftForearm;
+    characterNodes.legRight = rightLeg;
+    characterNodes.upperLegR = rightLeg;
+    characterNodes.rightLeg = rightLeg;
+    characterNodes.forelegRight = rightLowerLeg;
+    characterNodes.lowerLegR = rightLowerLeg;
+    characterNodes.legLeft = leftLeg;
+    characterNodes.upperLegL = leftLeg;
+    characterNodes.leftLeg = leftLeg;
+    characterNodes.forelegLeft = leftLowerLeg;
+    characterNodes.lowerLegL = leftLowerLeg;
 
-    // Right Knee Joint (-0.40 from hip)
-    const lowerLegR = new THREE.Group();
-    lowerLegR.name = 'lowerLegR';
-    lowerLegR.position.set(0, -0.40, 0);
-    upperLegR.add(lowerLegR);
-
-    const lowerLegRMesh = makeBlock(0.22, 0.45, 0.22, MAT_PANTS, 0, -0.225, 0);
-    lowerLegRMesh.name = 'lowerLegRMesh';
-    lowerLegR.add(lowerLegRMesh);
-
-    const footRMesh = makeBlock(0.24, 0.12, 0.34, MAT_SHOE_D, 0, -0.49, 0.05);
-    footRMesh.name = 'footRMesh';
-    lowerLegR.add(footRMesh);
-
-    const soleRMesh = makeBlock(0.24, 0.04, 0.34, MAT_SHOE_L, 0, -0.55, 0.05);
-    soleRMesh.name = 'soleRMesh';
-    lowerLegR.add(soleRMesh);
-
-    // Register nodes
-    characterNodes.root = charRoot;
-    characterNodes.torso = chestJoint;
-    characterNodes.chest = chestJoint;
-    characterNodes.head = headJoint;
-    characterNodes.upperArmL = upperArmL;
-    characterNodes.forearmL = forearmL;
-    characterNodes.leftArm = upperArmL;
-    characterNodes.upperArmR = upperArmR;
-    characterNodes.forearmR = forearmR;
-    characterNodes.rightArm = upperArmR;
-    characterNodes.upperLegL = upperLegL;
-    characterNodes.lowerLegL = lowerLegL;
-    characterNodes.leftLeg = upperLegL;
-    characterNodes.upperLegR = upperLegR;
-    characterNodes.lowerLegR = lowerLegR;
-    characterNodes.rightLeg = upperLegR;
-
-    const voxelModelGroup = new THREE.Group();
-    voxelModelGroup.name = 'voxelCharacter';
-    voxelModelGroup.add(charRoot);
-
-    const targetScale = 1.65 / 2.03;
-    voxelModelGroup.scale.set(targetScale, targetScale, targetScale);
-
-    return voxelModelGroup;
+    return playerRoot;
   }
 
   function initThreeViewer() {
@@ -2427,25 +2403,23 @@ document.addEventListener('DOMContentLoaded', () => {
     threeRenderer = new THREE.WebGLRenderer({
       canvas: threeCanvas,
       alpha: true,
-      antialias: !isMobile, // Disable heavy MSAA on mobile for buttery smooth 60fps
+      antialias: !isMobile,
       powerPreference: 'high-performance',
       precision: isMobile ? 'mediump' : 'highp'
     });
     threeRenderer.setSize(width, height);
-    // Clamp DPR to 1.0 on mobile to prevent 3x overdraw lag; 1.5 max on desktop
     threeRenderer.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio, 1.5));
     if (!isMobile) {
       threeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-      threeRenderer.toneMappingExposure = 1.15;
+      threeRenderer.toneMappingExposure = 1.05;
     }
 
-    // 4. Fixed Eye-Level Camera & Zero-Zoom Fitting (Camera distance is locked, NO zoom in/out)
+    // 4. Fixed Eye-Level Camera & Zero-Zoom Fitting
     fitCameraToModel = function() {
       if (!threeCamera) return;
       const aspect = threeCamera.aspect || (width / height) || 1.0;
       const fovRad = (threeCamera.fov * Math.PI) / 360;
 
-      // Target model height is 1.65 units, comfortably centered at (0, 0, 0)
       const targetHeight = 1.65;
       const fitFraction = 0.74;
       const distY = (targetHeight / 2) / (Math.tan(fovRad) * fitFraction);
@@ -2460,46 +2434,42 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     fitCameraToModel();
 
-    // 5. Lighting (Matching Cherry Grove biome)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    // 5. Balanced Lighting (Rich, saturated Minecraft colors)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
     threeScene.add(ambientLight);
 
-    // Sun directional light (warm golden daylight from top right)
-    const sunLight = new THREE.DirectionalLight(0xfff6ea, 1.4);
-    sunLight.position.set(4, 6, 4);
+    const sunLight = new THREE.DirectionalLight(0xfff6ea, 1.1);
+    sunLight.position.set(3, 5, 3.5);
     threeScene.add(sunLight);
 
-    // Front soft fill light
-    const frontFillLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    frontFillLight.position.set(0, 2, 4);
+    const frontFillLight = new THREE.DirectionalLight(0xffffff, 0.65);
+    frontFillLight.position.set(0, 1.5, 3.5);
     threeScene.add(frontFillLight);
 
-    // Neon cyan rim light (gaming accent from left)
-    const cyanRimLight = new THREE.DirectionalLight(0x00f0ff, 1.2);
-    cyanRimLight.position.set(-4, 2, -2);
+    const cyanRimLight = new THREE.DirectionalLight(0x00f0ff, 0.9);
+    cyanRimLight.position.set(-3, 2, -2);
     threeScene.add(cyanRimLight);
 
-    // Day / Night Lighting sync hook
     window.update3DLighting = function(isNightMode) {
       if (isNightMode) {
         ambientLight.color.setHex(0x334466);
-        ambientLight.intensity = 0.6;
+        ambientLight.intensity = 0.55;
         sunLight.color.setHex(0x5588cc);
-        sunLight.intensity = 0.7;
-        cyanRimLight.intensity = 2.2;
-        frontFillLight.intensity = 0.5;
+        sunLight.intensity = 0.65;
+        cyanRimLight.intensity = 1.8;
+        frontFillLight.intensity = 0.45;
       } else {
         ambientLight.color.setHex(0xffffff);
-        ambientLight.intensity = 0.9;
+        ambientLight.intensity = 0.75;
         sunLight.color.setHex(0xfff6ea);
-        sunLight.intensity = 1.4;
-        cyanRimLight.intensity = 1.2;
-        frontFillLight.intensity = 0.8;
+        sunLight.intensity = 1.1;
+        cyanRimLight.intensity = 0.9;
+        frontFillLight.intensity = 0.65;
       }
     };
 
-    // 6. Build and Mount Voxel Character Rig (build_voxel_character.py specification)
-    modelMeshGroup = buildVoxelCharacter();
+    // 6. Build and Mount Authentic Minecraft Character
+    modelMeshGroup = buildMinecraftPlayer();
     if (modelMeshGroup) {
       if (modelPivot) {
         threeScene.remove(modelPivot);
@@ -2514,18 +2484,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (modelLoading) {
         modelLoading.classList.add('loaded');
       }
-      updateGamerProgress(100, 'CHERRY GROVE VOXEL RIG READY (100%)');
+      updateGamerProgress(100, 'CHERRY GROVE MINECRAFT AVATAR READY (100%)');
       setTimeout(finishGamerLoading, 250);
     }
 
-    // Optional GLB Loader for external files or drag-and-drop
+    // Optional manual GLB loader for user file selection or drag-and-drop (never auto-overwrites)
     if (typeof THREE.GLTFLoader !== 'undefined') {
       const loader = new THREE.GLTFLoader();
 
       function setupModelScene(gltf) {
         modelMeshGroup = gltf.scene;
-
-        // Preserve original textures and avoid expensive normal recomputations
         modelMeshGroup.traverse((child) => {
           if (child.isMesh) {
             if (!child.geometry.attributes.normal) {
@@ -2536,15 +2504,12 @@ document.addEventListener('DOMContentLoaded', () => {
               child.material.side = isMobile ? THREE.FrontSide : THREE.DoubleSide;
               child.material.roughness = 0.6;
               child.material.metalness = 0.15;
-              child.material.transparent = false;
-              child.material.opacity = 1.0;
               child.material.needsUpdate = true;
               originalMeshMaterials.set(child.uuid, child.material);
             }
           }
         });
 
-        // Cache articulated body parts with robust fallbacks
         characterNodes.head = modelMeshGroup.getObjectByName('head');
         characterNodes.upperArmL = modelMeshGroup.getObjectByName('upperArmL') || modelMeshGroup.getObjectByName('left_arm');
         characterNodes.forearmL = modelMeshGroup.getObjectByName('forearmL');
@@ -2562,20 +2527,15 @@ document.addEventListener('DOMContentLoaded', () => {
         characterNodes.rightLeg = characterNodes.upperLegR;
         characterNodes.root = modelMeshGroup.getObjectByName('root') || modelMeshGroup;
 
-        // Center and normalize model mesh
         const bbox = new THREE.Box3().setFromObject(modelMeshGroup);
         const center = bbox.getCenter(new THREE.Vector3());
         const size = bbox.getSize(new THREE.Vector3());
 
-        // Re-center model geometry so pivot is at geometric origin (0, 0, 0)
         modelMeshGroup.position.set(-center.x, -center.y, -center.z);
-
-        // Scale model so height is standardized to 1.65 units
         const baseHeight = size.y || 1.0;
         const targetScale = 1.65 / baseHeight;
         modelMeshGroup.scale.set(targetScale, targetScale, targetScale);
 
-        // Container group for rotation & mouse sway
         if (modelPivot) {
           threeScene.remove(modelPivot);
         }
@@ -2583,13 +2543,9 @@ document.addEventListener('DOMContentLoaded', () => {
         modelPivot.add(modelMeshGroup);
         threeScene.add(modelPivot);
 
-        // Perfectly frame model in viewport
         fitCameraToModel();
-
-        // Render immediate initial frame
         threeRenderer.render(threeScene, threeCamera);
 
-        // Dismiss loading screen and spinner
         if (modelLoading) {
           modelLoading.classList.add('loaded');
         }
@@ -2623,60 +2579,6 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsArrayBuffer(file);
       }
 
-      // Candidate paths to check in order (prioritize articulated character model)
-      const candidatePaths = [
-        'assets/character_articulated.glb',
-        'assets/character.glb',
-        'colored 3d.glb',
-        'assets/colored 3d.glb',
-        'assets/3d_model.glb'
-      ];
-
-      function tryLoadCandidate(idx) {
-        if (idx >= candidatePaths.length) {
-          finishGamerLoading();
-          if (modelLoading) {
-            modelLoading.innerHTML = `
-              <span>Load "colored 3d.glb"</span>
-              <label class="mc-btn btn-sm" style="margin-top:6px; cursor:pointer;">
-                <span class="mc-btn-inner">Select 3D File</span>
-                <input type="file" id="local-model-input" accept=".glb,.gltf" style="display:none;">
-              </label>
-            `;
-            const input = document.getElementById('local-model-input');
-            if (input) {
-              input.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) loadModelFromFile(file);
-              });
-            }
-          }
-          return;
-        }
-
-        const path = candidatePaths[idx];
-        loader.load(
-          path,
-          (gltf) => {
-            setupModelScene(gltf);
-          },
-          (xhr) => {
-            if (xhr.lengthComputable) {
-              const percent = Math.round((xhr.loaded / xhr.total) * 100);
-              updateGamerProgress(percent, `LOADING CHERRY GROVE AVATAR (${percent}%)...`);
-              if (modelLoading) {
-                const span = modelLoading.querySelector('span');
-                if (span) span.textContent = `Loading Colored 3D Mesh (${percent}%)...`;
-              }
-            }
-          },
-          (error) => {
-            console.warn(`Could not load model from ${path}, trying next fallback...`, error);
-            tryLoadCandidate(idx + 1);
-          }
-        );
-      }
-
       // Drag & drop support on canvas container
       if (container) {
         container.addEventListener('dragover', (e) => e.preventDefault());
@@ -2688,40 +2590,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
       }
-
-      // Check if embedded model data is present (100% offline & local file:/// support without CORS)
-      if (typeof window.MODEL_DATA_BASE64 === 'string' && window.MODEL_DATA_BASE64.length > 1000) {
-        if (modelLoading) {
-          const span = modelLoading.querySelector('span');
-          if (span) span.textContent = 'Rendering Colored 3D Mesh...';
-        }
-        try {
-          const bin = window.atob(window.MODEL_DATA_BASE64);
-          const len = bin.length;
-          const bytes = new Uint8Array(len);
-          for (let i = 0; i < len; i++) {
-            bytes[i] = bin.charCodeAt(i);
-          }
-          loader.parse(
-            bytes.buffer,
-            '',
-            (gltf) => {
-              setupModelScene(gltf);
-            },
-            (err) => {
-              console.warn('Could not parse embedded model data, falling back to candidate files:', err);
-              tryLoadCandidate(0);
-            }
-          );
-          return;
-        } catch (err) {
-          console.warn('Embedded model decoding error:', err);
-          tryLoadCandidate(0);
-          return;
-        }
-      }
-
-      tryLoadCandidate(0);
     }
 
     // 7. Cursor Movement & Drag Interaction (Move from cursor horizontally, Zero Zoom)
@@ -2790,10 +2658,13 @@ document.addEventListener('DOMContentLoaded', () => {
       threeCanvas.addEventListener('wheel', preventZoom, { passive: false });
     }
 
-    // Keyboard turning: ArrowLeft, ArrowRight, A, D
+    // Keyboard turning: ArrowLeft, ArrowRight, A, D and 'B' key for Minecraft Emote Wheel
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        openEmoteWheel();
+      } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
         dragRotation -= 0.12;
         currentVelocityY = -0.05;
       } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
@@ -2802,257 +2673,219 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // 8. Animation Render Loop (Procedural Emotes + Cursor/Drag Turntable, Zero Zoom)
-    let lastRenderTime = 0;
-    const mobileFrameInterval = isMobile ? (1000 / 38) : 0;
-
-    function applyArticulatedEmote(key, p) {
+    // 8. Authentic Minecraft Bedrock Emote Engine & Animation Loop
+    function resetCharacterPose() {
       const cn = characterNodes;
-      const upperArmR = cn.upperArmR || cn.rightArm;
-      const forearmR = cn.forearmR;
-      const upperArmL = cn.upperArmL || cn.leftArm;
-      const forearmL = cn.forearmL;
-      const upperLegR = cn.upperLegR || cn.rightLeg;
-      const lowerLegR = cn.lowerLegR;
-      const upperLegL = cn.upperLegL || cn.leftLeg;
-      const lowerLegL = cn.lowerLegL;
-      const chest = cn.chest || cn.torso;
+      if (cn.root) {
+        cn.root.position.set(0, -0.82, 0);
+        cn.root.rotation.set(0, 0, 0);
+      }
+      if (cn.torso) {
+        cn.torso.position.set(0, 0, 0);
+        cn.torso.rotation.set(0, 0, 0);
+      }
+      if (cn.chest) {
+        cn.chest.position.set(0, 0, 0);
+        cn.chest.rotation.set(0, 0, 0);
+      }
+      if (cn.head) cn.head.rotation.set(0, 0, 0);
+      const armR = cn.armRight || cn.upperArmR || cn.rightArm;
+      const armL = cn.armLeft || cn.upperArmL || cn.leftArm;
+      const forearmR = cn.forearmRight || cn.forearmR;
+      const forearmL = cn.forearmLeft || cn.forearmL;
+      const legR = cn.legRight || cn.upperLegR || cn.rightLeg;
+      const legL = cn.legLeft || cn.upperLegL || cn.leftLeg;
+      const forelegR = cn.forelegRight || cn.lowerLegR;
+      const forelegL = cn.forelegLeft || cn.lowerLegL;
+
+      if (armR) armR.rotation.set(0, 0, 0);
+      if (armL) armL.rotation.set(0, 0, 0);
+      if (forearmR) forearmR.rotation.set(0, 0, 0);
+      if (forearmL) forearmL.rotation.set(0, 0, 0);
+      if (legR) legR.rotation.set(0, 0, 0);
+      if (legL) legL.rotation.set(0, 0, 0);
+      if (forelegR) forelegR.rotation.set(0, 0, 0);
+      if (forelegL) forelegL.rotation.set(0, 0, 0);
+    }
+
+    function applyArticulatedEmote(key, emoteTime, duration) {
+      const cn = characterNodes;
+      const armR = cn.armRight || cn.upperArmR || cn.rightArm;
+      const armL = cn.armLeft || cn.upperArmL || cn.leftArm;
+      const forearmR = cn.forearmRight || cn.forearmR;
+      const forearmL = cn.forearmLeft || cn.forearmL;
+      const legR = cn.legRight || cn.upperLegR || cn.rightLeg;
+      const legL = cn.legLeft || cn.upperLegL || cn.leftLeg;
+      const torso = cn.torso || cn.chest;
       const head = cn.head;
+      const root = cn.root;
+
+      // Clean animation envelope: 180ms ease-in, sustain action, 220ms ease-out
+      const blendIn = Math.min(1.0, emoteTime / 0.18);
+      const blendOut = Math.min(1.0, (duration - emoteTime) / 0.22);
+      const env = Math.max(0, Math.min(blendIn, blendOut));
+
+      resetCharacterPose();
 
       switch (key) {
         case 'wave': {
-          // Wave from build_voxel_character.py Wave action:
-          // Right arm raises high forward and outward (-140 deg), forearm waves back and forth at elbow
-          const raise = Math.sin(p * Math.PI);
-          if (upperArmR) {
-            upperArmR.rotation.x = -1.95 * raise;
-            upperArmR.rotation.z = 0.35 * raise;
-            upperArmR.rotation.y = 0.20 * raise;
+          // Official Minecraft Bedrock "The Wave" Emote
+          const waveCycle = Math.sin(emoteTime * 14) * 0.38; // 4.5 Hz wave oscillation
+          if (armR) {
+            armR.rotation.x = -2.1 * env; // Point high in air (~120 deg)
+            armR.rotation.z = (0.42 + waveCycle) * env; // Wave left and right
           }
           if (forearmR) {
-            forearmR.rotation.x = -0.55 * raise;
-            forearmR.rotation.z = Math.sin(p * Math.PI * 14) * 0.48 * raise;
+            forearmR.rotation.x = -0.32 * env;
           }
           if (head) {
-            head.rotation.z = Math.sin(p * Math.PI * 6) * 0.16 * raise;
-            head.rotation.y = 0.12 * raise;
+            head.rotation.z = -0.16 * env; // Warm head tilt
+            head.rotation.x = -0.06 * env;
           }
-          if (upperArmL) {
-            upperArmL.rotation.x = 0.12 * raise;
+          if (armL) {
+            armL.rotation.x = 0.10 * env;
+          }
+          if (root) {
+            root.position.y = -0.82 + Math.abs(Math.sin(emoteTime * 7)) * 0.03 * env;
           }
           break;
         }
 
         case 'cheer': {
-          // Victory Cheer: BOTH arms shoot straight up in the air in a triumphant V!
-          const jumpProgress = Math.sin(p * Math.PI);
-          const hopBeat = Math.sin(p * Math.PI * 6);
-          if (upperArmL) {
-            upperArmL.rotation.z = -2.35 * jumpProgress;
-            upperArmL.rotation.x = -0.45 * jumpProgress;
-          }
-          if (forearmL) {
-            forearmL.rotation.z = -0.30 * jumpProgress;
-            forearmL.rotation.x = -0.20 * jumpProgress;
-          }
-          if (upperArmR) {
-            upperArmR.rotation.z = 2.35 * jumpProgress;
-            upperArmR.rotation.x = -0.45 * jumpProgress;
-          }
-          if (forearmR) {
-            forearmR.rotation.z = 0.30 * jumpProgress;
-            forearmR.rotation.x = -0.20 * jumpProgress;
-          }
-          if (head) {
-            head.rotation.x = -0.45 * jumpProgress; // look up in celebration!
-          }
-          if (upperLegL && lowerLegL && upperLegR && lowerLegR) {
-            const legBend = Math.max(0, -hopBeat) * 0.35 * jumpProgress;
-            upperLegL.rotation.x = -legBend;
-            lowerLegL.rotation.x = legBend * 1.5;
-            upperLegR.rotation.x = -legBend;
-            lowerLegR.rotation.x = legBend * 1.5;
-          }
-          break;
-        }
+          // Official Minecraft Bedrock "Victory Cheer" Emote
+          const jumpPhase = Math.sin(emoteTime * 12);
+          const pump = Math.sin(emoteTime * 16) * 0.15;
 
-        case 'bow': {
-          // Hero's Bow: Torso bends forward at waist (42 degrees), head bows respectfully, arms fold back
-          const bowProgress = Math.sin(p * Math.PI);
-          if (chest) {
-            chest.rotation.x = 0.72 * bowProgress;
+          if (armR) {
+            armR.rotation.z = (2.82 + pump) * env; // High 'V' outward & up
+            armR.rotation.x = -0.35 * env;
+          }
+          if (armL) {
+            armL.rotation.z = (-2.82 - pump) * env; // High 'V' outward & up
+            armL.rotation.x = -0.35 * env;
           }
           if (head) {
-            head.rotation.x = 0.38 * bowProgress;
+            head.rotation.x = -0.35 * env; // Look up at triumph
           }
-          if (upperArmL && upperArmR) {
-            upperArmL.rotation.x = 0.45 * bowProgress;
-            upperArmR.rotation.x = 0.45 * bowProgress;
+          const hop = Math.max(0, jumpPhase) * 0.32 * env;
+          if (root) {
+            root.position.y = -0.82 + hop;
           }
-          if (forearmL && forearmR) {
-            forearmL.rotation.x = -0.20 * bowProgress;
-            forearmR.rotation.x = -0.20 * bowProgress;
-          }
-          break;
-        }
-
-        case 'point': {
-          // Adventure Point & Thumbs Up from build_voxel_character.py ThumbsUp action:
-          // Right arm extends forward (-95 deg), forearm bends upright 90° with thumb up!
-          const pointProgress = Math.sin(p * Math.PI);
-          if (upperArmR) {
-            upperArmR.rotation.x = -1.65 * pointProgress;
-            upperArmR.rotation.y = 0.15 * pointProgress;
-            upperArmR.rotation.z = 0.10 * pointProgress;
-          }
-          if (forearmR) {
-            forearmR.rotation.x = -1.45 * pointProgress;
-          }
-          if (upperArmL) {
-            upperArmL.rotation.x = 0.25 * pointProgress; // hand on hip
-            upperArmL.rotation.z = -0.45 * pointProgress;
-          }
-          if (forearmL) {
-            forearmL.rotation.x = -0.65 * pointProgress;
-          }
-          if (head) {
-            head.rotation.y = -0.25 * pointProgress;
-            head.rotation.x = 0.12 * pointProgress;
+          if (legR && legL && hop > 0.05) {
+            legR.rotation.x = 0.25 * env;
+            legL.rotation.x = -0.25 * env;
           }
           break;
         }
 
         case 'clap': {
-          // Applause: Both arms swing forward and clap together rhythmically in front of the chest!
-          const clapProgress = Math.sin(p * Math.PI);
-          const clapBeat = Math.sin(p * Math.PI * 14);
-          if (upperArmL) {
-            upperArmL.rotation.x = -1.15 * clapProgress;
-            upperArmL.rotation.z = -0.45 * clapProgress;
+          // Official Minecraft Bedrock "Simple Clap" Emote
+          const clapBeat = Math.sin(emoteTime * 22); // 7 Hz applause tempo
+          const clapOpen = Math.max(0, clapBeat) * 0.28;
+
+          if (armR) {
+            armR.rotation.x = -1.55 * env; // Horizontal forward
+            armR.rotation.z = (-0.30 - clapOpen) * env;
           }
-          if (forearmL) {
-            forearmL.rotation.x = -0.40 * clapProgress;
-            forearmL.rotation.y = (0.55 + clapBeat * 0.28) * clapProgress;
-          }
-          if (upperArmR) {
-            upperArmR.rotation.x = -1.15 * clapProgress;
-            upperArmR.rotation.z = 0.45 * clapProgress;
-          }
-          if (forearmR) {
-            forearmR.rotation.x = -0.40 * clapProgress;
-            forearmR.rotation.y = (-0.55 - clapBeat * 0.28) * clapProgress;
+          if (armL) {
+            armL.rotation.x = -1.55 * env; // Horizontal forward
+            armL.rotation.z = (0.30 + clapOpen) * env;
           }
           if (head) {
-            head.rotation.x = Math.abs(Math.sin(p * Math.PI * 7)) * 0.12 * clapProgress;
+            head.rotation.x = Math.max(0, clapBeat) * 0.12 * env;
           }
+          if (root) {
+            root.position.y = -0.82 + Math.max(0, clapBeat) * 0.02 * env;
+          }
+          break;
+        }
+
+        case 'point': {
+          // Official Minecraft Bedrock "Over There!" Emote
+          if (armR) {
+            armR.rotation.x = -1.45 * env;
+            armR.rotation.z = 0.28 * env;
+          }
+          if (head) {
+            head.rotation.y = -0.35 * env;
+            head.rotation.x = 0.06 * env;
+          }
+          if (torso) {
+            torso.rotation.y = -0.15 * env;
+          }
+          if (armL) {
+            armL.rotation.x = 0.25 * env;
+          }
+          break;
+        }
+
+        case 'bow': {
+          // Official Minecraft Bedrock "Hero's Bow" Emote
+          const bowEase = Math.sin(Math.min(1.0, emoteTime / duration) * Math.PI);
+          if (torso) torso.rotation.x = 0.65 * bowEase;
+          if (head) head.rotation.x = 0.35 * bowEase;
+          if (armR) armR.rotation.x = 0.35 * bowEase;
+          if (armL) armL.rotation.x = 0.35 * bowEase;
+          if (root) root.position.y = -0.82 - 0.04 * bowEase;
           break;
         }
 
         case 'disco': {
-          // Dance from build_voxel_character.py Dance action:
-          // Alternating arm swing, chest twist, root twist, leg steps!
-          const discoProgress = Math.sin(p * Math.PI);
-          const beat = Math.sin(p * Math.PI * 6);
-          const cosBeat = Math.cos(p * Math.PI * 6);
-          if (upperArmL) {
-            upperArmL.rotation.x = (-beat * 0.9) * discoProgress;
-            upperArmL.rotation.z = (-0.5 - Math.abs(beat) * 0.45) * discoProgress;
-          }
-          if (forearmL) {
-            forearmL.rotation.x = (-0.6 - Math.abs(beat) * 0.5) * discoProgress;
-          }
-          if (upperArmR) {
-            upperArmR.rotation.x = (beat * 0.9) * discoProgress;
-            upperArmR.rotation.z = (0.5 + Math.abs(cosBeat) * 0.45) * discoProgress;
-          }
-          if (forearmR) {
-            forearmR.rotation.x = (-0.6 - Math.abs(cosBeat) * 0.5) * discoProgress;
-          }
-          if (chest) {
-            chest.rotation.y = (beat * 0.32) * discoProgress;
+          // Official Minecraft Bedrock "Simple Dance / Foot Groove" Emote
+          const step = Math.sin(emoteTime * 10);
+          const cosStep = Math.cos(emoteTime * 10);
+
+          if (torso) {
+            torso.rotation.z = step * 0.15 * env;
+            torso.rotation.y = cosStep * 0.12 * env;
           }
           if (head) {
-            head.rotation.z = (beat * 0.18) * discoProgress;
-            head.rotation.y = (-beat * 0.25) * discoProgress;
+            head.rotation.z = -step * 0.18 * env;
+            head.rotation.x = Math.abs(cosStep) * 0.12 * env;
           }
-          if (upperLegL && lowerLegL && upperLegR && lowerLegR) {
-            upperLegL.rotation.x = (-beat * 0.4) * discoProgress;
-            lowerLegL.rotation.x = (Math.max(0, beat) * 0.6) * discoProgress;
-            upperLegR.rotation.x = (beat * 0.4) * discoProgress;
-            lowerLegR.rotation.x = (Math.max(0, -beat) * 0.6) * discoProgress;
-          }
+          if (armR) armR.rotation.x = step * 0.95 * env;
+          if (armL) armL.rotation.x = -step * 0.95 * env;
+          if (forearmR) forearmR.rotation.x = -0.35 * env;
+          if (forearmL) forearmL.rotation.x = -0.35 * env;
+          if (legR) legR.rotation.x = -step * 0.65 * env;
+          if (legL) legL.rotation.x = step * 0.65 * env;
+          if (root) root.position.y = -0.82 + Math.abs(cosStep) * 0.06 * env;
           break;
         }
 
         case 'tornado': {
-          // Tornado Spin: Arms spread wide like wings, body whirls in a 1080 cyclone
-          const spinProgress = Math.sin(p * Math.PI);
-          if (upperArmL) {
-            upperArmL.rotation.z = -1.50 * spinProgress;
-          }
-          if (upperArmR) {
-            upperArmR.rotation.z = 1.50 * spinProgress;
-          }
-          if (forearmL && forearmR) {
-            forearmL.rotation.set(0, 0, 0);
-            forearmR.rotation.set(0, 0, 0);
-          }
-          if (head) {
-            head.rotation.y = Math.sin(p * Math.PI * 10) * 0.25;
+          // Whirlwind Spin Emote (720° pirouette with airplane arms)
+          if (armR) armR.rotation.z = 1.55 * env;
+          if (armL) armL.rotation.z = -1.55 * env;
+          const spinProgress = Math.min(1.0, emoteTime / duration);
+          if (root) {
+            root.rotation.y = spinProgress * Math.PI * 4;
+            root.position.y = -0.82 + Math.sin(spinProgress * Math.PI) * 0.35;
           }
           break;
         }
 
         case 'flip': {
-          // Jump & 360° Backflip from build_voxel_character.py Jump action:
-          // Crouch with bent knees and arms back, launch, somersault tuck, landing cushion
-          if (p < 0.2) {
-            const t = p / 0.2;
-            if (upperLegL && upperLegR) {
-              upperLegL.rotation.x = -0.65 * t;
-              upperLegR.rotation.x = -0.65 * t;
+          // 360° Acrobatic Flip Emote
+          const p = Math.min(1.0, emoteTime / duration);
+          if (p < 0.22) {
+            const t = p / 0.22;
+            if (root) root.position.y = -0.82 - 0.15 * Math.sin(t * Math.PI * 0.5);
+            if (armR && armL) armR.rotation.x = armL.rotation.x = 0.7 * t;
+            if (legR && legL) legR.rotation.x = legL.rotation.x = -0.4 * t;
+          } else if (p < 0.80) {
+            const t = (p - 0.22) / 0.58;
+            if (root) {
+              root.position.y = -0.82 + Math.sin(t * Math.PI) * 0.9;
+              root.rotation.x = -Math.PI * 2 * t;
             }
-            if (lowerLegL && lowerLegR) {
-              lowerLegL.rotation.x = 1.10 * t; // knees bend backward!
-              lowerLegR.rotation.x = 1.10 * t;
-            }
-            if (upperArmL && upperArmR) {
-              upperArmL.rotation.x = 0.75 * t; // arms swing back
-              upperArmR.rotation.x = 0.75 * t;
-            }
-            if (chest) {
-              chest.rotation.x = 0.25 * t;
-            }
-          } else if (p < 0.85) {
-            if (upperLegL && upperLegR) {
-              upperLegL.rotation.x = 0.85;
-              upperLegR.rotation.x = 0.85;
-            }
-            if (lowerLegL && lowerLegR) {
-              lowerLegL.rotation.x = -0.85;
-              lowerLegR.rotation.x = -0.85;
-            }
-            if (upperArmL && upperArmR) {
-              upperArmL.rotation.x = -1.50;
-              upperArmR.rotation.x = -1.50;
-            }
-            if (forearmL && forearmR) {
-              forearmL.rotation.x = -1.40;
-              forearmR.rotation.x = -1.40;
-            }
+            if (armR && armL) armR.rotation.x = armL.rotation.x = -2.0;
+            if (legR && legL) legR.rotation.x = legL.rotation.x = 1.0;
           } else {
-            const t = (p - 0.85) / 0.15;
-            if (upperLegL && upperLegR) {
-              upperLegL.rotation.x = -0.25 * (1 - t);
-              upperLegR.rotation.x = -0.25 * (1 - t);
-            }
-            if (lowerLegL && lowerLegR) {
-              lowerLegL.rotation.x = 0.35 * (1 - t);
-              lowerLegR.rotation.x = 0.35 * (1 - t);
-            }
-            if (upperArmL && upperArmR) {
-              upperArmL.rotation.z = -0.45 * (1 - t);
-              upperArmR.rotation.z = 0.45 * (1 - t);
+            const t = (p - 0.80) / 0.20;
+            if (root) {
+              root.rotation.x = 0;
+              root.position.y = -0.82 - 0.08 * (1 - t) * Math.sin(t * Math.PI);
             }
           }
           break;
@@ -3060,188 +2893,82 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    function updateActiveEmote(now) {
-      if (!activeEmote) {
-        return {
-          posX: 0, posY: 0, posZ: 0,
-          rotX: 0, rotY: 0, rotZ: 0,
-          scaleX: 1, scaleY: 1, scaleZ: 1
-        };
-      }
-
-      const elapsed = now - activeEmote.startTime;
-      const p = Math.min(1.0, elapsed / activeEmote.duration);
-
-      // Apply articulated transformations to limbs
-      applyArticulatedEmote(activeEmote.key, p);
-
-      let posX = 0, posY = 0, posZ = 0;
-      let rotX = 0, rotY = 0, rotZ = 0;
-      let scaleX = 1, scaleY = 1, scaleZ = 1;
-
-      switch (activeEmote.key) {
-        case 'flip': {
-          if (p < 0.2) {
-            const t = p / 0.2;
-            posY = -0.16 * Math.sin(t * Math.PI * 0.5);
-            scaleY = 1.0 - 0.18 * Math.sin(t * Math.PI * 0.5);
-            scaleX = scaleZ = 1.0 + 0.08 * Math.sin(t * Math.PI * 0.5);
-          } else if (p < 0.85) {
-            const t = (p - 0.2) / 0.65;
-            posY = Math.sin(t * Math.PI) * 0.95;
-            rotX = -Math.PI * 2 * t;
-            scaleY = 1.08;
-            scaleX = scaleZ = 0.94;
-          } else {
-            const t = (p - 0.85) / 0.15;
-            posY = -0.09 * (1 - t) * Math.sin(t * Math.PI);
-            scaleY = 1.0 - 0.14 * Math.sin(t * Math.PI);
-            scaleX = scaleZ = 1.0 + 0.06 * Math.sin(t * Math.PI);
-          }
-          break;
-        }
-
-        case 'wave': {
-          rotZ = Math.sin(p * Math.PI * 6) * 0.08 * Math.sin(p * Math.PI);
-          posY = Math.abs(Math.sin(p * Math.PI * 3)) * 0.10 * Math.sin(p * Math.PI);
-          break;
-        }
-
-        case 'cheer': {
-          posY = Math.abs(Math.sin(p * Math.PI * 5)) * 0.44 * Math.sin(p * Math.PI);
-          rotZ = Math.sin(p * Math.PI * 8) * 0.08 * Math.sin(p * Math.PI);
-          scaleY = 1.0 + (Math.sin(p * Math.PI * 5) * 0.10) * Math.sin(p * Math.PI);
-          scaleX = scaleZ = 1.0 - (Math.sin(p * Math.PI * 5) * 0.05) * Math.sin(p * Math.PI);
-          break;
-        }
-
-        case 'disco': {
-          posX = Math.sin(p * Math.PI * 6) * 0.18 * Math.sin(p * Math.PI);
-          posY = Math.abs(Math.cos(p * Math.PI * 6)) * 0.12 * Math.sin(p * Math.PI);
-          rotZ = Math.sin(p * Math.PI * 6) * 0.12 * Math.sin(p * Math.PI);
-          rotY = Math.sin(p * Math.PI * 3) * 0.25 * Math.sin(p * Math.PI);
-          break;
-        }
-
-        case 'bow': {
-          posY = -0.10 * Math.sin(p * Math.PI);
-          posZ = -0.05 * Math.sin(p * Math.PI);
-          break;
-        }
-
-        case 'point': {
-          posZ = 0.20 * Math.sin(p * Math.PI);
-          posY = 0.04 * Math.sin(p * Math.PI);
-          break;
-        }
-
-        case 'tornado': {
-          rotY = p * Math.PI * 6; // 3 full 360 degree whirlwind spins
-          posY = Math.sin(p * Math.PI) * 0.35;
-          scaleY = 1.0 + Math.sin(p * Math.PI) * 0.12;
-          scaleX = scaleZ = 1.0 - Math.sin(p * Math.PI) * 0.06;
-          break;
-        }
-
-        case 'clap': {
-          const pulse = Math.sin(p * Math.PI * 14);
-          scaleY = 1.0 + pulse * 0.04 * Math.sin(p * Math.PI);
-          scaleX = scaleZ = 1.0 - pulse * 0.02 * Math.sin(p * Math.PI);
-          posY = Math.abs(pulse) * 0.03 * Math.sin(p * Math.PI);
-          break;
-        }
-      }
-
-      if (p >= 1.0) {
+    function updateActiveEmote(dtSec) {
+      if (!activeEmote) return;
+      activeEmote.timer += dtSec;
+      const durationSec = activeEmote.duration * 0.001;
+      applyArticulatedEmote(activeEmote.key, activeEmote.timer, durationSec);
+      if (activeEmote.timer >= durationSec) {
         activeEmote = null;
+        resetCharacterPose();
       }
-
-      return {
-        posX, posY, posZ,
-        rotX, rotY, rotZ,
-        scaleX, scaleY, scaleZ
-      };
     }
 
+    let lastFrameSec = 0;
     function renderThree(timestamp = 0) {
       requestAnimationFrame(renderThree);
+      const nowSec = timestamp * 0.001;
+      const dt = lastFrameSec ? Math.min(0.08, Math.max(0.001, nowSec - lastFrameSec)) : 0.016;
+      lastFrameSec = nowSec;
+
       if (isMobile && timestamp) {
         if (timestamp - lastRenderTime < mobileFrameInterval) return;
         lastRenderTime = timestamp;
       }
-      try {
-        if (modelPivot) {
-          // Reset articulated joints to neutral pose
-          if (characterNodes.chest) characterNodes.chest.rotation.set(0, 0, 0);
-          if (characterNodes.torso) characterNodes.torso.rotation.set(0, 0, 0);
-          if (characterNodes.head) characterNodes.head.rotation.set(0, 0, 0);
-          if (characterNodes.upperArmL) characterNodes.upperArmL.rotation.set(0, 0, 0);
-          if (characterNodes.forearmL) characterNodes.forearmL.rotation.set(0, 0, 0);
-          if (characterNodes.leftArm) characterNodes.leftArm.rotation.set(0, 0, 0);
-          if (characterNodes.upperArmR) characterNodes.upperArmR.rotation.set(0, 0, 0);
-          if (characterNodes.forearmR) characterNodes.forearmR.rotation.set(0, 0, 0);
-          if (characterNodes.rightArm) characterNodes.rightArm.rotation.set(0, 0, 0);
-          if (characterNodes.upperLegL) characterNodes.upperLegL.rotation.set(0, 0, 0);
-          if (characterNodes.lowerLegL) characterNodes.lowerLegL.rotation.set(0, 0, 0);
-          if (characterNodes.leftLeg) characterNodes.leftLeg.rotation.set(0, 0, 0);
-          if (characterNodes.upperLegR) characterNodes.upperLegR.rotation.set(0, 0, 0);
-          if (characterNodes.lowerLegR) characterNodes.lowerLegR.rotation.set(0, 0, 0);
-          if (characterNodes.rightLeg) characterNodes.rightLeg.rotation.set(0, 0, 0);
 
-          if (!activeEmote) {
-            // Subtle natural Minecraft idle breathing & arm sway from build_voxel_character.py Idle action
+      try {
+        if (characterNodes.root && threeScene) {
+          if (activeEmote) {
+            // Smoothly auto-center character to face front during emotes
+            dragRotation += (0 - dragRotation) * 0.12;
+            if (modelPivot) {
+              modelPivot.rotation.y += (0 - modelPivot.rotation.y) * 0.12;
+            }
+            updateActiveEmote(dt);
+          } else {
+            // Natural Minecraft idle breathing & arm sway
             const idleTime = timestamp * 0.0022;
-            const chestNode = characterNodes.chest || characterNodes.torso;
-            if (chestNode) {
-              chestNode.rotation.x = Math.sin(idleTime) * 0.026;
+            const torsoNode = characterNodes.torso || characterNodes.chest;
+            if (torsoNode) {
+              torsoNode.position.y = Math.sin(idleTime) * 0.012;
             }
             if (characterNodes.head) {
               characterNodes.head.rotation.x = Math.sin(idleTime + 0.6) * 0.025;
-              characterNodes.head.rotation.y = Math.sin(idleTime * 0.5) * 0.04;
             }
-            const leftArmNode = characterNodes.upperArmL || characterNodes.leftArm;
+            const leftArmNode = characterNodes.armLeft || characterNodes.upperArmL || characterNodes.leftArm;
             if (leftArmNode) {
-              leftArmNode.rotation.x = Math.sin(idleTime) * 0.06;
+              leftArmNode.rotation.x = Math.sin(idleTime) * 0.05;
             }
-            const rightArmNode = characterNodes.upperArmR || characterNodes.rightArm;
+            const rightArmNode = characterNodes.armRight || characterNodes.upperArmR || characterNodes.rightArm;
             if (rightArmNode) {
-              rightArmNode.rotation.x = -Math.sin(idleTime) * 0.06;
+              rightArmNode.rotation.x = -Math.sin(idleTime) * 0.05;
+            }
+
+            // Turntable controls
+            if (isDragging && modelPivot) {
+              modelPivot.rotation.y = dragRotation;
+            } else if (modelPivot) {
+              if (Math.abs(currentVelocityY) > 0.0002) {
+                dragRotation += currentVelocityY;
+                modelPivot.rotation.y = dragRotation;
+                currentVelocityY *= 0.90;
+              } else if (autoSpinEnabled) {
+                dragRotation += autoSpinSpeed;
+                modelPivot.rotation.y = dragRotation;
+              } else {
+                // In Minecraft menu: Steve's head looks towards mouse cursor, body stays facing front
+                const targetY = dragRotation + targetCursorAngle * 0.35;
+                modelPivot.rotation.y += (targetY - modelPivot.rotation.y) * 0.08;
+                if (characterNodes.head) {
+                  characterNodes.head.rotation.y += (targetCursorAngle * 0.65 - characterNodes.head.rotation.y) * 0.10;
+                }
+              }
             }
           }
-
-          const et = updateActiveEmote(timestamp);
-
-          if (isDragging) {
-            modelPivot.rotation.y = dragRotation;
-          } else {
-            // Apply inertia if recently dragged/flicked
-            if (Math.abs(currentVelocityY) > 0.0002) {
-              dragRotation += currentVelocityY;
-              modelPivot.rotation.y = dragRotation;
-              currentVelocityY *= 0.90;
-            } else if (autoSpinEnabled && !activeEmote) {
-              // Smooth continuous horizontal turntable spin (paused during emote)
-              dragRotation += autoSpinSpeed;
-              modelPivot.rotation.y = dragRotation;
-            } else if (!activeEmote) {
-              // Smoothly turn character left and right to face the cursor!
-              const targetY = dragRotation + targetCursorAngle;
-              modelPivot.rotation.y += (targetY - modelPivot.rotation.y) * 0.08;
-            }
-          }
-
-          // Apply Emote procedural transforms
-          modelPivot.position.set(et.posX, et.posY, et.posZ);
-          modelPivot.rotation.x = et.rotX;
-          modelPivot.rotation.y += et.rotY;
-          modelPivot.rotation.z = et.rotZ;
-          modelPivot.scale.set(et.scaleX, et.scaleY, et.scaleZ);
         }
 
-        // Camera stays permanently locked at optimal distance (Zero Zoom)
-        threeCamera.position.set(0, 0, optimalCamDist);
-        threeCamera.lookAt(0, 0, 0);
-
+        threeCamera.position.set(0, 0.05, optimalCamDist);
+        threeCamera.lookAt(0, 0.05, 0);
         threeRenderer.render(threeScene, threeCamera);
       } catch (err) {
         console.warn('Render loop frame error:', err);
