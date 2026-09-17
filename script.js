@@ -1774,6 +1774,8 @@ document.addEventListener('DOMContentLoaded', () => {
       duration: duration
     };
   }
+  window.triggerEmote = triggerEmote;
+  window.triggerEmoteTest = triggerEmote;
 
   // =========================================================================
   // 6. VITALS & XP BAR INTERACTION
@@ -1942,11 +1944,21 @@ document.addEventListener('DOMContentLoaded', () => {
   let modelPivot = null;
   let activeEmote = null;
   const characterNodes = {
-    head: null,
-    leftArm: null,
-    rightArm: null,
+    root: null,
     torso: null,
+    chest: null,
+    head: null,
+    upperArmL: null,
+    forearmL: null,
+    leftArm: null,
+    upperArmR: null,
+    forearmR: null,
+    rightArm: null,
+    upperLegL: null,
+    lowerLegL: null,
     leftLeg: null,
+    upperLegR: null,
+    lowerLegR: null,
     rightLeg: null
   };
   let fitCameraToModel = () => {};
@@ -1973,10 +1985,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       if (gamerLoadingScreen && !gamerLoadingScreen.classList.contains('hidden')) {
         gamerLoadingScreen.classList.add('hidden');
+        setTimeout(() => {
+          gamerLoadingScreen.style.display = 'none';
+        }, 550);
         playLevelUpSound();
         showToast('Survival Guide V1.0.0', 'Welcome Yash! 3D Articulated Avatar & Emotes Ready.', 'assets/icons/player-head.svg');
       }
-    }, 400);
+    }, 300);
   }
 
   // Safety timer to guarantee dismiss
@@ -1988,7 +2003,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentVelocityY = 0;
   let dragRotation = 0;
   let targetCursorAngle = 0;
-  let autoSpinEnabled = true;
+  let autoSpinEnabled = false;
   const autoSpinSpeed = 0.007;
   let optimalCamDist = 3.0;
 
@@ -2027,6 +2042,369 @@ document.addEventListener('DOMContentLoaded', () => {
       side: THREE.DoubleSide
     })
   };
+
+  // =========================================================================
+  // VOXEL CHARACTER BUILDER & RIG ENGINE (build_voxel_character.py specification)
+  // =========================================================================
+  function buildVoxelCharacter() {
+    if (typeof THREE === 'undefined') return null;
+
+    function createFaceTexture() {
+      if (typeof document === 'undefined') return null;
+      const c = document.createElement('canvas');
+      c.width = 32; c.height = 32;
+      const ctx = c.getContext('2d');
+      // Skin tone
+      ctx.fillStyle = '#f0b887';
+      ctx.fillRect(0, 0, 32, 32);
+
+      // Curly hair fringe & bangs
+      ctx.fillStyle = '#2e1a12';
+      ctx.fillRect(0, 0, 32, 8);
+      ctx.fillRect(2, 8, 4, 3);
+      ctx.fillRect(9, 8, 5, 2);
+      ctx.fillRect(17, 8, 5, 3);
+      ctx.fillRect(25, 8, 5, 2);
+
+      // Sideburns
+      ctx.fillRect(0, 8, 3, 14);
+      ctx.fillRect(29, 8, 3, 14);
+
+      // Eyebrows
+      ctx.fillStyle = '#22130d';
+      ctx.fillRect(5, 11, 7, 2);
+      ctx.fillRect(20, 11, 7, 2);
+
+      // Eyes (white sclera + dark pupil + specular shine)
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(5, 13, 7, 5);
+      ctx.fillRect(20, 13, 7, 5);
+      ctx.fillStyle = '#3a2012';
+      ctx.fillRect(8, 13, 4, 5);
+      ctx.fillRect(20, 13, 4, 5);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(8, 13, 2, 2);
+      ctx.fillRect(20, 13, 2, 2);
+
+      // Nose accent
+      ctx.fillStyle = '#dc9e6e';
+      ctx.fillRect(14, 18, 4, 3);
+
+      // Beard & mustache
+      ctx.fillStyle = '#2e1a12';
+      ctx.fillRect(0, 24, 32, 8);
+      ctx.fillRect(3, 21, 5, 3);
+      ctx.fillRect(24, 21, 5, 3);
+      ctx.fillRect(10, 21, 12, 3); // mustache
+
+      // Friendly smile / mouth
+      ctx.fillStyle = '#9e4e3e';
+      ctx.fillRect(13, 25, 6, 2);
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.magFilter = THREE.NearestFilter;
+      tex.minFilter = THREE.NearestFilter;
+      return tex;
+    }
+
+    function createPlaidTexture() {
+      if (typeof document === 'undefined') return null;
+      const c = document.createElement('canvas');
+      c.width = 32; c.height = 32;
+      const ctx = c.getContext('2d');
+      // Brown shirt base
+      ctx.fillStyle = '#5c2e24';
+      ctx.fillRect(0, 0, 32, 32);
+
+      // Dark brown grid
+      ctx.fillStyle = '#3a1c15';
+      ctx.fillRect(6, 0, 4, 32);
+      ctx.fillRect(22, 0, 4, 32);
+      ctx.fillRect(0, 6, 32, 4);
+      ctx.fillRect(0, 22, 32, 4);
+
+      // Warm tan grid lines
+      ctx.fillStyle = '#825239';
+      ctx.fillRect(14, 0, 2, 32);
+      ctx.fillRect(30, 0, 2, 32);
+      ctx.fillRect(0, 14, 32, 2);
+      ctx.fillRect(0, 30, 32, 2);
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(2, 2);
+      tex.magFilter = THREE.NearestFilter;
+      tex.minFilter = THREE.NearestFilter;
+      return tex;
+    }
+
+    function createJeansTexture() {
+      if (typeof document === 'undefined') return null;
+      const c = document.createElement('canvas');
+      c.width = 32; c.height = 32;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#9eb8dc';
+      ctx.fillRect(0, 0, 32, 32);
+
+      // Denim weave
+      ctx.fillStyle = '#88a4cb';
+      for (let x = 0; x < 32; x += 4) {
+        for (let y = 0; y < 32; y += 4) {
+          if ((x + y) % 8 === 0) ctx.fillRect(x, y, 2, 2);
+        }
+      }
+      // Seam line
+      ctx.fillStyle = '#6f8ab2';
+      ctx.fillRect(15, 0, 2, 32);
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(2, 2);
+      tex.magFilter = THREE.NearestFilter;
+      tex.minFilter = THREE.NearestFilter;
+      return tex;
+    }
+
+    const faceTex = createFaceTexture();
+    const plaidTex = createPlaidTexture();
+    const jeansTex = createJeansTexture();
+
+    // Materials from build_voxel_character.py
+    const MAT_SKIN = new THREE.MeshStandardMaterial({ color: 0xf0b887, roughness: 0.65, metalness: 0.05 });
+    const MAT_HAIR = new THREE.MeshStandardMaterial({ color: 0x2e1a12, roughness: 0.85, metalness: 0.05 });
+    const MAT_SHIRT = new THREE.MeshStandardMaterial({
+      color: 0x5c2e24,
+      map: plaidTex || null,
+      roughness: 0.70,
+      metalness: 0.05
+    });
+    const MAT_PANTS = new THREE.MeshStandardMaterial({
+      color: 0x9eb8dc,
+      map: jeansTex || null,
+      roughness: 0.75,
+      metalness: 0.05
+    });
+    const MAT_SHOE_D = new THREE.MeshStandardMaterial({ color: 0x33476b, roughness: 0.60, metalness: 0.10 });
+    const MAT_SHOE_L = new THREE.MeshStandardMaterial({ color: 0xe6e6e0, roughness: 0.50, metalness: 0.10 });
+    const MAT_GLASSES = new THREE.MeshStandardMaterial({ color: 0x0d0d0f, roughness: 0.20, metalness: 0.85 });
+    const MAT_WATCH = new THREE.MeshStandardMaterial({ color: 0x8c8f94, roughness: 0.25, metalness: 0.90 });
+    const MAT_BRACE_R = new THREE.MeshStandardMaterial({ color: 0xbf1a1a, roughness: 0.50, metalness: 0.15 });
+    const MAT_BRACE_B = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.50, metalness: 0.20 });
+
+    const MAT_HEAD_FACE = faceTex ? [
+      MAT_SKIN, // +X
+      MAT_SKIN, // -X
+      MAT_HAIR, // +Y
+      MAT_SKIN, // -Y
+      new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.65 }), // +Z Face!
+      MAT_HAIR  // -Z Back of head
+    ] : MAT_SKIN;
+
+    function makeBlock(w, h, d, mat, x, y, z) {
+      const geom = new THREE.BoxGeometry(w, h, d);
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    // Hierarchical Bones Rig matching build_voxel_character.py
+    const charRoot = new THREE.Group();
+    charRoot.name = 'root';
+    charRoot.position.set(0, -0.05, 0); // centered vertical pivot
+
+    // Hips block
+    const hipsMesh = makeBlock(0.42, 0.20, 0.26, MAT_PANTS, 0, 0.03, 0);
+    hipsMesh.name = 'hips';
+    charRoot.add(hipsMesh);
+
+    // Chest / Torso Joint (at 1.30 -> relative to root 0.95: +0.35)
+    const chestJoint = new THREE.Group();
+    chestJoint.name = 'chest';
+    chestJoint.position.set(0, 0.35, 0);
+    charRoot.add(chestJoint);
+
+    const chestMesh = makeBlock(0.46, 0.42, 0.28, MAT_SHIRT, 0, 0, 0);
+    chestMesh.name = 'chestMesh';
+    chestJoint.add(chestMesh);
+
+    // Sunglasses on collar
+    const glassesMesh = makeBlock(0.20, 0.10, 0.05, MAT_GLASSES, 0, 0.08, 0.155);
+    glassesMesh.name = 'glasses';
+    chestJoint.add(glassesMesh);
+
+    // Head Joint (at 1.53 -> relative to chest 1.30: +0.23)
+    const headJoint = new THREE.Group();
+    headJoint.name = 'head';
+    headJoint.position.set(0, 0.23, 0);
+    chestJoint.add(headJoint);
+
+    const neckMesh = makeBlock(0.16, 0.08, 0.16, MAT_SKIN, 0, 0, 0);
+    neckMesh.name = 'neck';
+    headJoint.add(neckMesh);
+
+    const headMesh = makeBlock(0.34, 0.32, 0.32, MAT_HEAD_FACE, 0, 0.20, 0);
+    headMesh.name = 'headMesh';
+    headJoint.add(headMesh);
+
+    const hairTopMesh = makeBlock(0.36, 0.16, 0.34, MAT_HAIR, 0, 0.40, 0.01);
+    hairTopMesh.name = 'hairTop';
+    headJoint.add(hairTopMesh);
+
+    const hairBackMesh = makeBlock(0.34, 0.30, 0.10, MAT_HAIR, 0, 0.25, -0.12);
+    hairBackMesh.name = 'hairBack';
+    headJoint.add(hairBackMesh);
+
+    const beardMesh = makeBlock(0.30, 0.14, 0.10, MAT_HAIR, 0, 0.09, 0.13);
+    beardMesh.name = 'beard';
+    headJoint.add(beardMesh);
+
+    // Left Arm (Shoulder at -0.32, 1.51 -> relative to chest: -0.32, +0.21, 0)
+    const upperArmL = new THREE.Group();
+    upperArmL.name = 'upperArmL';
+    upperArmL.position.set(-0.32, 0.21, 0);
+    chestJoint.add(upperArmL);
+
+    const upperArmLMesh = makeBlock(0.16, 0.38, 0.16, MAT_SHIRT, 0, -0.19, 0);
+    upperArmLMesh.name = 'upperArmLMesh';
+    upperArmL.add(upperArmLMesh);
+
+    // Left Forearm / Elbow Joint (-0.38 relative to shoulder)
+    const forearmL = new THREE.Group();
+    forearmL.name = 'forearmL';
+    forearmL.position.set(0, -0.38, 0);
+    upperArmL.add(forearmL);
+
+    const forearmLMesh = makeBlock(0.15, 0.34, 0.15, MAT_SKIN, 0, -0.15, 0);
+    forearmLMesh.name = 'forearmLMesh';
+    forearmL.add(forearmLMesh);
+
+    const handLMesh = makeBlock(0.15, 0.14, 0.10, MAT_SKIN, 0, -0.35, 0);
+    handLMesh.name = 'handLMesh';
+    forearmL.add(handLMesh);
+
+    const braceRedMesh = makeBlock(0.165, 0.03, 0.165, MAT_BRACE_R, 0, -0.30, 0);
+    braceRedMesh.name = 'braceRed';
+    forearmL.add(braceRedMesh);
+
+    const braceBlkMesh = makeBlock(0.165, 0.03, 0.165, MAT_BRACE_B, 0, -0.34, 0);
+    braceBlkMesh.name = 'braceBlk';
+    forearmL.add(braceBlkMesh);
+
+    // Right Arm (Shoulder at 0.32, 1.51 -> relative to chest: +0.32, +0.21, 0)
+    const upperArmR = new THREE.Group();
+    upperArmR.name = 'upperArmR';
+    upperArmR.position.set(0.32, 0.21, 0);
+    chestJoint.add(upperArmR);
+
+    const upperArmRMesh = makeBlock(0.16, 0.38, 0.16, MAT_SHIRT, 0, -0.19, 0);
+    upperArmRMesh.name = 'upperArmRMesh';
+    upperArmR.add(upperArmRMesh);
+
+    // Right Forearm / Elbow Joint (-0.38 relative to shoulder)
+    const forearmR = new THREE.Group();
+    forearmR.name = 'forearmR';
+    forearmR.position.set(0, -0.38, 0);
+    upperArmR.add(forearmR);
+
+    const forearmRMesh = makeBlock(0.15, 0.34, 0.15, MAT_SKIN, 0, -0.15, 0);
+    forearmRMesh.name = 'forearmRMesh';
+    forearmR.add(forearmRMesh);
+
+    const handRMesh = makeBlock(0.15, 0.14, 0.10, MAT_SKIN, 0, -0.35, 0);
+    handRMesh.name = 'handRMesh';
+    forearmR.add(handRMesh);
+
+    const watchMesh = makeBlock(0.175, 0.06, 0.175, MAT_WATCH, 0, -0.31, 0);
+    watchMesh.name = 'watch';
+    forearmR.add(watchMesh);
+
+    // Left Leg (Hip at -0.14, 0.95 -> relative to root: -0.14, 0, 0)
+    const upperLegL = new THREE.Group();
+    upperLegL.name = 'upperLegL';
+    upperLegL.position.set(-0.14, 0, 0);
+    charRoot.add(upperLegL);
+
+    const upperLegLMesh = makeBlock(0.24, 0.40, 0.24, MAT_PANTS, 0, -0.20, 0);
+    upperLegLMesh.name = 'upperLegLMesh';
+    upperLegL.add(upperLegLMesh);
+
+    // Left Knee Joint (-0.40 from hip)
+    const lowerLegL = new THREE.Group();
+    lowerLegL.name = 'lowerLegL';
+    lowerLegL.position.set(0, -0.40, 0);
+    upperLegL.add(lowerLegL);
+
+    const lowerLegLMesh = makeBlock(0.22, 0.45, 0.22, MAT_PANTS, 0, -0.225, 0);
+    lowerLegLMesh.name = 'lowerLegLMesh';
+    lowerLegL.add(lowerLegLMesh);
+
+    const footLMesh = makeBlock(0.24, 0.12, 0.34, MAT_SHOE_D, 0, -0.49, 0.05);
+    footLMesh.name = 'footLMesh';
+    lowerLegL.add(footLMesh);
+
+    const soleLMesh = makeBlock(0.24, 0.04, 0.34, MAT_SHOE_L, 0, -0.55, 0.05);
+    soleLMesh.name = 'soleLMesh';
+    lowerLegL.add(soleLMesh);
+
+    // Right Leg (Hip at 0.14, 0.95 -> relative to root: +0.14, 0, 0)
+    const upperLegR = new THREE.Group();
+    upperLegR.name = 'upperLegR';
+    upperLegR.position.set(0.14, 0, 0);
+    charRoot.add(upperLegR);
+
+    const upperLegRMesh = makeBlock(0.24, 0.40, 0.24, MAT_PANTS, 0, -0.20, 0);
+    upperLegRMesh.name = 'upperLegRMesh';
+    upperLegR.add(upperLegRMesh);
+
+    // Right Knee Joint (-0.40 from hip)
+    const lowerLegR = new THREE.Group();
+    lowerLegR.name = 'lowerLegR';
+    lowerLegR.position.set(0, -0.40, 0);
+    upperLegR.add(lowerLegR);
+
+    const lowerLegRMesh = makeBlock(0.22, 0.45, 0.22, MAT_PANTS, 0, -0.225, 0);
+    lowerLegRMesh.name = 'lowerLegRMesh';
+    lowerLegR.add(lowerLegRMesh);
+
+    const footRMesh = makeBlock(0.24, 0.12, 0.34, MAT_SHOE_D, 0, -0.49, 0.05);
+    footRMesh.name = 'footRMesh';
+    lowerLegR.add(footRMesh);
+
+    const soleRMesh = makeBlock(0.24, 0.04, 0.34, MAT_SHOE_L, 0, -0.55, 0.05);
+    soleRMesh.name = 'soleRMesh';
+    lowerLegR.add(soleRMesh);
+
+    // Register nodes
+    characterNodes.root = charRoot;
+    characterNodes.torso = chestJoint;
+    characterNodes.chest = chestJoint;
+    characterNodes.head = headJoint;
+    characterNodes.upperArmL = upperArmL;
+    characterNodes.forearmL = forearmL;
+    characterNodes.leftArm = upperArmL;
+    characterNodes.upperArmR = upperArmR;
+    characterNodes.forearmR = forearmR;
+    characterNodes.rightArm = upperArmR;
+    characterNodes.upperLegL = upperLegL;
+    characterNodes.lowerLegL = lowerLegL;
+    characterNodes.leftLeg = upperLegL;
+    characterNodes.upperLegR = upperLegR;
+    characterNodes.lowerLegR = lowerLegR;
+    characterNodes.rightLeg = upperLegR;
+
+    const voxelModelGroup = new THREE.Group();
+    voxelModelGroup.name = 'voxelCharacter';
+    voxelModelGroup.add(charRoot);
+
+    const targetScale = 1.65 / 2.03;
+    voxelModelGroup.scale.set(targetScale, targetScale, targetScale);
+
+    return voxelModelGroup;
+  }
 
   function initThreeViewer() {
     if (!threeCanvas || typeof THREE === 'undefined') return;
@@ -2120,7 +2498,27 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
-    // 6. Load GLB Model (Supporting multiple paths & local file fallback)
+    // 6. Build and Mount Voxel Character Rig (build_voxel_character.py specification)
+    modelMeshGroup = buildVoxelCharacter();
+    if (modelMeshGroup) {
+      if (modelPivot) {
+        threeScene.remove(modelPivot);
+      }
+      modelPivot = new THREE.Group();
+      modelPivot.add(modelMeshGroup);
+      threeScene.add(modelPivot);
+
+      fitCameraToModel();
+      threeRenderer.render(threeScene, threeCamera);
+
+      if (modelLoading) {
+        modelLoading.classList.add('loaded');
+      }
+      updateGamerProgress(100, 'CHERRY GROVE VOXEL RIG READY (100%)');
+      setTimeout(finishGamerLoading, 250);
+    }
+
+    // Optional GLB Loader for external files or drag-and-drop
     if (typeof THREE.GLTFLoader !== 'undefined') {
       const loader = new THREE.GLTFLoader();
 
@@ -2130,40 +2528,39 @@ document.addEventListener('DOMContentLoaded', () => {
         // Preserve original textures and avoid expensive normal recomputations
         modelMeshGroup.traverse((child) => {
           if (child.isMesh) {
-            // Only compute normals if missing to save 724k vertex calculations
             if (!child.geometry.attributes.normal) {
               child.geometry.computeVertexNormals();
             }
             child.frustumCulled = true;
             if (child.material) {
-              // Enable GPU backface culling on mobile to cut fragment draw calls in half
               child.material.side = isMobile ? THREE.FrontSide : THREE.DoubleSide;
               child.material.roughness = 0.6;
               child.material.metalness = 0.15;
               child.material.transparent = false;
               child.material.opacity = 1.0;
               child.material.needsUpdate = true;
-              if (child.material.map) {
-                child.material.map.needsUpdate = true;
-                if (child.material.map.image && typeof child.material.map.image.addEventListener === 'function') {
-                  child.material.map.image.addEventListener('load', () => {
-                    child.material.map.needsUpdate = true;
-                    child.material.needsUpdate = true;
-                  });
-                }
-              }
               originalMeshMaterials.set(child.uuid, child.material);
             }
           }
         });
 
-        // Cache articulated body parts
+        // Cache articulated body parts with robust fallbacks
         characterNodes.head = modelMeshGroup.getObjectByName('head');
-        characterNodes.leftArm = modelMeshGroup.getObjectByName('left_arm');
-        characterNodes.rightArm = modelMeshGroup.getObjectByName('right_arm');
-        characterNodes.torso = modelMeshGroup.getObjectByName('torso');
-        characterNodes.leftLeg = modelMeshGroup.getObjectByName('left_leg');
-        characterNodes.rightLeg = modelMeshGroup.getObjectByName('right_leg');
+        characterNodes.upperArmL = modelMeshGroup.getObjectByName('upperArmL') || modelMeshGroup.getObjectByName('left_arm');
+        characterNodes.forearmL = modelMeshGroup.getObjectByName('forearmL');
+        characterNodes.leftArm = characterNodes.upperArmL;
+        characterNodes.upperArmR = modelMeshGroup.getObjectByName('upperArmR') || modelMeshGroup.getObjectByName('right_arm');
+        characterNodes.forearmR = modelMeshGroup.getObjectByName('forearmR');
+        characterNodes.rightArm = characterNodes.upperArmR;
+        characterNodes.chest = modelMeshGroup.getObjectByName('chest') || modelMeshGroup.getObjectByName('torso');
+        characterNodes.torso = characterNodes.chest;
+        characterNodes.upperLegL = modelMeshGroup.getObjectByName('upperLegL') || modelMeshGroup.getObjectByName('left_leg');
+        characterNodes.lowerLegL = modelMeshGroup.getObjectByName('lowerLegL');
+        characterNodes.leftLeg = characterNodes.upperLegL;
+        characterNodes.upperLegR = modelMeshGroup.getObjectByName('upperLegR') || modelMeshGroup.getObjectByName('right_leg');
+        characterNodes.lowerLegR = modelMeshGroup.getObjectByName('lowerLegR');
+        characterNodes.rightLeg = characterNodes.upperLegR;
+        characterNodes.root = modelMeshGroup.getObjectByName('root') || modelMeshGroup;
 
         // Center and normalize model mesh
         const bbox = new THREE.Box3().setFromObject(modelMeshGroup);
@@ -2411,23 +2808,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyArticulatedEmote(key, p) {
       const cn = characterNodes;
-      if (!cn.head && !cn.rightArm && !cn.torso) return;
+      const upperArmR = cn.upperArmR || cn.rightArm;
+      const forearmR = cn.forearmR;
+      const upperArmL = cn.upperArmL || cn.leftArm;
+      const forearmL = cn.forearmL;
+      const upperLegR = cn.upperLegR || cn.rightLeg;
+      const lowerLegR = cn.lowerLegR;
+      const upperLegL = cn.upperLegL || cn.leftLeg;
+      const lowerLegL = cn.lowerLegL;
+      const chest = cn.chest || cn.torso;
+      const head = cn.head;
 
       switch (key) {
         case 'wave': {
-          // Right arm raises high up and waves enthusiastically back and forth
+          // Wave from build_voxel_character.py Wave action:
+          // Right arm raises high forward and outward (-140 deg), forearm waves back and forth at elbow
           const raise = Math.sin(p * Math.PI);
-          if (cn.rightArm) {
-            cn.rightArm.rotation.z = raise * 2.2; // raise arm up high toward sky
-            cn.rightArm.rotation.x = Math.sin(p * Math.PI * 10) * 0.55 * raise; // rapid hand wave
-            cn.rightArm.rotation.y = Math.sin(p * Math.PI * 10) * 0.25 * raise;
+          if (upperArmR) {
+            upperArmR.rotation.x = -1.95 * raise;
+            upperArmR.rotation.z = 0.35 * raise;
+            upperArmR.rotation.y = 0.20 * raise;
           }
-          if (cn.head) {
-            cn.head.rotation.z = Math.sin(p * Math.PI * 6) * 0.18 * raise; // friendly head tilt
-            cn.head.rotation.x = Math.sin(p * Math.PI * 4) * 0.12 * raise; // friendly nod
+          if (forearmR) {
+            forearmR.rotation.x = -0.55 * raise;
+            forearmR.rotation.z = Math.sin(p * Math.PI * 14) * 0.48 * raise;
           }
-          if (cn.leftArm) {
-            cn.leftArm.rotation.x = Math.sin(p * Math.PI * 4) * 0.15 * raise; // resting arm counter-balance
+          if (head) {
+            head.rotation.z = Math.sin(p * Math.PI * 6) * 0.16 * raise;
+            head.rotation.y = 0.12 * raise;
+          }
+          if (upperArmL) {
+            upperArmL.rotation.x = 0.12 * raise;
           }
           break;
         }
@@ -2435,147 +2846,213 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'cheer': {
           // Victory Cheer: BOTH arms shoot straight up in the air in a triumphant V!
           const jumpProgress = Math.sin(p * Math.PI);
-          if (cn.leftArm) {
-            cn.leftArm.rotation.z = -jumpProgress * 2.3; // left arm straight up!
-            cn.leftArm.rotation.x = Math.sin(p * Math.PI * 6) * 0.35 * jumpProgress;
+          const hopBeat = Math.sin(p * Math.PI * 6);
+          if (upperArmL) {
+            upperArmL.rotation.z = -2.35 * jumpProgress;
+            upperArmL.rotation.x = -0.45 * jumpProgress;
           }
-          if (cn.rightArm) {
-            cn.rightArm.rotation.z = jumpProgress * 2.3; // right arm straight up!
-            cn.rightArm.rotation.x = Math.sin(p * Math.PI * 6) * 0.35 * jumpProgress;
+          if (forearmL) {
+            forearmL.rotation.z = -0.30 * jumpProgress;
+            forearmL.rotation.x = -0.20 * jumpProgress;
           }
-          if (cn.head) {
-            cn.head.rotation.x = -0.35 * jumpProgress; // look up at the sky in celebration!
+          if (upperArmR) {
+            upperArmR.rotation.z = 2.35 * jumpProgress;
+            upperArmR.rotation.x = -0.45 * jumpProgress;
           }
-          if (cn.leftLeg && cn.rightLeg) {
-            cn.leftLeg.rotation.x = Math.sin(p * Math.PI * 6) * 0.35 * jumpProgress;
-            cn.rightLeg.rotation.x = -Math.sin(p * Math.PI * 6) * 0.35 * jumpProgress;
+          if (forearmR) {
+            forearmR.rotation.z = 0.30 * jumpProgress;
+            forearmR.rotation.x = -0.20 * jumpProgress;
+          }
+          if (head) {
+            head.rotation.x = -0.45 * jumpProgress; // look up in celebration!
+          }
+          if (upperLegL && lowerLegL && upperLegR && lowerLegR) {
+            const legBend = Math.max(0, -hopBeat) * 0.35 * jumpProgress;
+            upperLegL.rotation.x = -legBend;
+            lowerLegL.rotation.x = legBend * 1.5;
+            upperLegR.rotation.x = -legBend;
+            lowerLegR.rotation.x = legBend * 1.5;
           }
           break;
         }
 
         case 'bow': {
-          // Hero's Bow: Torso bends forward at waist (38 degrees), head looks down respectfully, arms tuck back
+          // Hero's Bow: Torso bends forward at waist (42 degrees), head bows respectfully, arms fold back
           const bowProgress = Math.sin(p * Math.PI);
-          if (cn.torso) {
-            cn.torso.rotation.x = 0.65 * bowProgress; // deep forward bow
+          if (chest) {
+            chest.rotation.x = 0.72 * bowProgress;
           }
-          if (cn.head) {
-            cn.head.rotation.x = 0.35 * bowProgress; // head bowed down
+          if (head) {
+            head.rotation.x = 0.38 * bowProgress;
           }
-          if (cn.leftArm) {
-            cn.leftArm.rotation.x = 0.45 * bowProgress; // arms tuck politely backwards
+          if (upperArmL && upperArmR) {
+            upperArmL.rotation.x = 0.45 * bowProgress;
+            upperArmR.rotation.x = 0.45 * bowProgress;
           }
-          if (cn.rightArm) {
-            cn.rightArm.rotation.x = 0.45 * bowProgress;
+          if (forearmL && forearmR) {
+            forearmL.rotation.x = -0.20 * bowProgress;
+            forearmR.rotation.x = -0.20 * bowProgress;
           }
           break;
         }
 
         case 'point': {
-          // Adventure Point: Right arm extends straight forward toward the quest horizon!
+          // Adventure Point & Thumbs Up from build_voxel_character.py ThumbsUp action:
+          // Right arm extends forward (-95 deg), forearm bends upright 90° with thumb up!
           const pointProgress = Math.sin(p * Math.PI);
-          if (cn.rightArm) {
-            cn.rightArm.rotation.x = -1.55 * pointProgress; // arm horizontal pointing forward
-            cn.rightArm.rotation.y = 0.25 * pointProgress;  // aim slightly inward
+          if (upperArmR) {
+            upperArmR.rotation.x = -1.65 * pointProgress;
+            upperArmR.rotation.y = 0.15 * pointProgress;
+            upperArmR.rotation.z = 0.10 * pointProgress;
           }
-          if (cn.leftArm) {
-            cn.leftArm.rotation.x = 0.25 * pointProgress; // hand on hip
-            cn.leftArm.rotation.z = -0.35 * pointProgress;
+          if (forearmR) {
+            forearmR.rotation.x = -1.45 * pointProgress;
           }
-          if (cn.head) {
-            cn.head.rotation.y = 0.35 * pointProgress; // head looks in pointing direction
-            cn.head.rotation.x = -0.1 * pointProgress;
+          if (upperArmL) {
+            upperArmL.rotation.x = 0.25 * pointProgress; // hand on hip
+            upperArmL.rotation.z = -0.45 * pointProgress;
           }
-          if (cn.leftLeg) {
-            cn.leftLeg.rotation.x = -0.3 * pointProgress; // hero stance step
+          if (forearmL) {
+            forearmL.rotation.x = -0.65 * pointProgress;
+          }
+          if (head) {
+            head.rotation.y = -0.25 * pointProgress;
+            head.rotation.x = 0.12 * pointProgress;
           }
           break;
         }
 
         case 'clap': {
-          // Applause: Both arms come forward and clap together rhythmically in front of the chest!
+          // Applause: Both arms swing forward and clap together rhythmically in front of the chest!
           const clapProgress = Math.sin(p * Math.PI);
           const clapBeat = Math.sin(p * Math.PI * 14);
-          if (cn.leftArm) {
-            cn.leftArm.rotation.x = -0.85 * clapProgress; // arm forward
-            cn.leftArm.rotation.z = (-0.4 + clapBeat * 0.25) * clapProgress; // hand claps inwards
-            cn.leftArm.rotation.y = 0.35 * clapProgress;
+          if (upperArmL) {
+            upperArmL.rotation.x = -1.15 * clapProgress;
+            upperArmL.rotation.z = -0.45 * clapProgress;
           }
-          if (cn.rightArm) {
-            cn.rightArm.rotation.x = -0.85 * clapProgress; // arm forward
-            cn.rightArm.rotation.z = (0.4 - clapBeat * 0.25) * clapProgress; // hand claps inwards
-            cn.rightArm.rotation.y = -0.35 * clapProgress;
+          if (forearmL) {
+            forearmL.rotation.x = -0.40 * clapProgress;
+            forearmL.rotation.y = (0.55 + clapBeat * 0.28) * clapProgress;
           }
-          if (cn.head) {
-            cn.head.rotation.x = Math.abs(Math.sin(p * Math.PI * 6)) * 0.12 * clapProgress; // enthusiastic nodding
+          if (upperArmR) {
+            upperArmR.rotation.x = -1.15 * clapProgress;
+            upperArmR.rotation.z = 0.45 * clapProgress;
+          }
+          if (forearmR) {
+            forearmR.rotation.x = -0.40 * clapProgress;
+            forearmR.rotation.y = (-0.55 - clapBeat * 0.28) * clapProgress;
+          }
+          if (head) {
+            head.rotation.x = Math.abs(Math.sin(p * Math.PI * 7)) * 0.12 * clapProgress;
           }
           break;
         }
 
         case 'disco': {
-          // Disco Groove: Alternating arm pumps, leg steps, and head bobbing to the beat!
+          // Dance from build_voxel_character.py Dance action:
+          // Alternating arm swing, chest twist, root twist, leg steps!
           const discoProgress = Math.sin(p * Math.PI);
           const beat = Math.sin(p * Math.PI * 6);
-          if (cn.leftArm) {
-            cn.leftArm.rotation.z = (-Math.abs(beat) * 1.9) * discoProgress;
-            cn.leftArm.rotation.x = (beat * 0.5) * discoProgress;
+          const cosBeat = Math.cos(p * Math.PI * 6);
+          if (upperArmL) {
+            upperArmL.rotation.x = (-beat * 0.9) * discoProgress;
+            upperArmL.rotation.z = (-0.5 - Math.abs(beat) * 0.45) * discoProgress;
           }
-          if (cn.rightArm) {
-            cn.rightArm.rotation.z = (Math.abs(Math.cos(p * Math.PI * 6)) * 1.9) * discoProgress;
-            cn.rightArm.rotation.x = (-beat * 0.5) * discoProgress;
+          if (forearmL) {
+            forearmL.rotation.x = (-0.6 - Math.abs(beat) * 0.5) * discoProgress;
           }
-          if (cn.head) {
-            cn.head.rotation.z = (Math.sin(p * Math.PI * 6) * 0.2) * discoProgress;
-            cn.head.rotation.y = (Math.sin(p * Math.PI * 3) * 0.3) * discoProgress;
+          if (upperArmR) {
+            upperArmR.rotation.x = (beat * 0.9) * discoProgress;
+            upperArmR.rotation.z = (0.5 + Math.abs(cosBeat) * 0.45) * discoProgress;
           }
-          if (cn.leftLeg && cn.rightLeg) {
-            cn.leftLeg.rotation.x = (beat * 0.35) * discoProgress;
-            cn.rightLeg.rotation.x = (-beat * 0.35) * discoProgress;
+          if (forearmR) {
+            forearmR.rotation.x = (-0.6 - Math.abs(cosBeat) * 0.5) * discoProgress;
+          }
+          if (chest) {
+            chest.rotation.y = (beat * 0.32) * discoProgress;
+          }
+          if (head) {
+            head.rotation.z = (beat * 0.18) * discoProgress;
+            head.rotation.y = (-beat * 0.25) * discoProgress;
+          }
+          if (upperLegL && lowerLegL && upperLegR && lowerLegR) {
+            upperLegL.rotation.x = (-beat * 0.4) * discoProgress;
+            lowerLegL.rotation.x = (Math.max(0, beat) * 0.6) * discoProgress;
+            upperLegR.rotation.x = (beat * 0.4) * discoProgress;
+            lowerLegR.rotation.x = (Math.max(0, -beat) * 0.6) * discoProgress;
           }
           break;
         }
 
         case 'tornado': {
-          // Tornado Spin: Arms spread wide like wings, head tilts as body whirls in a 1080 cyclone
+          // Tornado Spin: Arms spread wide like wings, body whirls in a 1080 cyclone
           const spinProgress = Math.sin(p * Math.PI);
-          if (cn.leftArm) {
-            cn.leftArm.rotation.z = -1.45 * spinProgress; // arm spread horizontal
+          if (upperArmL) {
+            upperArmL.rotation.z = -1.50 * spinProgress;
           }
-          if (cn.rightArm) {
-            cn.rightArm.rotation.z = 1.45 * spinProgress; // arm spread horizontal
+          if (upperArmR) {
+            upperArmR.rotation.z = 1.50 * spinProgress;
           }
-          if (cn.head) {
-            cn.head.rotation.y = Math.sin(p * Math.PI * 10) * 0.25;
+          if (forearmL && forearmR) {
+            forearmL.rotation.set(0, 0, 0);
+            forearmR.rotation.set(0, 0, 0);
+          }
+          if (head) {
+            head.rotation.y = Math.sin(p * Math.PI * 10) * 0.25;
           }
           break;
         }
 
         case 'flip': {
-          // 360° Backflip: Arms swing back on crouch, tuck during flip, extend on landing
+          // Jump & 360° Backflip from build_voxel_character.py Jump action:
+          // Crouch with bent knees and arms back, launch, somersault tuck, landing cushion
           if (p < 0.2) {
             const t = p / 0.2;
-            if (cn.leftArm && cn.rightArm) {
-              cn.leftArm.rotation.x = 0.7 * t; // swing back
-              cn.rightArm.rotation.x = 0.7 * t;
+            if (upperLegL && upperLegR) {
+              upperLegL.rotation.x = -0.65 * t;
+              upperLegR.rotation.x = -0.65 * t;
             }
-            if (cn.leftLeg && cn.rightLeg) {
-              cn.leftLeg.rotation.x = 0.35 * t; // crouch bend
-              cn.rightLeg.rotation.x = 0.35 * t;
+            if (lowerLegL && lowerLegR) {
+              lowerLegL.rotation.x = 1.10 * t; // knees bend backward!
+              lowerLegR.rotation.x = 1.10 * t;
+            }
+            if (upperArmL && upperArmR) {
+              upperArmL.rotation.x = 0.75 * t; // arms swing back
+              upperArmR.rotation.x = 0.75 * t;
+            }
+            if (chest) {
+              chest.rotation.x = 0.25 * t;
             }
           } else if (p < 0.85) {
-            if (cn.leftArm && cn.rightArm) {
-              cn.leftArm.rotation.x = -1.3; // tuck tight in air
-              cn.rightArm.rotation.x = -1.3;
+            if (upperLegL && upperLegR) {
+              upperLegL.rotation.x = 0.85;
+              upperLegR.rotation.x = 0.85;
             }
-            if (cn.leftLeg && cn.rightLeg) {
-              cn.leftLeg.rotation.x = -0.5; // legs tucked
-              cn.rightLeg.rotation.x = -0.5;
+            if (lowerLegL && lowerLegR) {
+              lowerLegL.rotation.x = -0.85;
+              lowerLegR.rotation.x = -0.85;
+            }
+            if (upperArmL && upperArmR) {
+              upperArmL.rotation.x = -1.50;
+              upperArmR.rotation.x = -1.50;
+            }
+            if (forearmL && forearmR) {
+              forearmL.rotation.x = -1.40;
+              forearmR.rotation.x = -1.40;
             }
           } else {
             const t = (p - 0.85) / 0.15;
-            if (cn.leftArm && cn.rightArm) {
-              cn.leftArm.rotation.z = -0.4 * (1 - t); // arms out for balance
-              cn.rightArm.rotation.z = 0.4 * (1 - t);
+            if (upperLegL && upperLegR) {
+              upperLegL.rotation.x = -0.25 * (1 - t);
+              upperLegR.rotation.x = -0.25 * (1 - t);
+            }
+            if (lowerLegL && lowerLegR) {
+              lowerLegL.rotation.x = 0.35 * (1 - t);
+              lowerLegR.rotation.x = 0.35 * (1 - t);
+            }
+            if (upperArmL && upperArmR) {
+              upperArmL.rotation.z = -0.45 * (1 - t);
+              upperArmR.rotation.z = 0.45 * (1 - t);
             }
           }
           break;
@@ -2606,20 +3083,20 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'flip': {
           if (p < 0.2) {
             const t = p / 0.2;
-            posY = -0.14 * Math.sin(t * Math.PI * 0.5);
-            scaleY = 1.0 - 0.20 * Math.sin(t * Math.PI * 0.5);
-            scaleX = scaleZ = 1.0 + 0.10 * Math.sin(t * Math.PI * 0.5);
+            posY = -0.16 * Math.sin(t * Math.PI * 0.5);
+            scaleY = 1.0 - 0.18 * Math.sin(t * Math.PI * 0.5);
+            scaleX = scaleZ = 1.0 + 0.08 * Math.sin(t * Math.PI * 0.5);
           } else if (p < 0.85) {
             const t = (p - 0.2) / 0.65;
-            posY = Math.sin(t * Math.PI) * 0.90;
+            posY = Math.sin(t * Math.PI) * 0.95;
             rotX = -Math.PI * 2 * t;
             scaleY = 1.08;
             scaleX = scaleZ = 0.94;
           } else {
             const t = (p - 0.85) / 0.15;
             posY = -0.09 * (1 - t) * Math.sin(t * Math.PI);
-            scaleY = 1.0 - 0.16 * Math.sin(t * Math.PI);
-            scaleX = scaleZ = 1.0 + 0.08 * Math.sin(t * Math.PI);
+            scaleY = 1.0 - 0.14 * Math.sin(t * Math.PI);
+            scaleX = scaleZ = 1.0 + 0.06 * Math.sin(t * Math.PI);
           }
           break;
         }
@@ -2694,29 +3171,41 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       try {
         if (modelPivot) {
-          // Reset articulated joints to zero
-          if (characterNodes.head) characterNodes.head.rotation.set(0, 0, 0);
-          if (characterNodes.leftArm) characterNodes.leftArm.rotation.set(0, 0, 0);
-          if (characterNodes.rightArm) characterNodes.rightArm.rotation.set(0, 0, 0);
+          // Reset articulated joints to neutral pose
+          if (characterNodes.chest) characterNodes.chest.rotation.set(0, 0, 0);
           if (characterNodes.torso) characterNodes.torso.rotation.set(0, 0, 0);
+          if (characterNodes.head) characterNodes.head.rotation.set(0, 0, 0);
+          if (characterNodes.upperArmL) characterNodes.upperArmL.rotation.set(0, 0, 0);
+          if (characterNodes.forearmL) characterNodes.forearmL.rotation.set(0, 0, 0);
+          if (characterNodes.leftArm) characterNodes.leftArm.rotation.set(0, 0, 0);
+          if (characterNodes.upperArmR) characterNodes.upperArmR.rotation.set(0, 0, 0);
+          if (characterNodes.forearmR) characterNodes.forearmR.rotation.set(0, 0, 0);
+          if (characterNodes.rightArm) characterNodes.rightArm.rotation.set(0, 0, 0);
+          if (characterNodes.upperLegL) characterNodes.upperLegL.rotation.set(0, 0, 0);
+          if (characterNodes.lowerLegL) characterNodes.lowerLegL.rotation.set(0, 0, 0);
           if (characterNodes.leftLeg) characterNodes.leftLeg.rotation.set(0, 0, 0);
+          if (characterNodes.upperLegR) characterNodes.upperLegR.rotation.set(0, 0, 0);
+          if (characterNodes.lowerLegR) characterNodes.lowerLegR.rotation.set(0, 0, 0);
           if (characterNodes.rightLeg) characterNodes.rightLeg.rotation.set(0, 0, 0);
 
           if (!activeEmote) {
-            // Subtle natural Minecraft idle breathing & arm sway
+            // Subtle natural Minecraft idle breathing & arm sway from build_voxel_character.py Idle action
             const idleTime = timestamp * 0.0022;
-            if (characterNodes.torso) {
-              characterNodes.torso.rotation.x = Math.sin(idleTime) * 0.018;
+            const chestNode = characterNodes.chest || characterNodes.torso;
+            if (chestNode) {
+              chestNode.rotation.x = Math.sin(idleTime) * 0.026;
             }
             if (characterNodes.head) {
               characterNodes.head.rotation.x = Math.sin(idleTime + 0.6) * 0.025;
               characterNodes.head.rotation.y = Math.sin(idleTime * 0.5) * 0.04;
             }
-            if (characterNodes.leftArm) {
-              characterNodes.leftArm.rotation.x = Math.sin(idleTime) * 0.06;
+            const leftArmNode = characterNodes.upperArmL || characterNodes.leftArm;
+            if (leftArmNode) {
+              leftArmNode.rotation.x = Math.sin(idleTime) * 0.06;
             }
-            if (characterNodes.rightArm) {
-              characterNodes.rightArm.rotation.x = -Math.sin(idleTime) * 0.06;
+            const rightArmNode = characterNodes.upperArmR || characterNodes.rightArm;
+            if (rightArmNode) {
+              rightArmNode.rotation.x = -Math.sin(idleTime) * 0.06;
             }
           }
 
