@@ -1708,7 +1708,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function triggerEmote(emoteKey) {
     initAudio();
-    let duration = 2200;
+    let duration = 2000;
 
     switch (emoteKey) {
       case 'flip':
@@ -1734,7 +1734,7 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'disco':
         duration = 2500;
         playDiscoBeat();
-        showToast('Disco Groove 🕺', 'Minecraft retro rhythm dance activated!', 'assets/icons/player-head.svg');
+        showToast('Disco Groove 🕺', 'Minecraft retro rhythm dance activated! (Click again to stop)', 'assets/icons/player-head.svg');
         break;
 
       case 'bow':
@@ -1746,13 +1746,14 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'point':
         duration = 2000;
         playClickSound(1.4);
-        showToast('Adventure Point 👉', 'Onward! Great quests and code await ahead.', 'assets/icons/compass.svg');
+        showToast('Adventure Point 👉', 'Onward! Great quests and code await ahead.', 'assets/icons/ender-pearl.svg');
         break;
 
       case 'tornado':
+      case 'spin':
         duration = 2000;
         playSwordSweepSound();
-        showToast('Tornado Spin 🌪️', 'Cyclone whirlwind spin unleashed!', 'assets/icons/diamond-sword.svg');
+        showToast('Tornado Spin 🌪️', 'Cyclone whirlwind spin unleashed!', 'assets/icons/nether-star.svg');
         spawnParticleBurst(25);
         break;
 
@@ -1768,11 +1769,10 @@ document.addEventListener('DOMContentLoaded', () => {
         break;
     }
 
-    activeEmote = {
-      key: emoteKey,
-      timer: 0.001,
-      duration: duration
-    };
+    if (emoteController) {
+      const targetName = (emoteKey === 'tornado') ? 'spin' : emoteKey;
+      emoteController.play(targetName);
+    }
   }
   window.triggerEmote = triggerEmote;
   window.triggerEmoteTest = triggerEmote;
@@ -1943,6 +1943,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let modelMeshGroup = null;
   let modelPivot = null;
   let activeEmote = null;
+  let emoteController = null;
   const characterNodes = {
     root: null,
     torso: null,
@@ -2543,6 +2544,8 @@ document.addEventListener('DOMContentLoaded', () => {
       modelPivot.add(modelWrapper);
       threeScene.add(modelPivot);
 
+      initOrUpdateEmoteController();
+
       fitCameraToModel();
       threeRenderer.render(threeScene, threeCamera);
 
@@ -2562,6 +2565,8 @@ document.addEventListener('DOMContentLoaded', () => {
         modelPivot = new THREE.Group();
         modelPivot.add(modelMeshGroup);
         threeScene.add(modelPivot);
+
+        initOrUpdateEmoteController();
 
         fitCameraToModel();
         threeRenderer.render(threeScene, threeCamera);
@@ -2740,240 +2745,718 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // 8. Authentic Minecraft Bedrock Emote Engine & Animation Loop
-    function resetCharacterPose() {
-      const cn = characterNodes;
-      if (cn.torso) cn.torso.rotation.set(0, 0, 0);
-      if (cn.chest) cn.chest.rotation.set(0, 0, 0);
-      if (cn.head) cn.head.rotation.set(0, 0, 0);
-      const armR = cn.armRight || cn.upperArmR || cn.rightArm;
-      const armL = cn.armLeft || cn.upperArmL || cn.leftArm;
-      const forearmR = cn.forearmRight || cn.forearmR;
-      const forearmL = cn.forearmLeft || cn.forearmL;
-      const legR = cn.legRight || cn.upperLegR || cn.rightLeg;
-      const legL = cn.legLeft || cn.upperLegL || cn.leftLeg;
-      const forelegR = cn.forelegRight || cn.lowerLegR;
-      const forelegL = cn.forelegLeft || cn.lowerLegL;
+    // 8. Authentic Minecraft Bedrock Emote Engine & Skeletal Animation Controller
+    class EmoteController {
+      constructor(options = {}) {
+        this.modelPivot = options.modelPivot || null;
+        this.nodes = options.nodes || {};
+        this.onEmoteStart = options.onEmoteStart || null;
+        this.onEmoteEnd = options.onEmoteEnd || null;
 
-      if (armR) armR.rotation.set(0, 0, 0);
-      if (armL) armL.rotation.set(0, 0, 0);
-      if (forearmR) forearmR.rotation.set(0, 0, 0);
-      if (forearmL) forearmL.rotation.set(0, 0, 0);
-      if (legR) legR.rotation.set(0, 0, 0);
-      if (legL) legL.rotation.set(0, 0, 0);
-      if (forelegR) forelegR.rotation.set(0, 0, 0);
-      if (forelegL) forelegL.rotation.set(0, 0, 0);
+        this.managedNodes = ['head', 'torso', 'leftArm', 'rightArm', 'leftLeg', 'rightLeg', 'forearmR', 'forearmL'];
 
-      if (modelPivot) {
-        modelPivot.position.set(0, 0, 0);
-        modelPivot.rotation.x = 0;
-        modelPivot.rotation.z = 0;
-        modelPivot.scale.set(1, 1, 1);
+        // Realistic joint limits (radians) to prevent unnatural body clipping
+        this.jointLimits = {
+          head: { minX: -0.75, maxX: 0.65, minY: -0.90, maxY: 0.90, minZ: -0.45, maxZ: 0.45 },
+          torso: { minX: -0.25, maxX: 0.85, minY: -0.55, maxY: 0.55, minZ: -0.35, maxZ: 0.35 },
+          rightArm: { minX: -3.05, maxX: 1.25, minY: -0.85, maxY: 0.85, minZ: -0.40, maxZ: 3.05 },
+          leftArm: { minX: -3.05, maxX: 1.25, minY: -0.85, maxY: 0.85, minZ: -3.05, maxZ: 0.40 },
+          rightLeg: { minX: -1.25, maxX: 1.25, minY: -0.30, maxY: 0.30, minZ: -0.25, maxZ: 0.60 },
+          leftLeg: { minX: -1.25, maxX: 1.25, minY: -0.30, maxY: 0.30, minZ: -0.60, maxZ: 0.25 },
+          forearmR: { minX: -1.60, maxX: 0.05, minY: -0.20, maxY: 0.20, minZ: -0.20, maxZ: 0.20 },
+          forearmL: { minX: -1.60, maxX: 0.05, minY: -0.20, maxY: 0.20, minZ: -0.20, maxZ: 0.20 }
+        };
+
+        // Live pose state (quaternions + pivot transforms)
+        this.livePose = {
+          quaternions: {},
+          pivotPos: new THREE.Vector3(0, 0, 0),
+          pivotRot: new THREE.Euler(0, 0, 0, 'XYZ')
+        };
+
+        // Snapshot from previous state for seamless cross-fading
+        this.fromPose = {
+          quaternions: {},
+          pivotPos: new THREE.Vector3(0, 0, 0),
+          pivotRot: new THREE.Euler(0, 0, 0, 'XYZ')
+        };
+
+        // Idle pose target (identity quaternions, zero positions)
+        this.idlePose = {
+          quaternions: {},
+          pivotPos: new THREE.Vector3(0, 0, 0),
+          pivotRot: new THREE.Euler(0, 0, 0, 'XYZ')
+        };
+
+        for (const key of this.managedNodes) {
+          this.livePose.quaternions[key] = new THREE.Quaternion();
+          this.fromPose.quaternions[key] = new THREE.Quaternion();
+          this.idlePose.quaternions[key] = new THREE.Quaternion();
+        }
+
+        this.currentEmote = null;
+        this.emoteElapsed = 0;
+        this.emoteDuration = 0;
+        this.isLooping = false;
+        this.state = 'idle'; // 'idle' | 'playing' | 'easing_to_idle'
+
+        this.isBlending = false;
+        this.blendElapsed = 0;
+        this.blendDuration = 0.22; // 220ms cross-fade between emotes
+
+        this.spinBaseAngle = 0;
+
+        this.emoteDefs = this._initEmoteDefinitions();
       }
-    }
 
-    function applyArticulatedEmote(key, emoteTime, duration) {
-      const cn = characterNodes;
-      const armR = cn.armRight || cn.upperArmR || cn.rightArm;
-      const armL = cn.armLeft || cn.upperArmL || cn.leftArm;
-      const forearmR = cn.forearmRight || cn.forearmR;
-      const forearmL = cn.forearmLeft || cn.forearmL;
-      const legR = cn.legRight || cn.upperLegR || cn.rightLeg;
-      const legL = cn.legLeft || cn.upperLegL || cn.leftLeg;
-      const torso = cn.torso || cn.chest;
-      const head = cn.head;
+      setNodes(nodes) {
+        this.nodes = nodes || {};
+      }
 
-      // Clean animation envelope: 180ms ease-in, sustain action, 220ms ease-out
-      const blendIn = Math.min(1.0, emoteTime / 0.18);
-      const blendOut = Math.min(1.0, (duration - emoteTime) / 0.22);
-      const env = Math.max(0, Math.min(blendIn, blendOut));
+      setModelPivot(pivot) {
+        this.modelPivot = pivot;
+      }
 
-      resetCharacterPose();
+      // Mathematical Easing Functions
+      _easeInOutSine(t) {
+        return -(Math.cos(Math.PI * t) - 1) / 2;
+      }
 
-      switch (key) {
-        case 'wave': {
-          // Official Minecraft Bedrock "The Wave" Emote
-          const waveCycle = Math.sin(emoteTime * 14) * 0.38; // 4.5 Hz wave oscillation
-          if (armR) {
-            armR.rotation.x = -2.1 * env; // Point high in air (~120 deg)
-            armR.rotation.z = (0.42 + waveCycle) * env; // Wave left and right
-          }
-          if (forearmR) {
-            forearmR.rotation.x = -0.32 * env;
-          }
-          if (head) {
-            head.rotation.z = -0.16 * env; // Warm head tilt
-            head.rotation.x = -0.06 * env;
-          }
-          if (armL) {
-            armL.rotation.x = 0.10 * env;
-          }
-          if (modelPivot) {
-            modelPivot.position.y = Math.abs(Math.sin(emoteTime * 7)) * 0.03 * env;
-          }
-          break;
-        }
+      _easeOutQuad(t) {
+        return 1 - (1 - t) * (1 - t);
+      }
 
-        case 'cheer': {
-          // Official Minecraft Bedrock "Victory Cheer" Emote
-          const jumpPhase = Math.sin(emoteTime * 12);
-          const pump = Math.sin(emoteTime * 16) * 0.15;
+      _easeInOutQuad(t) {
+        return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      }
 
-          if (armR) {
-            armR.rotation.z = (2.82 + pump) * env; // High 'V' outward & up
-            armR.rotation.x = -0.35 * env;
-          }
-          if (armL) {
-            armL.rotation.z = (-2.82 - pump) * env; // High 'V' outward & up
-            armL.rotation.x = -0.35 * env;
-          }
-          if (head) {
-            head.rotation.x = -0.35 * env; // Look up at triumph
-          }
-          const hop = Math.max(0, jumpPhase) * 0.32 * env;
-          if (modelPivot) {
-            modelPivot.position.y = hop;
-          }
-          if (legR && legL && hop > 0.05) {
-            legR.rotation.x = 0.25 * env;
-            legL.rotation.x = -0.25 * env;
-          }
-          break;
-        }
+      _easeInOutCubic(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      }
 
-        case 'clap': {
-          // Official Minecraft Bedrock "Simple Clap" Emote
-          const clapBeat = Math.sin(emoteTime * 22); // 7 Hz applause tempo
-          const clapOpen = Math.max(0, clapBeat) * 0.28;
+      _smoothstep(t) {
+        const c = Math.max(0, Math.min(1, t));
+        return c * c * (3 - 2 * c);
+      }
 
-          if (armR) {
-            armR.rotation.x = -1.55 * env; // Horizontal forward
-            armR.rotation.z = (-0.30 - clapOpen) * env;
-          }
-          if (armL) {
-            armL.rotation.x = -1.55 * env; // Horizontal forward
-            armL.rotation.z = (0.30 + clapOpen) * env;
-          }
-          if (head) {
-            head.rotation.x = Math.max(0, clapBeat) * 0.12 * env;
-          }
-          if (modelPivot) {
-            modelPivot.position.y = Math.max(0, clapBeat) * 0.02 * env;
-          }
-          break;
-        }
+      _clampJoint(bone, euler) {
+        const lim = this.jointLimits[bone];
+        if (!lim) return euler;
+        euler.x = Math.max(lim.minX, Math.min(lim.maxX, euler.x));
+        euler.y = Math.max(lim.minY, Math.min(lim.maxY, euler.y));
+        euler.z = Math.max(lim.minZ, Math.min(lim.maxZ, euler.z));
+        return euler;
+      }
 
-        case 'point': {
-          // Official Minecraft Bedrock "Over There!" Emote
-          if (armR) {
-            armR.rotation.x = -1.45 * env;
-            armR.rotation.z = 0.28 * env;
-          }
-          if (head) {
-            head.rotation.y = -0.35 * env;
-            head.rotation.x = 0.06 * env;
-          }
-          if (torso) {
-            torso.rotation.y = -0.15 * env;
-          }
-          if (armL) {
-            armL.rotation.x = 0.25 * env;
-          }
-          break;
-        }
+      _initEmoteDefinitions() {
+        return {
+          // 1. Wave: rightArm rotates up to shoulder height, then oscillates side-to-side at elbow/shoulder for ~1.5s, looping 2-3 times
+          wave: {
+            duration: 1.65,
+            isLooping: false,
+            evaluate: (t, dur) => {
+              const pose = {
+                rotations: {},
+                pivotPos: new THREE.Vector3(0, 0, 0),
+                pivotRot: new THREE.Euler(0, 0, 0, 'XYZ')
+              };
 
-        case 'bow': {
-          // Official Minecraft Bedrock "Hero's Bow" Emote
-          const bowEase = Math.sin(Math.min(1.0, emoteTime / duration) * Math.PI);
-          if (torso) torso.rotation.x = 0.55 * bowEase;
-          if (head) head.rotation.x = 0.35 * bowEase;
-          if (armR) armR.rotation.x = 0.35 * bowEase;
-          if (armL) armL.rotation.x = 0.35 * bowEase;
-          if (modelPivot) {
-            modelPivot.position.y = -0.04 * bowEase;
-            modelPivot.rotation.x = 0.15 * bowEase;
-          }
-          break;
-        }
+              // Arm raise envelope: 0 -> 0.28s raise, 0.28s -> 1.40s wave oscillation, 1.40s -> 1.65s return
+              let raiseWeight = 0;
+              if (t < 0.28) {
+                raiseWeight = this._easeInOutQuad(t / 0.28);
+              } else if (t < 1.40) {
+                raiseWeight = 1.0;
+              } else {
+                raiseWeight = 1.0 - this._easeInOutQuad((t - 1.40) / 0.25);
+              }
 
-        case 'disco': {
-          // Official Minecraft Bedrock "Simple Dance / Foot Groove" Emote
-          const step = Math.sin(emoteTime * 10);
-          const cosStep = Math.cos(emoteTime * 10);
+              // Side-to-side oscillation (2.5 wave cycles over ~1.12s => ~2.23 Hz)
+              const waveCycle = Math.sin((t - 0.28) * Math.PI * 2 * 2.25);
+              const waveSway = (t >= 0.28 && t <= 1.40) ? waveCycle * 0.34 : 0;
 
-          if (torso) {
-            torso.rotation.z = step * 0.15 * env;
-            torso.rotation.y = cosStep * 0.12 * env;
-          }
-          if (head) {
-            head.rotation.z = -step * 0.18 * env;
-            head.rotation.x = Math.abs(cosStep) * 0.12 * env;
-          }
-          if (armR) armR.rotation.x = step * 0.95 * env;
-          if (armL) armL.rotation.x = -step * 0.95 * env;
-          if (forearmR) forearmR.rotation.x = -0.35 * env;
-          if (forearmL) forearmL.rotation.x = -0.35 * env;
-          if (legR) legR.rotation.x = -step * 0.65 * env;
-          if (legL) legL.rotation.x = step * 0.65 * env;
-          if (modelPivot) {
-            modelPivot.position.y = Math.abs(cosStep) * 0.06 * env;
-            modelPivot.rotation.z = step * 0.08 * env;
-          }
-          break;
-        }
+              // Shoulder height: rx ≈ -1.45 rad (~83° forward)
+              pose.rotations.rightArm = new THREE.Euler(
+                -1.45 * raiseWeight,
+                -0.10 * raiseWeight,
+                (0.38 + waveSway) * raiseWeight,
+                'XYZ'
+              );
 
-        case 'tornado': {
-          // Whirlwind Spin Emote (720° pirouette with airplane arms)
-          if (armR) armR.rotation.z = 1.55 * env;
-          if (armL) armL.rotation.z = -1.55 * env;
-          const spinProgress = Math.min(1.0, emoteTime / duration);
-          if (modelPivot) {
-            modelPivot.rotation.y = dragRotation + spinProgress * Math.PI * 4;
-            modelPivot.position.y = Math.sin(spinProgress * Math.PI) * 0.35;
-          }
-          break;
-        }
+              // Elbow / forearm flex
+              pose.rotations.forearmR = new THREE.Euler(
+                (-0.25 + waveSway * 0.20) * raiseWeight,
+                0,
+                0,
+                'XYZ'
+              );
 
-        case 'flip': {
-          // 360° Acrobatic Flip Emote
-          const p = Math.min(1.0, emoteTime / duration);
-          if (p < 0.22) {
-            const t = p / 0.22;
-            if (modelPivot) modelPivot.position.y = -0.15 * Math.sin(t * Math.PI * 0.5);
-            if (armR && armL) armR.rotation.x = armL.rotation.x = 0.7 * t;
-            if (legR && legL) legR.rotation.x = legL.rotation.x = -0.4 * t;
-          } else if (p < 0.80) {
-            const t = (p - 0.22) / 0.58;
-            if (modelPivot) {
-              modelPivot.position.y = Math.sin(t * Math.PI) * 0.9;
-              modelPivot.rotation.x = -Math.PI * 2 * t;
+              // Warm head tilt towards wave
+              pose.rotations.head = new THREE.Euler(
+                -0.08 * raiseWeight,
+                0,
+                -0.16 * raiseWeight,
+                'XYZ'
+              );
+
+              // Left arm relaxed at side
+              pose.rotations.leftArm = new THREE.Euler(0.08 * raiseWeight, 0, 0, 'XYZ');
+
+              // Slight body bounce with waving hand
+              pose.pivotPos.y = Math.max(0, waveSway) * 0.015 * raiseWeight;
+
+              return pose;
             }
-            if (armR && armL) armR.rotation.x = armL.rotation.x = -2.0;
-            if (legR && legL) legR.rotation.x = legL.rotation.x = 1.0;
-          } else {
-            const t = (p - 0.80) / 0.20;
-            if (modelPivot) {
-              modelPivot.rotation.x = 0;
-              modelPivot.position.y = -0.08 * (1 - t) * Math.sin(t * Math.PI);
+          },
+
+          // 2. Cheer: both arms raise straight up above head, body does a small bounce (translateY), loops for ~1s
+          cheer: {
+            duration: 1.40,
+            isLooping: false,
+            evaluate: (t, dur) => {
+              const pose = {
+                rotations: {},
+                pivotPos: new THREE.Vector3(0, 0, 0),
+                pivotRot: new THREE.Euler(0, 0, 0, 'XYZ')
+              };
+
+              const env = t < 0.20 ? (t / 0.20) : (t > 1.20 ? (1.40 - t) / 0.20 : 1.0);
+              const smoothEnv = this._easeInOutQuad(Math.max(0, Math.min(1, env)));
+
+              // 2 pump & bounce loops over ~1.2s (~1.67 Hz)
+              const bouncePhase = Math.sin(t * Math.PI * 2 * 1.67);
+              const pump = bouncePhase * 0.16;
+
+              // Both arms raised straight up overhead in victory "V"
+              pose.rotations.rightArm = new THREE.Euler(
+                -0.35 * smoothEnv,
+                0,
+                (2.80 + pump) * smoothEnv,
+                'XYZ'
+              );
+              pose.rotations.leftArm = new THREE.Euler(
+                -0.35 * smoothEnv,
+                0,
+                (-2.80 - pump) * smoothEnv,
+                'XYZ'
+              );
+
+              // Head tilted upward in triumph
+              pose.rotations.head = new THREE.Euler(-0.35 * smoothEnv, 0, 0, 'XYZ');
+
+              // Vertical body bounce (translateY)
+              const hop = Math.max(0, bouncePhase) * 0.22 * smoothEnv;
+              pose.pivotPos.y = hop;
+
+              // Legs tuck slightly at peak hop
+              if (hop > 0.04) {
+                const hopTuck = hop / 0.22;
+                pose.rotations.rightLeg = new THREE.Euler(0.20 * hopTuck, 0, 0, 'XYZ');
+                pose.rotations.leftLeg = new THREE.Euler(-0.20 * hopTuck, 0, 0, 'XYZ');
+              }
+
+              return pose;
+            }
+          },
+
+          // 3. Clap: both arms rotate inward from sides to meet in front of chest repeatedly, elbows bent, ~4 claps over 1.5s
+          clap: {
+            duration: 1.60,
+            isLooping: false,
+            evaluate: (t, dur) => {
+              const pose = {
+                rotations: {},
+                pivotPos: new THREE.Vector3(0, 0, 0),
+                pivotRot: new THREE.Euler(0, 0, 0, 'XYZ')
+              };
+
+              const env = t < 0.20 ? (t / 0.20) : (t > 1.40 ? (1.60 - t) / 0.20 : 1.0);
+              const smoothEnv = this._easeInOutQuad(Math.max(0, Math.min(1, env)));
+
+              // 4 claps over 1.25s => ~3.2 Hz
+              const clapPhase = Math.sin((t - 0.15) * Math.PI * 2 * 3.2);
+              const clapOpen = Math.max(0, clapPhase) * 0.36;
+
+              // Arms meet in front of chest (rx ≈ -1.50 horizontal)
+              pose.rotations.rightArm = new THREE.Euler(
+                -1.50 * smoothEnv,
+                0,
+                (-0.24 - clapOpen) * smoothEnv,
+                'XYZ'
+              );
+              pose.rotations.leftArm = new THREE.Euler(
+                -1.50 * smoothEnv,
+                0,
+                (0.24 + clapOpen) * smoothEnv,
+                'XYZ'
+              );
+
+              // Elbows bent forward
+              pose.rotations.forearmR = new THREE.Euler(-0.20 * smoothEnv, 0, 0, 'XYZ');
+              pose.rotations.forearmL = new THREE.Euler(-0.20 * smoothEnv, 0, 0, 'XYZ');
+
+              // Head nods on impact
+              const impact = Math.max(0, -clapPhase);
+              pose.rotations.head = new THREE.Euler(impact * 0.12 * smoothEnv, 0, 0, 'XYZ');
+              pose.pivotPos.y = impact * 0.025 * smoothEnv;
+
+              return pose;
+            }
+          },
+
+          // 4. Bow: body and head pitch forward at hips ~45°, hold briefly, return upright
+          bow: {
+            duration: 1.80,
+            isLooping: false,
+            evaluate: (t, dur) => {
+              const pose = {
+                rotations: {},
+                pivotPos: new THREE.Vector3(0, 0, 0),
+                pivotRot: new THREE.Euler(0, 0, 0, 'XYZ')
+              };
+
+              // 0 to 0.55s: bend forward; 0.55 to 1.15s: hold; 1.15 to 1.80s: return
+              let bowCurve = 0;
+              if (t < 0.55) {
+                bowCurve = this._easeInOutCubic(t / 0.55);
+              } else if (t <= 1.15) {
+                bowCurve = 1.0;
+              } else {
+                bowCurve = 1.0 - this._easeInOutSine((t - 1.15) / 0.65);
+              }
+
+              // 45 degrees = ~0.785 rad forward pitch at hips
+              pose.rotations.torso = new THREE.Euler(0.75 * bowCurve, 0, 0, 'XYZ');
+              pose.rotations.head = new THREE.Euler(0.35 * bowCurve, 0, 0, 'XYZ');
+
+              // Arms hang forward naturally
+              pose.rotations.rightArm = new THREE.Euler(0.35 * bowCurve, 0, 0, 'XYZ');
+              pose.rotations.leftArm = new THREE.Euler(0.35 * bowCurve, 0, 0, 'XYZ');
+
+              // Slight hip dip
+              pose.pivotPos.y = -0.04 * bowCurve;
+
+              return pose;
+            }
+          },
+
+          // 5. Point: rightArm extends straight forward from shoulder, holds ~1s, returns to idle
+          point: {
+            duration: 1.80,
+            isLooping: false,
+            evaluate: (t, dur) => {
+              const pose = {
+                rotations: {},
+                pivotPos: new THREE.Vector3(0, 0, 0),
+                pivotRot: new THREE.Euler(0, 0, 0, 'XYZ')
+              };
+
+              // 0 to 0.35s: extend arm; 0.35 to 1.40s: hold (~1.05s hold!); 1.40 to 1.80s: return
+              let pointCurve = 0;
+              if (t < 0.35) {
+                pointCurve = this._easeInOutCubic(t / 0.35);
+              } else if (t <= 1.40) {
+                pointCurve = 1.0;
+              } else {
+                pointCurve = 1.0 - this._easeInOutQuad((t - 1.40) / 0.40);
+              }
+
+              // Right arm straight forward from shoulder (rx = -1.57 rad = 90 deg)
+              pose.rotations.rightArm = new THREE.Euler(
+                -1.57 * pointCurve,
+                -0.10 * pointCurve,
+                0.18 * pointCurve,
+                'XYZ'
+              );
+
+              // Torso twist and head gaze towards pointing direction
+              pose.rotations.torso = new THREE.Euler(0, -0.15 * pointCurve, 0, 'XYZ');
+              pose.rotations.head = new THREE.Euler(0.05 * pointCurve, -0.32 * pointCurve, 0, 'XYZ');
+
+              // Left arm relaxed at side
+              pose.rotations.leftArm = new THREE.Euler(0.12 * pointCurve, 0, 0, 'XYZ');
+
+              return pose;
+            }
+          },
+
+          // 6. Spin: entire model rotates 360° on Y-axis over ~1s with ease-in-out
+          spin: {
+            duration: 1.10,
+            isLooping: false,
+            evaluate: (t, dur) => {
+              const pose = {
+                rotations: {},
+                pivotPos: new THREE.Vector3(0, 0, 0),
+                pivotRot: new THREE.Euler(0, 0, 0, 'XYZ')
+              };
+
+              const p = Math.min(1.0, t / dur);
+              const ease = this._easeInOutCubic(p);
+
+              // 360° on Y-axis over ~1s with ease-in-out
+              pose.pivotRot.y = this.spinBaseAngle + (Math.PI * 2 * ease);
+
+              // Hop / float in air
+              pose.pivotPos.y = Math.sin(p * Math.PI) * 0.16;
+
+              // Airplane balance arms flare out
+              const flare = Math.sin(p * Math.PI);
+              pose.rotations.rightArm = new THREE.Euler(-0.20 * flare, 0, 0.55 * flare, 'XYZ');
+              pose.rotations.leftArm = new THREE.Euler(-0.20 * flare, 0, -0.55 * flare, 'XYZ');
+
+              return pose;
+            }
+          },
+
+          // 7. Flip: body does full 360° rotation on X-axis (front flip) with slight Y-axis hop, ~0.8s
+          flip: {
+            duration: 0.85,
+            isLooping: false,
+            evaluate: (t, dur) => {
+              const pose = {
+                rotations: {},
+                pivotPos: new THREE.Vector3(0, 0, 0),
+                pivotRot: new THREE.Euler(0, 0, 0, 'XYZ')
+              };
+
+              if (t < 0.15) {
+                // Phase 1: Crouch anticipation
+                const t1 = t / 0.15;
+                pose.pivotPos.y = -0.10 * Math.sin(t1 * Math.PI * 0.5);
+                pose.rotations.rightArm = new THREE.Euler(0.65 * t1, 0, 0, 'XYZ');
+                pose.rotations.leftArm = new THREE.Euler(0.65 * t1, 0, 0, 'XYZ');
+                pose.rotations.torso = new THREE.Euler(0.25 * t1, 0, 0, 'XYZ');
+                pose.rotations.rightLeg = new THREE.Euler(-0.35 * t1, 0, 0, 'XYZ');
+                pose.rotations.leftLeg = new THREE.Euler(-0.35 * t1, 0, 0, 'XYZ');
+              } else if (t < 0.70) {
+                // Phase 2: Launch & 360° front flip on X-axis
+                const t2 = (t - 0.15) / 0.55;
+                pose.pivotRot.x = -Math.PI * 2 * t2;
+                pose.pivotPos.y = Math.sin(t2 * Math.PI) * 0.52; // Parabolic hop
+
+                // Mid-air tuck
+                pose.rotations.rightArm = new THREE.Euler(-2.20, 0, 0, 'XYZ');
+                pose.rotations.leftArm = new THREE.Euler(-2.20, 0, 0, 'XYZ');
+                pose.rotations.rightLeg = new THREE.Euler(1.10, 0, 0, 'XYZ');
+                pose.rotations.leftLeg = new THREE.Euler(1.10, 0, 0, 'XYZ');
+                pose.rotations.torso = new THREE.Euler(0.40, 0, 0, 'XYZ');
+              } else {
+                // Phase 3: Landing cushion & return
+                const t3 = (t - 0.70) / 0.15;
+                pose.pivotRot.x = 0;
+                pose.pivotPos.y = -0.07 * (1.0 - t3) * Math.sin(t3 * Math.PI);
+                pose.rotations.torso = new THREE.Euler(0.12 * (1.0 - t3), 0, 0, 'XYZ');
+              }
+
+              return pose;
+            }
+          },
+
+          // 8. Disco: alternating arm raises (left up/right down, then swap) with continuous Y-axis body sway, looping until stopped
+          disco: {
+            duration: 1.0, // loop duration
+            isLooping: true,
+            evaluate: (t, dur) => {
+              const pose = {
+                rotations: {},
+                pivotPos: new THREE.Vector3(0, 0, 0),
+                pivotRot: new THREE.Euler(0, 0, 0, 'XYZ')
+              };
+
+              const cycle = t * 6.5; // rhythm tempo
+              const s = Math.sin(cycle);
+              const c = Math.cos(cycle);
+              const factor = (s + 1) / 2; // 0 (right up) to 1 (left up)
+
+              // Alternating arm raises (left up/right down, then swap)
+              // Pose Right-Up: armR rx = -2.25, rz = 0.55 | armL rx = 0.70, rz = -0.22
+              // Pose Left-Up:  armR rx = 0.70, rz = 0.22  | armL rx = -2.25, rz = -0.55
+              pose.rotations.rightArm = new THREE.Euler(
+                THREE.MathUtils.lerp(-2.25, 0.70, factor),
+                0,
+                THREE.MathUtils.lerp(0.55, 0.22, factor),
+                'XYZ'
+              );
+              pose.rotations.leftArm = new THREE.Euler(
+                THREE.MathUtils.lerp(0.70, -2.25, factor),
+                0,
+                THREE.MathUtils.lerp(-0.22, -0.55, factor),
+                'XYZ'
+              );
+
+              // Continuous Y-axis body sway (twist) + Z-axis groove
+              pose.rotations.torso = new THREE.Euler(
+                0,
+                c * 0.22, // continuous Y-axis sway!
+                s * 0.14,
+                'XYZ'
+              );
+
+              pose.rotations.head = new THREE.Euler(
+                Math.abs(s) * 0.08,
+                -c * 0.18,
+                -s * 0.12,
+                'XYZ'
+              );
+
+              // Rhythmic body bounce
+              pose.pivotPos.y = Math.abs(s) * 0.06;
+
+              // Alternating leg steps
+              pose.rotations.rightLeg = new THREE.Euler(-s * 0.45, 0, 0, 'XYZ');
+              pose.rotations.leftLeg = new THREE.Euler(s * 0.45, 0, 0, 'XYZ');
+
+              return pose;
             }
           }
-          break;
+        };
+      }
+
+      play(name, options = {}) {
+        // Support alias: 'tornado' -> 'spin'
+        if (name === 'tornado') name = 'spin';
+
+        const def = this.emoteDefs[name];
+        if (!def) {
+          console.warn(`Emote "${name}" not found.`);
+          return false;
+        }
+
+        // If playing the same looping emote (e.g. disco), toggle off
+        if (this.currentEmote === name && this.isLooping && !options.restart) {
+          this.stop();
+          return true;
+        }
+
+        // 1. Capture current live pose into fromPose for seamless cross-fading
+        this._snapshotCurrentPose();
+
+        // 2. Setup new emote state
+        this.currentEmote = name;
+        this.emoteElapsed = 0;
+        this.emoteDuration = options.duration || def.duration;
+        this.isLooping = (options.loop !== undefined) ? options.loop : def.isLooping;
+        this.state = 'playing';
+
+        // 3. Cross-fade blending
+        this.isBlending = true;
+        this.blendElapsed = 0;
+        this.blendDuration = options.blendDuration || 0.22;
+
+        // Special handling for Spin: capture starting Y rotation
+        if (name === 'spin') {
+          this.spinBaseAngle = this.modelPivot ? this.modelPivot.rotation.y : 0;
+        }
+
+        if (this.onEmoteStart) {
+          this.onEmoteStart(name);
+        }
+
+        return true;
+      }
+
+      stop(blendDuration = 0.25) {
+        if (this.state === 'idle') return;
+
+        this._snapshotCurrentPose();
+        this.currentEmote = null;
+        this.state = 'easing_to_idle';
+        this.isBlending = true;
+        this.blendElapsed = 0;
+        this.blendDuration = blendDuration;
+
+        if (this.onEmoteEnd) {
+          this.onEmoteEnd();
+        }
+      }
+
+      isPlaying() {
+        return this.state !== 'idle';
+      }
+
+      getCurrentEmote() {
+        return this.currentEmote;
+      }
+
+      _snapshotCurrentPose() {
+        for (const key of this.managedNodes) {
+          this.fromPose.quaternions[key].copy(this.livePose.quaternions[key]);
+        }
+        this.fromPose.pivotPos.copy(this.livePose.pivotPos);
+        this.fromPose.pivotRot.copy(this.livePose.pivotRot);
+      }
+
+      // Helper to generate THREE.AnimationClip with QuaternionKeyframeTracks for AnimationMixer compatibility
+      createAnimationClip(name, fps = 30) {
+        const def = this.emoteDefs[name === 'tornado' ? 'spin' : name];
+        if (!def) return null;
+        const dur = def.duration;
+        const totalFrames = Math.ceil(dur * fps);
+        const times = [];
+        const trackData = {};
+
+        for (const key of this.managedNodes) {
+          trackData[key] = [];
+        }
+        trackData.pivotPos = [];
+
+        for (let i = 0; i <= totalFrames; i++) {
+          const t = Math.min(dur, (i / totalFrames) * dur);
+          times.push(t);
+          const p = def.evaluate(t, dur);
+          for (const key of this.managedNodes) {
+            const raw = (p.rotations && p.rotations[key]) ? p.rotations[key].clone() : new THREE.Euler(0, 0, 0, 'XYZ');
+            const clamped = this._clampJoint(key, raw);
+            const q = new THREE.Quaternion().setFromEuler(clamped);
+            trackData[key].push(q.x, q.y, q.z, q.w);
+          }
+          const pos = p.pivotPos || new THREE.Vector3(0, 0, 0);
+          trackData.pivotPos.push(pos.x, pos.y, pos.z);
+        }
+
+        const tracks = [];
+        for (const key of this.managedNodes) {
+          const nodeObj = this.nodes[key];
+          const trackName = nodeObj ? `${nodeObj.name || key}.quaternion` : `${key}.quaternion`;
+          tracks.push(new THREE.QuaternionKeyframeTrack(trackName, times, trackData[key]));
+        }
+        tracks.push(new THREE.VectorKeyframeTrack('modelPivot.position', times, trackData.pivotPos));
+
+        return new THREE.AnimationClip(name, dur, tracks);
+      }
+
+      update(dt) {
+        if (this.state === 'idle') return;
+
+        // Advance blend timer if transitioning
+        let blendWeight = 1.0;
+        if (this.isBlending) {
+          this.blendElapsed += dt;
+          const blendProgress = Math.min(1.0, this.blendElapsed / this.blendDuration);
+          blendWeight = this._easeInOutQuad(blendProgress);
+          if (this.blendElapsed >= this.blendDuration) {
+            this.isBlending = false;
+          }
+        }
+
+        if (this.state === 'easing_to_idle') {
+          // Blending from fromPose towards idlePose (identity quaternions, 0 position)
+          for (const key of this.managedNodes) {
+            this.livePose.quaternions[key].copy(this.fromPose.quaternions[key]).slerp(this.idlePose.quaternions[key], blendWeight);
+          }
+          this.livePose.pivotPos.lerpVectors(this.fromPose.pivotPos, this.idlePose.pivotPos, blendWeight);
+          this.livePose.pivotRot.x = THREE.MathUtils.lerp(this.fromPose.pivotRot.x, 0, blendWeight);
+          this.livePose.pivotRot.y = THREE.MathUtils.lerp(this.fromPose.pivotRot.y, 0, blendWeight);
+          this.livePose.pivotRot.z = THREE.MathUtils.lerp(this.fromPose.pivotRot.z, 0, blendWeight);
+
+          this._applyPoseToNodes();
+
+          if (!this.isBlending) {
+            this.state = 'idle';
+          }
+          return;
+        }
+
+        // Active emote evaluation
+        const def = this.emoteDefs[this.currentEmote];
+        if (!def) {
+          this.stop();
+          return;
+        }
+
+        this.emoteElapsed += dt;
+
+        // Check completion for non-looping emotes
+        if (!this.isLooping && this.emoteElapsed >= this.emoteDuration) {
+          this.stop(0.20);
+          return;
+        }
+
+        // Calculate target pose from emote definition
+        const evalTime = this.isLooping ? (this.emoteElapsed % def.duration) : Math.min(this.emoteDuration, this.emoteElapsed);
+        const targetPose = def.evaluate(evalTime, this.emoteDuration);
+
+        // Convert target rotations to quaternions and apply joint limits
+        const targetQuaternions = {};
+        for (const key of this.managedNodes) {
+          const rawEuler = (targetPose.rotations && targetPose.rotations[key]) ? targetPose.rotations[key].clone() : new THREE.Euler(0, 0, 0, 'XYZ');
+          const clamped = this._clampJoint(key, rawEuler);
+          targetQuaternions[key] = new THREE.Quaternion().setFromEuler(clamped);
+        }
+
+        // Apply blending
+        if (this.isBlending) {
+          for (const key of this.managedNodes) {
+            this.livePose.quaternions[key].copy(this.fromPose.quaternions[key]).slerp(targetQuaternions[key], blendWeight);
+          }
+          this.livePose.pivotPos.lerpVectors(this.fromPose.pivotPos, targetPose.pivotPos || this.idlePose.pivotPos, blendWeight);
+
+          const targetRot = targetPose.pivotRot || this.idlePose.pivotRot;
+          this.livePose.pivotRot.x = THREE.MathUtils.lerp(this.fromPose.pivotRot.x, targetRot.x, blendWeight);
+          this.livePose.pivotRot.y = THREE.MathUtils.lerp(this.fromPose.pivotRot.y, targetRot.y, blendWeight);
+          this.livePose.pivotRot.z = THREE.MathUtils.lerp(this.fromPose.pivotRot.z, targetRot.z, blendWeight);
+        } else {
+          for (const key of this.managedNodes) {
+            this.livePose.quaternions[key].copy(targetQuaternions[key]);
+          }
+          if (targetPose.pivotPos) this.livePose.pivotPos.copy(targetPose.pivotPos);
+          if (targetPose.pivotRot) this.livePose.pivotRot.copy(targetPose.pivotRot);
+        }
+
+        this._applyPoseToNodes();
+      }
+
+      _applyPoseToNodes() {
+        // Apply quaternions and synced Euler rotations to Three.js nodes
+        for (const key of this.managedNodes) {
+          const node = this.nodes[key];
+          if (node) {
+            node.quaternion.copy(this.livePose.quaternions[key]);
+            node.rotation.setFromQuaternion(this.livePose.quaternions[key]);
+          }
+        }
+
+        // Apply pivot transformations
+        if (this.modelPivot) {
+          this.modelPivot.position.copy(this.livePose.pivotPos);
+          this.modelPivot.rotation.x = this.livePose.pivotRot.x;
+          if (this.currentEmote === 'spin') {
+            this.modelPivot.rotation.y = this.livePose.pivotRot.y;
+          }
+          this.modelPivot.rotation.z = this.livePose.pivotRot.z;
         }
       }
     }
 
-    function updateActiveEmote(dtSec) {
-      if (!activeEmote) return;
-      activeEmote.timer += dtSec;
-      const durationSec = activeEmote.duration * 0.001;
-      applyArticulatedEmote(activeEmote.key, activeEmote.timer, durationSec);
-      if (activeEmote.timer >= durationSec) {
-        activeEmote = null;
-        resetCharacterPose();
+    function initOrUpdateEmoteController() {
+      const activeNodes = {
+        head: characterNodes.head,
+        torso: characterNodes.torso || characterNodes.chest,
+        leftArm: characterNodes.leftArm || characterNodes.upperArmL || characterNodes.armLeft,
+        rightArm: characterNodes.rightArm || characterNodes.upperArmR || characterNodes.armRight,
+        leftLeg: characterNodes.leftLeg || characterNodes.upperLegL || characterNodes.legLeft,
+        rightLeg: characterNodes.rightLeg || characterNodes.upperLegR || characterNodes.legRight,
+        forearmR: characterNodes.forearmR || characterNodes.forearmRight,
+        forearmL: characterNodes.forearmL || characterNodes.forearmLeft
+      };
+
+      if (!emoteController) {
+        emoteController = new EmoteController({
+          modelPivot: modelPivot,
+          nodes: activeNodes
+        });
+        window.emoteController = emoteController;
+      } else {
+        emoteController.setModelPivot(modelPivot);
+        emoteController.setNodes(activeNodes);
       }
     }
 
+    let lastRenderTime = 0;
+    const mobileFrameInterval = 1000 / 45;
     let lastFrameSec = 0;
+
     function renderThree(timestamp = 0) {
       requestAnimationFrame(renderThree);
       const nowSec = timestamp * 0.001;
@@ -2987,13 +3470,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         if (threeScene) {
-          if (activeEmote) {
-            // Smoothly auto-center character to face front during emotes
-            dragRotation += (0 - dragRotation) * 0.12;
-            if (modelPivot && activeEmote.key !== 'tornado') {
-              modelPivot.rotation.y += (0 - modelPivot.rotation.y) * 0.12;
+          if (emoteController && emoteController.isPlaying()) {
+            const isSpin = emoteController.getCurrentEmote() === 'spin';
+            if (!isSpin) {
+              // Smoothly auto-center character to face front during emotes
+              dragRotation += (0 - dragRotation) * 0.12;
             }
-            updateActiveEmote(dt);
+            emoteController.update(dt);
           } else {
             // Natural Minecraft idle breathing & arm sway
             const idleTime = timestamp * 0.0022;
